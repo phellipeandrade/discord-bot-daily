@@ -255,7 +255,7 @@ if (process.env.NODE_ENV !== 'test') {
         const escolhido = escolherUsuario(data);
         const canal = await client.channels.fetch(CHANNEL_ID!);
         if (canal?.isTextBased()) {
-          (canal as TextChannel).send(`📢 Sorteio do dia:\n🎯 <@${escolhido.id}> (**${escolhido.name}**) foi o escolhido do dia!`);
+          (canal as TextChannel).send(`📢 Bom dia, time!\n🎙️ Hoje a daily será conduzida por <@${escolhido.id}> (**${escolhido.name}**).`);
         }
       } catch (error) {
         console.error('Erro ao executar seleção diária:', error);
