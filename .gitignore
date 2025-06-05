@@ -24,9 +24,6 @@ Thumbs.db
 *.swp
 *.swo
 
-# Arquivos específicos do projeto
-users.json
-
 # Logs
 logs/
 *.log
