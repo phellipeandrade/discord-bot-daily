@@ -2,7 +2,11 @@ const fs = require('fs');
 const path = require('path');
 
 // Mock das funções do fs
-jest.mock('fs');
+jest.mock('fs', () => ({
+  existsSync: jest.fn(),
+  readFileSync: jest.fn(),
+  writeFileSync: jest.fn()
+}));
 
 // Mock do arquivo de usuários
 const MOCK_USERS_FILE = path.join(__dirname, '..', 'src', 'users.json');
@@ -22,7 +26,8 @@ describe('Funções Utilitárias', () => {
 
   describe('carregarUsuarios', () => {
     it('deve criar arquivo se não existir', () => {
-      fs.existsSync.mockReturnValue(false);
+      fs.existsSync.mockImplementation(() => false);
+      fs.writeFileSync.mockImplementation(() => {});
       
       carregarUsuarios();
 
@@ -39,8 +44,8 @@ describe('Funções Utilitárias', () => {
         lastSelected: { name: 'user2', id: '456' }
       };
 
-      fs.existsSync.mockReturnValue(true);
-      fs.readFileSync.mockReturnValue(JSON.stringify(mockData));
+      fs.existsSync.mockImplementation(() => true);
+      fs.readFileSync.mockImplementation(() => JSON.stringify(mockData));
 
       const result = carregarUsuarios();
 
@@ -48,11 +53,17 @@ describe('Funções Utilitárias', () => {
       expect(fs.readFileSync).toHaveBeenCalledWith(MOCK_USERS_FILE, 'utf-8');
     });
 
-    it('deve lançar erro se o arquivo estiver corrompido', () => {
-      fs.existsSync.mockReturnValue(true);
-      fs.readFileSync.mockReturnValue('invalid json');
+    it('deve retornar dados vazios se o arquivo estiver corrompido', () => {
+      fs.existsSync.mockImplementation(() => true);
+      fs.readFileSync.mockImplementation(() => 'invalid json');
 
-      expect(() => carregarUsuarios()).toThrow();
+      const result = carregarUsuarios();
+
+      expect(result).toEqual({ all: [], remaining: [] });
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        MOCK_USERS_FILE,
+        JSON.stringify({ all: [], remaining: [] }, null, 2)
+      );
     });
   });
 
@@ -63,6 +74,8 @@ describe('Funções Utilitárias', () => {
         remaining: [{ name: 'user1', id: '123' }],
         lastSelected: { name: 'user2', id: '456' }
       };
+
+      fs.writeFileSync.mockImplementation(() => {});
 
       salvarUsuarios(mockData);
 
@@ -80,9 +93,13 @@ describe('Funções Utilitárias', () => {
         lastSelected: { name: 'user2', id: '456' }
       };
 
+      let savedData;
+      fs.writeFileSync.mockImplementation((file, data) => {
+        savedData = JSON.parse(data);
+      });
+
       salvarUsuarios(mockData);
 
-      const savedData = JSON.parse(fs.writeFileSync.mock.calls[0][1]);
       expect(savedData).toHaveProperty('all');
       expect(savedData).toHaveProperty('remaining');
       expect(savedData).toHaveProperty('lastSelected');

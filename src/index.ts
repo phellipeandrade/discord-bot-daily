@@ -44,8 +44,30 @@ function carregarUsuarios(): UserData {
   if (!fs.existsSync(USERS_FILE)) {
     const vazio: UserData = { all: [], remaining: [] };
     fs.writeFileSync(USERS_FILE, JSON.stringify(vazio, null, 2));
+    return vazio;
   }
-  return JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
+  try {
+    const data = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
+    // Validar se os dados estão no formato correto
+    if (!Array.isArray(data.all) || !Array.isArray(data.remaining)) {
+      throw new Error('Formato de dados inválido');
+    }
+    // Validar se cada usuário tem as propriedades necessárias
+    const validarUsuario = (user: any): user is UserEntry => 
+      typeof user === 'object' && user !== null && 
+      typeof user.name === 'string' && 
+      typeof user.id === 'string';
+    
+    if (!data.all.every(validarUsuario) || !data.remaining.every(validarUsuario)) {
+      throw new Error('Formato de usuário inválido');
+    }
+    return data;
+  } catch (error) {
+    console.error('Erro ao carregar usuários:', error);
+    const vazio: UserData = { all: [], remaining: [] };
+    fs.writeFileSync(USERS_FILE, JSON.stringify(vazio, null, 2));
+    return vazio;
+  }
 }
 
 function salvarUsuarios(data: UserData): void {
@@ -63,8 +85,17 @@ function escolherUsuario(data: UserData): UserEntry {
   return escolhido;
 }
 
-function formatarUsuarios(lista: UserEntry[]): string {
-  return lista.length ? `• ` + lista.map(u => `${u.name}`).join('\n• ') : '(nenhum)';
+export function formatarUsuarios(lista: UserEntry[]): string {
+  console.log('🔍 Dados recebidos em formatarUsuarios:', lista);
+  return lista.length
+    ? lista.map(u => {
+        if (typeof u?.name !== 'string') {
+          console.warn('⚠️ Objeto inválido detectado:', u);
+          return '• [inválido]';
+        }
+        return `• ${u.name}`;
+      }).join('\n')
+    : '(nenhum)';
 }
 
 // =================== Handlers ===================
@@ -111,10 +142,11 @@ async function handleListar(interaction: ChatInputCommandInteraction, data: User
   const pendentes = formatarUsuarios(data.remaining);
   const jaSelecionados = data.all.filter(u => !data.remaining.some(r => r.id === u.id));
   const selecionados = formatarUsuarios(jaSelecionados);
-
+  console.log('🧪 all:', JSON.stringify(data.all, null, 2));
+  console.log('🧪 remaining:', JSON.stringify(data.remaining, null, 2));
   await interaction.reply({
     content: `📋 **Cadastrados:**\n${todos}\n\n🔄 **Ainda não sorteados:**\n${pendentes}\n\n✅ **Já sorteados:**\n${selecionados}`,
-    ephemeral: true
+    flags: 1 << 6
   });
 }
 
@@ -124,9 +156,16 @@ async function handleSelecionar(interaction: ChatInputCommandInteraction, data: 
 }
 
 async function handleResetar(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
-  data.remaining = [...data.all];
-  salvarUsuarios(data);
-  await interaction.reply(`🔄 Lista resetada! Todos os ${data.all.length} usuários estão disponíveis novamente.`);
+  try {
+    const originalData = JSON.parse(fs.readFileSync(path.join(__dirname, 'users.original.json'), 'utf-8'));
+    salvarUsuarios(originalData);
+    await interaction.reply(`🔄 Lista resetada ao estado original com ${originalData.all.length} usuários.`);
+  } catch (error) {
+    console.error('Erro ao resetar lista:', error);
+    data.remaining = [...data.all];
+    salvarUsuarios(data);
+    await interaction.reply(`🔄 Lista resetada! Todos os ${data.all.length} usuários estão disponíveis novamente.`);
+  }
 }
 
 // =================== Slash Commands ===================
@@ -216,7 +255,7 @@ if (process.env.NODE_ENV !== 'test') {
         const escolhido = escolherUsuario(data);
         const canal = await client.channels.fetch(CHANNEL_ID!);
         if (canal?.isTextBased()) {
-          (canal as TextChannel).send(`📢 Seleção diária:\n🎯 <@${escolhido.id}> (**${escolhido.name}**) foi o escolhido do dia!`);
+          (canal as TextChannel).send(`📢 Sorteio do dia:\n🎯 <@${escolhido.id}> (**${escolhido.name}**) foi o escolhido do dia!`);
         }
       } catch (error) {
         console.error('Erro ao executar seleção diária:', error);
