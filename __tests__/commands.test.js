@@ -33,11 +33,13 @@ describe('Comandos do Bot', () => {
       },
       member: {
         user: {
-          username: 'testUser'
+          username: 'testUser',
+          id: '123456'
         }
       },
       user: {
-        username: 'testUser'
+        username: 'testUser',
+        id: '123456'
       }
     };
   });
@@ -45,16 +47,16 @@ describe('Comandos do Bot', () => {
   describe('handleCadastrar', () => {
     it('deve cadastrar um novo usuário com sucesso', async () => {
       const mockData = {
-        all: ['existingUser'],
-        remaining: ['existingUser']
+        all: [{ name: 'existingUser', id: '789' }],
+        remaining: [{ name: 'existingUser', id: '789' }]
       };
 
       mockInteraction.options.getString.mockReturnValue('newUser');
 
       await handleCadastrar(mockInteraction, mockData);
 
-      expect(mockData.all).toContain('newUser');
-      expect(mockData.remaining).toContain('newUser');
+      expect(mockData.all.some(u => u.name === 'newUser' && u.id === '123456')).toBe(true);
+      expect(mockData.remaining.some(u => u.name === 'newUser' && u.id === '123456')).toBe(true);
       expect(mockInteraction.reply).toHaveBeenCalledWith(
         expect.stringContaining('cadastrado com sucesso')
       );
@@ -62,11 +64,11 @@ describe('Comandos do Bot', () => {
 
     it('não deve cadastrar um usuário que já existe', async () => {
       const mockData = {
-        all: ['existingUser'],
-        remaining: ['existingUser']
+        all: [{ name: 'existingUser', id: '123456' }],
+        remaining: [{ name: 'existingUser', id: '123456' }]
       };
 
-      mockInteraction.options.getString.mockReturnValue('existingUser');
+      mockInteraction.options.getString.mockReturnValue('newUser');
 
       await handleCadastrar(mockInteraction, mockData);
 
@@ -79,14 +81,14 @@ describe('Comandos do Bot', () => {
   describe('handleEntrar', () => {
     it('deve cadastrar o usuário atual com sucesso', async () => {
       const mockData = {
-        all: ['existingUser'],
-        remaining: ['existingUser']
+        all: [{ name: 'existingUser', id: '789' }],
+        remaining: [{ name: 'existingUser', id: '789' }]
       };
 
       await handleEntrar(mockInteraction, mockData);
 
-      expect(mockData.all).toContain('testUser');
-      expect(mockData.remaining).toContain('testUser');
+      expect(mockData.all.some(u => u.name === 'testUser' && u.id === '123456')).toBe(true);
+      expect(mockData.remaining.some(u => u.name === 'testUser' && u.id === '123456')).toBe(true);
       expect(mockInteraction.reply).toHaveBeenCalledWith(
         expect.stringContaining('cadastrado com sucesso')
       );
@@ -94,8 +96,8 @@ describe('Comandos do Bot', () => {
 
     it('não deve cadastrar o usuário atual se já existir', async () => {
       const mockData = {
-        all: ['testUser'],
-        remaining: ['testUser']
+        all: [{ name: 'testUser', id: '123456' }],
+        remaining: [{ name: 'testUser', id: '123456' }]
       };
 
       await handleEntrar(mockInteraction, mockData);
@@ -109,16 +111,22 @@ describe('Comandos do Bot', () => {
   describe('handleRemover', () => {
     it('deve remover um usuário com sucesso', async () => {
       const mockData = {
-        all: ['user1', 'user2'],
-        remaining: ['user1', 'user2']
+        all: [
+          { name: 'user1', id: '123' },
+          { name: 'user2', id: '456' }
+        ],
+        remaining: [
+          { name: 'user1', id: '123' },
+          { name: 'user2', id: '456' }
+        ]
       };
 
       mockInteraction.options.getString.mockReturnValue('user1');
 
       await handleRemover(mockInteraction, mockData);
 
-      expect(mockData.all).not.toContain('user1');
-      expect(mockData.remaining).not.toContain('user1');
+      expect(mockData.all.some(u => u.name === 'user1')).toBe(false);
+      expect(mockData.remaining.some(u => u.name === 'user1')).toBe(false);
       expect(mockInteraction.reply).toHaveBeenCalledWith(
         expect.stringContaining('removido com sucesso')
       );
@@ -143,8 +151,11 @@ describe('Comandos do Bot', () => {
   describe('handleListar', () => {
     it('deve listar usuários corretamente', async () => {
       const mockData = {
-        all: ['user1', 'user2'],
-        remaining: ['user2']
+        all: [
+          { name: 'user1', id: '123' },
+          { name: 'user2', id: '456' }
+        ],
+        remaining: [{ name: 'user2', id: '456' }]
       };
 
       await handleListar(mockInteraction, mockData);
@@ -169,10 +180,17 @@ describe('Comandos do Bot', () => {
       });
     });
 
-    it('deve mostrar corretamente usuários pendentes', async () => {
+    it('deve mostrar corretamente usuários pendentes e já sorteados', async () => {
       const mockData = {
-        all: ['user1', 'user2', 'user3'],
-        remaining: ['user2', 'user3']
+        all: [
+          { name: 'user1', id: '123' },
+          { name: 'user2', id: '456' },
+          { name: 'user3', id: '789' }
+        ],
+        remaining: [
+          { name: 'user2', id: '456' },
+          { name: 'user3', id: '789' }
+        ]
       };
 
       await handleListar(mockInteraction, mockData);
@@ -180,23 +198,28 @@ describe('Comandos do Bot', () => {
       const reply = mockInteraction.reply.mock.calls[0][0];
       expect(reply.content).toMatch(/Cadastrados:.*user1.*user2.*user3/s);
       expect(reply.content).toMatch(/Ainda não sorteados:.*user2.*user3/s);
+      expect(reply.content).toMatch(/Já sorteados:.*user1/s);
     });
   });
 
   describe('handleSelecionar', () => {
     it('deve selecionar um usuário corretamente', async () => {
       const mockData = {
-        all: ['user1', 'user2'],
-        remaining: ['user2']
+        all: [
+          { name: 'user1', id: '123' },
+          { name: 'user2', id: '456' }
+        ],
+        remaining: [{ name: 'user2', id: '456' }]
       };
 
-      escolherUsuario.mockReturnValue('user2');
+      const selectedUser = { name: 'user2', id: '456' };
+      escolherUsuario.mockReturnValue(selectedUser);
 
       await handleSelecionar(mockInteraction, mockData);
 
       expect(escolherUsuario).toHaveBeenCalledWith(mockData);
       expect(mockInteraction.reply).toHaveBeenCalledWith(
-        expect.stringContaining('user2')
+        expect.stringContaining(`<@${selectedUser.id}>`)
       );
     });
 

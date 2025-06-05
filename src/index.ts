@@ -17,20 +17,26 @@ dotenv.config();
 // =================== CONFIG ===================
 const TOKEN = process.env.DISCORD_TOKEN;
 const CHANNEL_ID = process.env.CHANNEL_ID;
-const GUILD_ID = process.env.GUILD_ID; // ID do servidor do Discord
+const GUILD_ID = process.env.GUILD_ID;
 const USERS_FILE = path.join(__dirname, 'users.json');
 const TIMEZONE = 'America/Sao_Paulo';
 
-if (!TOKEN || !CHANNEL_ID || !GUILD_ID) {
+// Não verificar variáveis de ambiente durante testes
+if (process.env.NODE_ENV !== 'test' && (!TOKEN || !CHANNEL_ID || !GUILD_ID)) {
   console.error('❌ Faltam variáveis de ambiente: DISCORD_TOKEN, CHANNEL_ID, GUILD_ID.');
   process.exit(1);
 }
 
 // =================== Interfaces ===================
-interface UserData {
-  all: string[];
-  remaining: string[];
-  lastSelected?: string;
+export interface UserEntry {
+  name: string;
+  id: string;
+}
+
+export interface UserData {
+  all: UserEntry[];
+  remaining: UserEntry[];
+  lastSelected?: UserEntry;
 }
 
 // =================== Utilitários ===================
@@ -46,7 +52,7 @@ function salvarUsuarios(data: UserData): void {
   fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-function escolherUsuario(data: UserData): string {
+function escolherUsuario(data: UserData): UserEntry {
   if (data.remaining.length === 0) {
     data.remaining = [...data.all];
   }
@@ -57,12 +63,19 @@ function escolherUsuario(data: UserData): string {
   return escolhido;
 }
 
+function formatarUsuarios(lista: UserEntry[]): string {
+  return lista.length ? `• ` + lista.map(u => `${u.name}`).join('\n• ') : '(nenhum)';
+}
+
 // =================== Handlers ===================
 async function handleCadastrar(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
   const userName = interaction.options.getString('nome', true);
-  if (!data.all.includes(userName)) {
-    data.all.push(userName);
-    data.remaining.push(userName);
+  const userId = interaction.user.id;
+
+  if (!data.all.some(u => u.id === userId)) {
+    const novo: UserEntry = { name: userName, id: userId };
+    data.all.push(novo);
+    data.remaining.push(novo);
     salvarUsuarios(data);
     await interaction.reply(`✅ Usuário \`${userName}\` cadastrado com sucesso.`);
   } else {
@@ -71,10 +84,13 @@ async function handleCadastrar(interaction: ChatInputCommandInteraction, data: U
 }
 
 async function handleEntrar(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
-  const displayName = interaction.member?.user?.username || interaction.user.username;
-  if (!data.all.includes(displayName)) {
-    data.all.push(displayName);
-    data.remaining.push(displayName);
+  const displayName = interaction.user.username;
+  const userId = interaction.user.id;
+
+  if (!data.all.some(u => u.id === userId)) {
+    const novo: UserEntry = { name: displayName, id: userId };
+    data.all.push(novo);
+    data.remaining.push(novo);
     salvarUsuarios(data);
     await interaction.reply(`✅ Você (${displayName}) foi cadastrado com sucesso.`);
   } else {
@@ -84,28 +100,27 @@ async function handleEntrar(interaction: ChatInputCommandInteraction, data: User
 
 async function handleRemover(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
   const userName = interaction.options.getString('nome', true);
-  if (data.all.includes(userName)) {
-    data.all = data.all.filter(u => u !== userName);
-    data.remaining = data.remaining.filter(u => u !== userName);
-    salvarUsuarios(data);
-    await interaction.reply(`🗑️ Usuário \`${userName}\` removido com sucesso.`);
-  } else {
-    await interaction.reply(`⚠️ O usuário \`${userName}\` não está na lista.`);
-  }
+  data.all = data.all.filter(u => u.name !== userName);
+  data.remaining = data.remaining.filter(u => u.name !== userName);
+  salvarUsuarios(data);
+  await interaction.reply(`🗑️ Usuário \`${userName}\` removido com sucesso.`);
 }
 
 async function handleListar(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
-  const todos = data.all.length ? `• ${data.all.join('\n• ')}` : '(nenhum)';
-  const pendentes = data.remaining.length ? `• ${data.remaining.join('\n• ')}` : '(nenhum)';
+  const todos = formatarUsuarios(data.all);
+  const pendentes = formatarUsuarios(data.remaining);
+  const jaSelecionados = data.all.filter(u => !data.remaining.some(r => r.id === u.id));
+  const selecionados = formatarUsuarios(jaSelecionados);
+
   await interaction.reply({
-    content: `📋 **Cadastrados:**\n${todos}\n\n🔄 **Ainda não sorteados:**\n${pendentes}`,
+    content: `📋 **Cadastrados:**\n${todos}\n\n🔄 **Ainda não sorteados:**\n${pendentes}\n\n✅ **Já sorteados:**\n${selecionados}`,
     ephemeral: true
   });
 }
 
 async function handleSelecionar(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
   const escolhido = escolherUsuario(data);
-  await interaction.reply(`🎯 O próximo selecionado é: **${escolhido}**`);
+  await interaction.reply(`🎯 O próximo selecionado é: <@${escolhido.id}> (**${escolhido.name}**)`);
 }
 
 async function handleResetar(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
@@ -114,7 +129,7 @@ async function handleResetar(interaction: ChatInputCommandInteraction, data: Use
   await interaction.reply(`🔄 Lista resetada! Todos os ${data.all.length} usuários estão disponíveis novamente.`);
 }
 
-// =================== Registro de comandos ===================
+// =================== Slash Commands ===================
 const commands = [
   new SlashCommandBuilder()
     .setName('cadastrar')
@@ -153,6 +168,10 @@ const commands = [
 
 // =================== Inicialização ===================
 if (process.env.NODE_ENV !== 'test') {
+  if (!TOKEN || !GUILD_ID) {
+    throw new Error('TOKEN e GUILD_ID são obrigatórios');
+  }
+
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
   const commandHandlers: Record<string, (i: ChatInputCommandInteraction, d: UserData) => Promise<void>> = {
@@ -165,14 +184,18 @@ if (process.env.NODE_ENV !== 'test') {
   };
 
   client.once('ready', async () => {
-    console.log(`🤖 Bot online como ${client.user?.tag}`);
+    if (!client.user) {
+      throw new Error('Cliente não inicializado corretamente');
+    }
+
+    console.log(`🤖 Bot online como ${client.user.tag}`);
 
     const rest = new REST({ version: '10' }).setToken(TOKEN);
-    await rest.put(Routes.applicationGuildCommands(client.user!.id, GUILD_ID), {
+    await rest.put(Routes.applicationGuildCommands(client.user.id, GUILD_ID), {
       body: commands
     });
 
-    console.log('✅ Comandos registrados no servidor com sucesso.');
+    console.log('✅ Comandos registrados com sucesso.');
     agendarSelecaoDiaria();
   });
 
@@ -193,7 +216,7 @@ if (process.env.NODE_ENV !== 'test') {
         const escolhido = escolherUsuario(data);
         const canal = await client.channels.fetch(CHANNEL_ID!);
         if (canal?.isTextBased()) {
-          (canal as TextChannel).send(`📢 Seleção diária:\n🎯 **${escolhido}** foi o escolhido do dia!`);
+          (canal as TextChannel).send(`📢 Seleção diária:\n🎯 <@${escolhido.id}> (**${escolhido.name}**) foi o escolhido do dia!`);
         }
       } catch (error) {
         console.error('Erro ao executar seleção diária:', error);
@@ -201,3 +224,16 @@ if (process.env.NODE_ENV !== 'test') {
     }, { timezone: TIMEZONE });
   }
 }
+
+// Exportar funções para testes
+export {
+  carregarUsuarios,
+  salvarUsuarios,
+  escolherUsuario,
+  handleCadastrar,
+  handleEntrar,
+  handleRemover,
+  handleListar,
+  handleSelecionar,
+  handleResetar
+};

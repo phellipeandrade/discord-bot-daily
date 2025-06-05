@@ -34,9 +34,9 @@ describe('Funções Utilitárias', () => {
 
     it('deve carregar corretamente o arquivo de usuários', () => {
       const mockData = {
-        all: ['user1', 'user2'],
-        remaining: ['user1'],
-        lastSelected: 'user2'
+        all: [{ name: 'user1', id: '123' }, { name: 'user2', id: '456' }],
+        remaining: [{ name: 'user1', id: '123' }],
+        lastSelected: { name: 'user2', id: '456' }
       };
 
       fs.existsSync.mockReturnValue(true);
@@ -59,9 +59,9 @@ describe('Funções Utilitárias', () => {
   describe('salvarUsuarios', () => {
     it('deve salvar corretamente os dados dos usuários', () => {
       const mockData = {
-        all: ['user1', 'user2'],
-        remaining: ['user1'],
-        lastSelected: 'user2'
+        all: [{ name: 'user1', id: '123' }, { name: 'user2', id: '456' }],
+        remaining: [{ name: 'user1', id: '123' }],
+        lastSelected: { name: 'user2', id: '456' }
       };
 
       salvarUsuarios(mockData);
@@ -75,9 +75,9 @@ describe('Funções Utilitárias', () => {
 
     it('deve manter a estrutura correta dos dados', () => {
       const mockData = {
-        all: ['user1', 'user2'],
-        remaining: ['user1'],
-        lastSelected: 'user2'
+        all: [{ name: 'user1', id: '123' }, { name: 'user2', id: '456' }],
+        remaining: [{ name: 'user1', id: '123' }],
+        lastSelected: { name: 'user2', id: '456' }
       };
 
       salvarUsuarios(mockData);
@@ -88,44 +88,63 @@ describe('Funções Utilitárias', () => {
       expect(savedData).toHaveProperty('lastSelected');
       expect(Array.isArray(savedData.all)).toBe(true);
       expect(Array.isArray(savedData.remaining)).toBe(true);
+      expect(savedData.all[0]).toHaveProperty('name');
+      expect(savedData.all[0]).toHaveProperty('id');
     });
   });
 
   describe('escolherUsuario', () => {
     it('deve escolher um usuário da lista remaining', () => {
       const mockData = {
-        all: ['user1', 'user2', 'user3'],
-        remaining: ['user1', 'user2'],
-        lastSelected: 'user3'
+        all: [
+          { name: 'user1', id: '123' },
+          { name: 'user2', id: '456' },
+          { name: 'user3', id: '789' }
+        ],
+        remaining: [
+          { name: 'user1', id: '123' },
+          { name: 'user2', id: '456' }
+        ],
+        lastSelected: { name: 'user3', id: '789' }
       };
 
       const result = escolherUsuario(mockData);
 
       expect(mockData.remaining).toHaveLength(1);
-      expect(mockData.all).toContain(result);
-      expect(mockData.lastSelected).toBe(result);
+      expect(mockData.all.some(u => u.id === result.id)).toBe(true);
+      expect(mockData.lastSelected).toEqual(result);
     });
 
     it('deve recarregar a lista remaining quando estiver vazia', () => {
       const mockData = {
-        all: ['user1', 'user2'],
+        all: [
+          { name: 'user1', id: '123' },
+          { name: 'user2', id: '456' }
+        ],
         remaining: [],
-        lastSelected: 'user2'
+        lastSelected: { name: 'user2', id: '456' }
       };
 
       const result = escolherUsuario(mockData);
 
       expect(mockData.remaining).toHaveLength(1);
-      expect(mockData.all).toContain(result);
-      expect(mockData.lastSelected).toBe(result);
+      expect(mockData.all.some(u => u.id === result.id)).toBe(true);
+      expect(mockData.lastSelected).toEqual(result);
       expect(mockData.all).toEqual(expect.arrayContaining(mockData.remaining));
     });
 
     it('deve manter a lista all inalterada após seleção', () => {
       const mockData = {
-        all: ['user1', 'user2', 'user3'],
-        remaining: ['user1', 'user2'],
-        lastSelected: 'user3'
+        all: [
+          { name: 'user1', id: '123' },
+          { name: 'user2', id: '456' },
+          { name: 'user3', id: '789' }
+        ],
+        remaining: [
+          { name: 'user1', id: '123' },
+          { name: 'user2', id: '456' }
+        ],
+        lastSelected: { name: 'user3', id: '789' }
       };
 
       const originalAll = [...mockData.all];

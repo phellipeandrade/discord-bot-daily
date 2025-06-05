@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test": "NODE_ENV=test jest",
+    "test:watch": "NODE_ENV=test jest --watch",
+    "test:coverage": "NODE_ENV=test jest --coverage",
     "prebuild": "mkdir -p build && cp src/users.json build/",
     "build": "tsc && esbuild dist/index.js --bundle --platform=node --outfile=build/index.js",
     "start": "node build/index.js",
     "dev": "ts-node src/index.ts",
-    "generate-zip": "zip -r bot.zip package.json .env build/",
+    "generate-zip": "rm -f bot.zip && zip -r bot.zip package.json .env build/",
     "build-zip": "npm run build && npm run generate-zip"
   },
   "author": "",
@@ -35,11 +35,10 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "coveragePathIgnorePatterns": [
-      "/node_modules/"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*.test.js"
-    ]
+    "moduleFileExtensions": ["ts", "js", "json", "node"],
+    "testMatch": ["**/__tests__/**/*.test.js"],
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    }
   }
 }
