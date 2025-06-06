@@ -8,7 +8,9 @@ import {
   TextChannel,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
+  Partials,
+  ButtonInteraction,
 } from 'discord.js';
 import * as cron from 'node-cron';
 import * as fs from 'fs';
@@ -212,9 +214,9 @@ async function handleLimparCoelhinhos(interaction: ChatInputCommandInteraction):
     return;
   }
 
-  // 2) Busca as últimas 100 mensagens (ou limite que desejar)
-  const messages = await (pedidosChannel as TextChannel).messages.fetch({ limit: 100 });
-  const botId = interaction.client.user!.id;
+  // 2) Busca as últimas 50 mensagens (ou limite que desejar)
+  const messages = await pedidosChannel.messages.fetch({ limit: 50 });
+  const botId = interaction.client.user.id;
   const coelhinho = '🐰';
   let removidas = 0;
 
@@ -236,6 +238,61 @@ async function handleLimparCoelhinhos(interaction: ChatInputCommandInteraction):
   await interaction.reply(`✅ Removidas ${removidas} reações 🐰 feitas pelo bot.`);
 }
 
+async function handlePlayButton(interaction: ButtonInteraction): Promise<void> {
+  const customId = interaction.customId;
+  if (!customId.startsWith('play_')) return;
+
+  const originalMessageId = customId.replace('play_', '');
+  const channel = await interaction.client.channels.fetch(MUSIC_CHANNEL_ID);
+  
+  if (!channel?.isTextBased()) {
+    await interaction.reply({
+      content: '❌ Falha ao tocar a música (canal de música não encontrado).',
+      ephemeral: true
+    });
+    return;
+  }
+
+  try {
+    const originalMsg = await (channel as TextChannel).messages.fetch(originalMessageId);
+    const linkRegex = /https?:\/\/\S+/i;
+    let linkParaPlay: string;
+
+    if (originalMsg.attachments.size > 0) {
+      linkParaPlay = originalMsg.attachments.first()!.url;
+    } else if (linkRegex.test(originalMsg.content)) {
+      const match = linkRegex.exec(originalMsg.content);
+      linkParaPlay = match![0];
+    } else if (originalMsg.embeds.length > 0) {
+      const embed = originalMsg.embeds[0];
+      linkParaPlay = embed.url ?? embed.data?.url ?? '';
+    } else {
+      linkParaPlay = '';
+    }
+
+    if (!linkParaPlay) {
+      await interaction.reply({
+        content: '❌ Não foi possível extrair o link desta música.',
+        ephemeral: true
+      });
+      return;
+    }
+
+    await (channel as TextChannel).send(`/play ${linkParaPlay}`);
+    await originalMsg.react('🐰');
+    await interaction.reply({
+      content: `▶️ Enviado \`/play ${linkParaPlay}\` para o bot de música.`,
+      ephemeral: true
+    });
+
+  } catch (error) {
+    console.error('Erro no botão "play_": ', error);
+    await interaction.reply({
+      content: '❌ Ocorreu um erro ao tentar tocar a música.',
+      ephemeral: true
+    });
+  }
+}
 
 // =================== Slash Commands ===================
 const commands = [
@@ -280,7 +337,15 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
+    GatewayIntentBits.MessageContent,
+
+    // Esta linha é essencial para "ver" e remover reações:
+    GatewayIntentBits.GuildMessageReactions
+  ],
+  partials: [
+    Partials.Message,
+    Partials.Reaction,
+    Partials.Channel
   ]
 });
 
@@ -317,40 +382,16 @@ if (process.env.NODE_ENV !== 'test') {
     agendarSelecaoDiaria();
   });
 
-  client.on('interactionCreate', async interaction => {
+  client.on('interactionCreate', async (interaction) => {
     if (interaction.isChatInputCommand()) {
       const data = carregarUsuarios();
       const handler = commandHandlers[interaction.commandName];
       if (handler) await handler(interaction, data);
     } else if (interaction.isButton()) {
-      const customId = interaction.customId;
-      if (!customId.startsWith('play_')) return;
-
-      const originalMessageId = customId.replace('play_', '');
-      const channel = await interaction.client.channels.fetch(MUSIC_CHANNEL_ID);
-      if (!channel?.isTextBased()) {
-        await interaction.reply({
-          content: '❌ Falha ao marcar a música como tocada (canal não encontrado).',
-          ephemeral: true
-        });
-        return;
-      }
-
-      try {
-        const originalMsg = await (channel as TextChannel).messages.fetch(originalMessageId);
-        await originalMsg.react('🐰');
-        await interaction.reply({
-          content: '✅ Música marcada como tocada (🐰)!',
-          ephemeral: true
-        });
-      } catch {
-        await interaction.reply({
-          content: '❌ Ocorreu um erro ao marcar a música como tocada.',
-          ephemeral: true
-        });
-      }
+      await handlePlayButton(interaction);
     }
   });
+  
 
   client.login(TOKEN);
 
