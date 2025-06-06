@@ -244,11 +244,11 @@ async function handlePlayButton(interaction: ButtonInteraction): Promise<void> {
 
   const originalMessageId = customId.replace('play_', '');
   const channel = await interaction.client.channels.fetch(MUSIC_CHANNEL_ID);
-  
+
   if (!channel?.isTextBased()) {
     await interaction.reply({
-      content: '❌ Falha ao tocar a música (canal de música não encontrado).',
-      ephemeral: true
+      content: '❌ Falha ao processar a música (canal de música não encontrado).',
+      flags: 1 << 6
     });
     return;
   }
@@ -273,26 +273,39 @@ async function handlePlayButton(interaction: ButtonInteraction): Promise<void> {
     if (!linkParaPlay) {
       await interaction.reply({
         content: '❌ Não foi possível extrair o link desta música.',
-        ephemeral: true
+        flags: 1 << 6
       });
       return;
     }
 
-    await (channel as TextChannel).send(`/play ${linkParaPlay}`);
+    // Marca a música com o emoji 🐰
     await originalMsg.react('🐰');
+
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel('🔗 Abrir link da música')
+        .setStyle(ButtonStyle.Link)
+        .setURL(linkParaPlay)
+    );
+
     await interaction.reply({
-      content: `▶️ Enviado \`/play ${linkParaPlay}\` para o bot de música.`,
-      ephemeral: true
+      content:
+        `✅ Música marcada como tocada!\n\n` +
+        `🎵 Para tocar a música no bot, copie e envie o comando abaixo:\n` +
+        `\`\`\`\n/play ${linkParaPlay}\n\`\`\``,
+      components: [row],
+      flags: 1 << 6
     });
 
   } catch (error) {
     console.error('Erro no botão "play_": ', error);
     await interaction.reply({
-      content: '❌ Ocorreu um erro ao tentar tocar a música.',
-      ephemeral: true
+      content: '❌ Ocorreu um erro ao processar a música.',
+      flags: 1 << 6
     });
   }
 }
+
 
 // =================== Slash Commands ===================
 const commands = [
