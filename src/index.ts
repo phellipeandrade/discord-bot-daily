@@ -5,7 +5,10 @@ import {
   Routes,
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  TextChannel
+  TextChannel,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
 } from 'discord.js';
 import * as cron from 'node-cron';
 import * as fs from 'fs';
@@ -15,17 +18,12 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 // =================== CONFIG ===================
-const TOKEN = process.env.DISCORD_TOKEN;
-const CHANNEL_ID = process.env.CHANNEL_ID;
-const GUILD_ID = process.env.GUILD_ID;
+const TOKEN = process.env.DISCORD_TOKEN!;
+const CHANNEL_ID = process.env.CHANNEL_ID!;
+const GUILD_ID = process.env.GUILD_ID!;
+const MUSIC_CHANNEL_ID = process.env.MUSIC_CHANNEL_ID!;
 const USERS_FILE = path.join(__dirname, 'users.json');
 const TIMEZONE = 'America/Sao_Paulo';
-
-// Não verificar variáveis de ambiente durante testes
-if (process.env.NODE_ENV !== 'test' && (!TOKEN || !CHANNEL_ID || !GUILD_ID)) {
-  console.error('❌ Faltam variáveis de ambiente: DISCORD_TOKEN, CHANNEL_ID, GUILD_ID.');
-  process.exit(1);
-}
 
 // =================== Interfaces ===================
 export interface UserEntry {
@@ -48,22 +46,20 @@ function carregarUsuarios(): UserData {
   }
   try {
     const data = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
-    // Validar se os dados estão no formato correto
     if (!Array.isArray(data.all) || !Array.isArray(data.remaining)) {
       throw new Error('Formato de dados inválido');
     }
-    // Validar se cada usuário tem as propriedades necessárias
-    const validarUsuario = (user: any): user is UserEntry => 
-      typeof user === 'object' && user !== null && 
-      typeof user.name === 'string' && 
+    const validarUsuario = (user: any): user is UserEntry =>
+      typeof user === 'object' &&
+      user !== null &&
+      typeof user.name === 'string' &&
       typeof user.id === 'string';
-    
+
     if (!data.all.every(validarUsuario) || !data.remaining.every(validarUsuario)) {
       throw new Error('Formato de usuário inválido');
     }
     return data;
-  } catch (error) {
-    console.error('Erro ao carregar usuários:', error);
+  } catch {
     const vazio: UserData = { all: [], remaining: [] };
     fs.writeFileSync(USERS_FILE, JSON.stringify(vazio, null, 2));
     return vazio;
@@ -86,15 +82,10 @@ function escolherUsuario(data: UserData): UserEntry {
 }
 
 export function formatarUsuarios(lista: UserEntry[]): string {
-  console.log('🔍 Dados recebidos em formatarUsuarios:', lista);
   return lista.length
-    ? lista.map(u => {
-        if (typeof u?.name !== 'string') {
-          console.warn('⚠️ Objeto inválido detectado:', u);
-          return '• [inválido]';
-        }
-        return `• ${u.name}`;
-      }).join('\n')
+    ? lista
+        .map(u => (typeof u?.name === 'string' ? `• ${u.name}` : '• [inválido]'))
+        .join('\n')
     : '(nenhum)';
 }
 
@@ -142,8 +133,6 @@ async function handleListar(interaction: ChatInputCommandInteraction, data: User
   const pendentes = formatarUsuarios(data.remaining);
   const jaSelecionados = data.all.filter(u => !data.remaining.some(r => r.id === u.id));
   const selecionados = formatarUsuarios(jaSelecionados);
-  console.log('🧪 all:', JSON.stringify(data.all, null, 2));
-  console.log('🧪 remaining:', JSON.stringify(data.remaining, null, 2));
   await interaction.reply({
     content: `📋 **Cadastrados:**\n${todos}\n\n🔄 **Ainda não sorteados:**\n${pendentes}\n\n✅ **Já sorteados:**\n${selecionados}`,
     flags: 1 << 6
@@ -160,13 +149,93 @@ async function handleResetar(interaction: ChatInputCommandInteraction, data: Use
     const originalData = JSON.parse(fs.readFileSync(path.join(__dirname, 'users.original.json'), 'utf-8'));
     salvarUsuarios(originalData);
     await interaction.reply(`🔄 Lista resetada ao estado original com ${originalData.all.length} usuários.`);
-  } catch (error) {
-    console.error('Erro ao resetar lista:', error);
+  } catch {
     data.remaining = [...data.all];
     salvarUsuarios(data);
     await interaction.reply(`🔄 Lista resetada! Todos os ${data.all.length} usuários estão disponíveis novamente.`);
   }
 }
+
+async function buscarProximaMusica(): Promise<{ texto: string; componentes?: ActionRowBuilder<ButtonBuilder>[] }> {
+  const pedidosChannel = await client.channels.fetch(MUSIC_CHANNEL_ID);
+  if (!pedidosChannel?.isTextBased()) {
+    return { texto: '✅ Nenhuma música válida encontrada.' };
+  }
+
+  const messages = await (pedidosChannel as TextChannel).messages.fetch({ limit: 50 });
+  const coelhinho = '🐰';
+  const linkRegex = /https?:\/\/\S+/i;
+
+  for (const msg of Array.from(messages.values()).reverse()) {
+    const coelho = msg.reactions.cache.find(r => r.emoji.name === coelhinho);
+    const jaTocada = !!coelho && coelho?.count > 0;
+    if (jaTocada) continue;
+
+    const temLinkNoContent = linkRegex.test(msg.content);
+    const temEmbed = msg.embeds.length > 0;
+    const temAttachment = msg.attachments.size > 0;
+    if (!temLinkNoContent && !temEmbed && !temAttachment) continue;
+
+    let linkExtraido: string;
+    if (temAttachment) {
+      linkExtraido = msg.attachments.first()!.url;
+    } else if (temLinkNoContent) {
+      linkExtraido = linkRegex.exec(msg.content)![0];
+    } else {
+      const embed = msg.embeds[0];
+      linkExtraido = embed.url ?? embed.data?.url ?? '';
+    }
+
+    const buttonTocar = new ButtonBuilder()
+      .setCustomId(`play_${msg.id}`)
+      .setLabel('▶️ Tocar música')
+      .setStyle(ButtonStyle.Primary);
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(buttonTocar);
+
+    const textoCompleto = `🎶 Próxima música: ${linkExtraido}\n🔗 [Ir para a mensagem original](${msg.url})`;
+    return { texto: textoCompleto, componentes: [row] };
+  }
+
+  return { texto: '✅ Todas as últimas músicas válidas já foram tocadas!' };
+}
+
+async function handleProximaMusica(interaction: ChatInputCommandInteraction): Promise<void> {
+  const { texto, componentes } = await buscarProximaMusica();
+  await interaction.reply({ content: texto, components: componentes });
+}
+
+async function handleLimparCoelhinhos(interaction: ChatInputCommandInteraction): Promise<void> {
+  // 1) Recupera o canal de pedidos de música
+  const pedidosChannel = await interaction.client.channels.fetch(MUSIC_CHANNEL_ID);
+  if (!pedidosChannel?.isTextBased()) {
+    await interaction.reply('❌ Não foi possível acessar o canal de pedidos de músicas.');
+    return;
+  }
+
+  // 2) Busca as últimas 100 mensagens (ou limite que desejar)
+  const messages = await (pedidosChannel as TextChannel).messages.fetch({ limit: 100 });
+  const botId = interaction.client.user!.id;
+  const coelhinho = '🐰';
+  let removidas = 0;
+
+  // 3) Para cada mensagem, procura reação 🐰 e, se o bot tiver reagido, remove apenas a reação do bot
+  for (const msg of messages.values()) {
+    const reaction = msg.reactions.cache.get(coelhinho);
+    if (!reaction) continue;
+
+    // reaction.users.remove(botId) remove apenas a reação daquele usuário específico
+    try {
+      await reaction.users.remove(botId);
+      removidas += 1;
+    } catch {
+      // se falhar em alguma mensagem, apenas ignora e continua
+    }
+  }
+
+  // 4) Responde ao usuário informando quantas remoções foram feitas
+  await interaction.reply(`✅ Removidas ${removidas} reações 🐰 feitas pelo bot.`);
+}
+
 
 // =================== Slash Commands ===================
 const commands = [
@@ -178,11 +247,9 @@ const commands = [
         .setDescription('Nome de exibição do usuário')
         .setRequired(true)
     ),
-
   new SlashCommandBuilder()
     .setName('entrar')
     .setDescription('Adiciona você mesmo à lista de usuários'),
-
   new SlashCommandBuilder()
     .setName('remover')
     .setDescription('Remove um usuário')
@@ -191,42 +258,52 @@ const commands = [
         .setDescription('Nome de exibição do usuário')
         .setRequired(true)
     ),
-
   new SlashCommandBuilder()
     .setName('listar')
     .setDescription('Lista todos os usuários cadastrados'),
-
   new SlashCommandBuilder()
     .setName('selecionar')
     .setDescription('Seleciona aleatoriamente o próximo usuário'),
-
   new SlashCommandBuilder()
     .setName('resetar')
-    .setDescription('Reseta a lista, tornando todos os usuários disponíveis novamente')
+    .setDescription('Reseta a lista, tornando todos os usuários disponíveis novamente'),
+  new SlashCommandBuilder()
+    .setName('proxima-musica')
+    .setDescription('Seleciona a próxima música do canal de pedidos'),
+  new SlashCommandBuilder()
+    .setName('limpar-coelhinhos')
+    .setDescription('Limpa todas as reações 🐰 feitas pelo bot')
 ].map(cmd => cmd.toJSON());
 
 // =================== Inicialização ===================
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
+
 if (process.env.NODE_ENV !== 'test') {
-  if (!TOKEN || !GUILD_ID) {
-    throw new Error('TOKEN e GUILD_ID são obrigatórios');
-  }
-
-  const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-
   const commandHandlers: Record<string, (i: ChatInputCommandInteraction, d: UserData) => Promise<void>> = {
     cadastrar: handleCadastrar,
     remover: handleRemover,
     listar: handleListar,
     selecionar: handleSelecionar,
     entrar: handleEntrar,
-    resetar: handleResetar
+    resetar: handleResetar,
+    'proxima-musica': async interaction => {
+      await handleProximaMusica(interaction);
+    },
+    'limpar-coelhinhos': async interaction => {
+      await handleLimparCoelhinhos(interaction);
+    }
   };
 
   client.once('ready', async () => {
-    if (!client.user) {
-      throw new Error('Cliente não inicializado corretamente');
-    }
+    if (!client.user) throw new Error('Cliente não inicializado corretamente');
 
+    // Log de inicialização
     console.log(`🤖 Bot online como ${client.user.tag}`);
 
     const rest = new REST({ version: '10' }).setToken(TOKEN);
@@ -234,33 +311,75 @@ if (process.env.NODE_ENV !== 'test') {
       body: commands
     });
 
+    // Log de registro de comandos
     console.log('✅ Comandos registrados com sucesso.');
+
     agendarSelecaoDiaria();
   });
 
   client.on('interactionCreate', async interaction => {
-    if (!interaction.isChatInputCommand()) return;
-    const data = carregarUsuarios();
-    const handler = commandHandlers[interaction.commandName];
-    if (handler) await handler(interaction, data);
+    if (interaction.isChatInputCommand()) {
+      const data = carregarUsuarios();
+      const handler = commandHandlers[interaction.commandName];
+      if (handler) await handler(interaction, data);
+    } else if (interaction.isButton()) {
+      const customId = interaction.customId;
+      if (!customId.startsWith('play_')) return;
+
+      const originalMessageId = customId.replace('play_', '');
+      const channel = await interaction.client.channels.fetch(MUSIC_CHANNEL_ID);
+      if (!channel?.isTextBased()) {
+        await interaction.reply({
+          content: '❌ Falha ao marcar a música como tocada (canal não encontrado).',
+          ephemeral: true
+        });
+        return;
+      }
+
+      try {
+        const originalMsg = await (channel as TextChannel).messages.fetch(originalMessageId);
+        await originalMsg.react('🐰');
+        await interaction.reply({
+          content: '✅ Música marcada como tocada (🐰)!',
+          ephemeral: true
+        });
+      } catch {
+        await interaction.reply({
+          content: '❌ Ocorreu um erro ao marcar a música como tocada.',
+          ephemeral: true
+        });
+      }
+    }
   });
 
   client.login(TOKEN);
 
   // =================== Agendamento ===================
   function agendarSelecaoDiaria(): void {
-    cron.schedule('0 9 * * 1-5', async () => {
-      try {
+    cron.schedule(
+      '0 9 * * 1-5',
+      async () => {
+        // 1) Seleciona quem conduz a daily
         const data = carregarUsuarios();
         const escolhido = escolherUsuario(data);
-        const canal = await client.channels.fetch(CHANNEL_ID!);
+
+        // 2) Recupera texto e componentes da próxima música
+        const { texto, componentes } = await buscarProximaMusica();
+
+        // 3) Envia a mensagem no canal de daily, incluindo texto existente + próxima música + botão
+        const canal = await client.channels.fetch(CHANNEL_ID);
         if (canal?.isTextBased()) {
-          (canal as TextChannel).send(`📢 Bom dia time!\n🎙️ Hoje a daily será conduzida por <@${escolhido.id}> (**${escolhido.name}**).`);
+          (canal as TextChannel).send({
+            content:
+              `📢 Bom dia time!\n` +
+              `🎙️ Hoje a daily será conduzida por <@${escolhido.id}> (**${escolhido.name}**).\n\n` +
+              texto,
+            components: componentes
+          });
         }
-      } catch (error) {
-        console.error('Erro ao executar seleção diária:', error);
-      }
-    }, { timezone: TIMEZONE });
+      },
+      { timezone: TIMEZONE }
+    );
   }
 }
 
@@ -274,5 +393,6 @@ export {
   handleRemover,
   handleListar,
   handleSelecionar,
-  handleResetar
+  handleResetar,
+  handleProximaMusica
 };
