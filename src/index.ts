@@ -16,6 +16,7 @@ import * as cron from 'node-cron';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import { isHoliday } from './holidays';
 
 dotenv.config();
 
@@ -413,6 +414,12 @@ if (process.env.NODE_ENV !== 'test') {
     cron.schedule(
       '0 9 * * 1-5',
       async () => {
+        // Verifica se é feriado
+        if (isHoliday(new Date())) {
+          console.log('🎉 Hoje é feriado! Não haverá sorteio da daily.');
+          return;
+        }
+
         // 1) Seleciona quem conduz a daily
         const data = carregarUsuarios();
         const escolhido = escolherUsuario(data);
