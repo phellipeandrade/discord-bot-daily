@@ -1,0 +1,70 @@
+{
+  "list.empty": "(none)",
+  "music.noValidMusic": "✅ No valid music found.",
+  "music.marked": "✅ Song marked as played!\n\n🎵 To play the song in the bot, copy and send the command below:\n```\n/play {{link}}\n```",
+  "music.reactionsCleared": "✅ Removed {{count}} 🐰 reactions made by the bot.",
+  "music.channelError": "Could not access the music channel.",
+  "music.processError": "Error processing the music.",
+  "music.extractError": "Could not extract music link.",
+  "music.next": "🎵 Next song: {{link}}\n\n📎 Message link: {{messageUrl}}",
+  "music.allPlayed": "✅ All recent songs have been played.",
+  "selection.readded": "✅ {{name}} has been readded to the selection list.",
+  "selection.notSelected": "❌ {{name}} is already in the selection list.",
+  "user.notFound": "❌ User {{name}} not found.",
+  "commands": {
+    "register": {
+      "name": "register",
+      "description": "Register a new user",
+      "options": {
+        "name": {
+          "name": "name",
+          "description": "User name"
+        }
+      }
+    },
+    "join": {
+      "name": "join",
+      "description": "Join the selection list"
+    },
+    "remove": {
+      "name": "remove",
+      "description": "Remove a user",
+      "options": {
+        "name": {
+          "name": "name",
+          "description": "User name"
+        }
+      }
+    },
+    "list": {
+      "name": "list",
+      "description": "List users"
+    },
+    "select": {
+      "name": "select",
+      "description": "Select a random user"
+    },
+    "reset": {
+      "name": "reset",
+      "description": "Reset the selection list"
+    },
+    "next-song": {
+      "name": "next-song",
+      "description": "Show the next unplayed song"
+    },
+    "clear-bunnies": {
+      "name": "clear-bunnies",
+      "description": "Remove bunny reactions made by the bot"
+    },
+    "readd": {
+      "name": "readd",
+      "description": "Readd a user to the selection list",
+      "options": {
+        "name": {
+          "name": "name",
+          "description": "User name"
+        }
+      }
+    }
+  }
+} 

@@ -17,6 +17,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { isHoliday } from './holidays';
+import { i18n } from './i18n';
 
 dotenv.config();
 
@@ -26,7 +27,11 @@ const CHANNEL_ID = process.env.CHANNEL_ID!;
 const GUILD_ID = process.env.GUILD_ID!;
 const MUSIC_CHANNEL_ID = process.env.MUSIC_CHANNEL_ID!;
 const USERS_FILE = path.join(__dirname, 'users.json');
-const TIMEZONE = 'America/Sao_Paulo';
+const TIMEZONE = process.env.TIMEZONE ?? 'America/Sao_Paulo';
+const LANGUAGE = process.env.BOT_LANGUAGE ?? 'pt-br';
+
+// Set bot language
+i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
 
 // =================== Interfaces ===================
 export interface UserEntry {
@@ -40,203 +45,206 @@ export interface UserData {
   lastSelected?: UserEntry;
 }
 
-// =================== Utilitários ===================
-function carregarUsuarios(): UserData {
-  if (!fs.existsSync(USERS_FILE)) {
-    const vazio: UserData = { all: [], remaining: [] };
-    fs.writeFileSync(USERS_FILE, JSON.stringify(vazio, null, 2));
-    return vazio;
-  }
+// =================== Utils ===================
+function loadUsers(): UserData {
   try {
-    const data = JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
-    if (!Array.isArray(data.all) || !Array.isArray(data.remaining)) {
-      throw new Error('Formato de dados inválido');
+    if (!fs.existsSync(USERS_FILE)) {
+      const emptyData: UserData = { all: [], remaining: [] };
+      saveUsers(emptyData);
+      return emptyData;
     }
-    const validarUsuario = (user: any): user is UserEntry =>
-      typeof user === 'object' &&
-      user !== null &&
-      typeof user.name === 'string' &&
-      typeof user.id === 'string';
-
-    if (!data.all.every(validarUsuario) || !data.remaining.every(validarUsuario)) {
-      throw new Error('Formato de usuário inválido');
-    }
-    return data;
+    return JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
   } catch {
-    const vazio: UserData = { all: [], remaining: [] };
-    fs.writeFileSync(USERS_FILE, JSON.stringify(vazio, null, 2));
-    return vazio;
+    const emptyData: UserData = { all: [], remaining: [] };
+    saveUsers(emptyData);
+    return emptyData;
   }
 }
 
-function salvarUsuarios(data: UserData): void {
+function saveUsers(data: UserData): void {
   fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-function escolherUsuario(data: UserData): UserEntry {
+function selectUser(data: UserData): UserEntry {
   if (data.remaining.length === 0) {
     data.remaining = [...data.all];
   }
   const index = Math.floor(Math.random() * data.remaining.length);
-  const escolhido = data.remaining.splice(index, 1)[0];
-  data.lastSelected = escolhido;
-  salvarUsuarios(data);
-  return escolhido;
+  const selected = data.remaining.splice(index, 1)[0];
+  data.lastSelected = selected;
+  saveUsers(data);
+  return selected;
 }
 
-export function formatarUsuarios(lista: UserEntry[]): string {
-  return lista.length
-    ? lista
-        .map(u => (typeof u?.name === 'string' ? `• ${u.name}` : '• [inválido]'))
-        .join('\n')
-    : '(nenhum)';
+function formatUsers(users: UserEntry[]): string {
+  if (users.length === 0) return i18n.t('list.empty');
+  return users.map(u => `• ${u.name}`).join('\n');
 }
 
 // =================== Handlers ===================
-async function handleCadastrar(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
-  const userName = interaction.options.getString('nome', true);
+async function handleRegister(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
+  const userName = interaction.options.getString('name', true);
   const userId = interaction.user.id;
 
   if (!data.all.some(u => u.id === userId)) {
-    const novo: UserEntry = { name: userName, id: userId };
-    data.all.push(novo);
-    data.remaining.push(novo);
-    salvarUsuarios(data);
-    await interaction.reply(`✅ Usuário \`${userName}\` cadastrado com sucesso.`);
+    const newUser: UserEntry = { name: userName, id: userId };
+    data.all.push(newUser);
+    data.remaining.push(newUser);
+    saveUsers(data);
+    await interaction.reply(i18n.t('user.registered', { name: userName }));
   } else {
-    await interaction.reply(`⚠️ O usuário \`${userName}\` já está cadastrado.`);
+    await interaction.reply(i18n.t('user.alreadyRegistered', { name: userName }));
   }
 }
 
-async function handleEntrar(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
+async function handleJoin(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
   const displayName = interaction.user.username;
   const userId = interaction.user.id;
 
   if (!data.all.some(u => u.id === userId)) {
-    const novo: UserEntry = { name: displayName, id: userId };
-    data.all.push(novo);
-    data.remaining.push(novo);
-    salvarUsuarios(data);
-    await interaction.reply(`✅ Você (${displayName}) foi cadastrado com sucesso.`);
+    const newUser: UserEntry = { name: displayName, id: userId };
+    data.all.push(newUser);
+    data.remaining.push(newUser);
+    saveUsers(data);
+    await interaction.reply(i18n.t('user.selfRegistered', { name: displayName }));
   } else {
-    await interaction.reply(`⚠️ Você (${displayName}) já está cadastrado.`);
+    await interaction.reply(i18n.t('user.alreadySelfRegistered', { name: displayName }));
   }
 }
 
-async function handleRemover(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
-  const userName = interaction.options.getString('nome', true);
+async function handleRemove(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
+  const userName = interaction.options.getString('name', true);
   data.all = data.all.filter(u => u.name !== userName);
   data.remaining = data.remaining.filter(u => u.name !== userName);
-  salvarUsuarios(data);
-  await interaction.reply(`🗑️ Usuário \`${userName}\` removido com sucesso.`);
+  saveUsers(data);
+  await interaction.reply(i18n.t('user.removed', { name: userName }));
 }
 
-async function handleListar(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
-  const todos = formatarUsuarios(data.all);
-  const pendentes = formatarUsuarios(data.remaining);
-  const jaSelecionados = data.all.filter(u => !data.remaining.some(r => r.id === u.id));
-  const selecionados = formatarUsuarios(jaSelecionados);
+async function handleList(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
+  const all = formatUsers(data.all);
+  const pending = formatUsers(data.remaining);
+  const selected = formatUsers(data.all.filter(u => !data.remaining.some(r => r.id === u.id)));
   await interaction.reply({
-    content: `📋 **Cadastrados:**\n${todos}\n\n🔄 **Ainda não sorteados:**\n${pendentes}\n\n✅ **Já sorteados:**\n${selecionados}`,
+    content: `${i18n.t('list.registered', { users: all })}\n\n${i18n.t('list.pending', { users: pending })}\n\n${i18n.t('list.selected', { users: selected })}`,
     flags: 1 << 6
   });
 }
 
-async function handleSelecionar(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
-  const escolhido = escolherUsuario(data);
-  await interaction.reply(`🎯 O próximo selecionado é: <@${escolhido.id}> (**${escolhido.name}**)`);
+async function handleSelect(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
+  const selected = selectUser(data);
+  await interaction.reply(i18n.t('selection.nextUser', { id: selected.id, name: selected.name }));
 }
 
-async function handleResetar(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
+async function handleReset(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
   try {
     const originalData = JSON.parse(fs.readFileSync(path.join(__dirname, 'users.original.json'), 'utf-8'));
-    salvarUsuarios(originalData);
-    await interaction.reply(`🔄 Lista resetada ao estado original com ${originalData.all.length} usuários.`);
+    saveUsers(originalData);
+    await interaction.reply(i18n.t('selection.resetOriginal', { count: originalData.all.length }));
   } catch {
     data.remaining = [...data.all];
-    salvarUsuarios(data);
-    await interaction.reply(`🔄 Lista resetada! Todos os ${data.all.length} usuários estão disponíveis novamente.`);
+    saveUsers(data);
+    await interaction.reply(i18n.t('selection.resetAll', { count: data.all.length }));
   }
 }
 
-async function buscarProximaMusica(): Promise<{ texto: string; componentes?: ActionRowBuilder<ButtonBuilder>[] }> {
-  const pedidosChannel = await client.channels.fetch(MUSIC_CHANNEL_ID);
-  if (!pedidosChannel?.isTextBased()) {
-    return { texto: '✅ Nenhuma música válida encontrada.' };
+async function handleReadd(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
+  const userName = interaction.options.getString('name', true);
+  const user = data.all.find(u => u.name === userName);
+  
+  if (user && !data.remaining.some(u => u.id === user.id)) {
+    data.remaining.push(user);
+    saveUsers(data);
+    await interaction.reply(i18n.t('selection.readded', { name: userName }));
+  } else if (user) {
+    await interaction.reply(i18n.t('selection.notSelected', { name: userName }));
+  } else {
+    await interaction.reply(i18n.t('user.notFound', { name: userName }));
+  }
+}
+
+async function findNextSong(): Promise<{ text: string; components?: ActionRowBuilder<ButtonBuilder>[] }> {
+  const requestsChannel = await client.channels.fetch(MUSIC_CHANNEL_ID);
+  if (!requestsChannel?.isTextBased()) {
+    return { text: i18n.t('music.channelError') };
   }
 
-  const messages = await (pedidosChannel as TextChannel).messages.fetch({ limit: 50 });
-  const coelhinho = '🐰';
+  const messages = await (requestsChannel as TextChannel).messages.fetch({ limit: 50 });
+  const bunny = '🐰';
   const linkRegex = /https?:\/\/\S+/i;
 
   for (const msg of Array.from(messages.values()).reverse()) {
-    const coelho = msg.reactions.cache.find(r => r.emoji.name === coelhinho);
-    const jaTocada = !!coelho && coelho?.count > 0;
-    if (jaTocada) continue;
+    const bunnyReaction = msg.reactions.cache.find(r => r.emoji.name === bunny);
+    const alreadyPlayed = !!bunnyReaction && bunnyReaction?.count > 0;
+    if (alreadyPlayed) continue;
 
-    const temLinkNoContent = linkRegex.test(msg.content);
-    const temEmbed = msg.embeds.length > 0;
-    const temAttachment = msg.attachments.size > 0;
-    if (!temLinkNoContent && !temEmbed && !temAttachment) continue;
+    const hasLinkInContent = linkRegex.test(msg.content);
+    const hasEmbed = msg.embeds.length > 0;
+    const hasAttachment = msg.attachments.size > 0;
+    if (!hasLinkInContent && !hasEmbed && !hasAttachment) continue;
 
-    let linkExtraido: string;
-    if (temAttachment) {
-      linkExtraido = msg.attachments.first()!.url;
-    } else if (temLinkNoContent) {
-      linkExtraido = linkRegex.exec(msg.content)![0];
+    let extractedLink: string;
+    if (hasAttachment) {
+      extractedLink = msg.attachments.first()!.url;
+    } else if (hasLinkInContent) {
+      extractedLink = linkRegex.exec(msg.content)![0];
     } else {
       const embed = msg.embeds[0];
-      linkExtraido = embed.url ?? embed.data?.url ?? '';
+      extractedLink = embed.url ?? embed.data?.url ?? '';
     }
 
-    const buttonTocar = new ButtonBuilder()
+    const playButton = new ButtonBuilder()
       .setCustomId(`play_${msg.id}`)
-      .setLabel('▶️ Tocar música')
+      .setLabel('▶️ Play song')
       .setStyle(ButtonStyle.Primary);
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(buttonTocar);
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(playButton);
 
-    const textoCompleto = `🎶 Próxima música: ${linkExtraido}\n🔗 [Ir para a mensagem original](${msg.url})`;
-    return { texto: textoCompleto, componentes: [row] };
+    return {
+      text: i18n.t('music.next', { link: extractedLink, messageUrl: msg.url }),
+      components: [row]
+    };
   }
 
-  return { texto: '✅ Todas as últimas músicas válidas já foram tocadas!' };
+  return { text: i18n.t('music.allPlayed') };
 }
 
-async function handleProximaMusica(interaction: ChatInputCommandInteraction): Promise<void> {
-  const { texto, componentes } = await buscarProximaMusica();
-  await interaction.reply({ content: texto, components: componentes });
+async function handleNextSong(interaction: ChatInputCommandInteraction): Promise<void> {
+  const { text, components } = await findNextSong();
+  await interaction.reply({ content: text, components });
 }
 
-async function handleLimparCoelhinhos(interaction: ChatInputCommandInteraction): Promise<void> {
-  // 1) Recupera o canal de pedidos de música
-  const pedidosChannel = await interaction.client.channels.fetch(MUSIC_CHANNEL_ID);
-  if (!pedidosChannel?.isTextBased()) {
-    await interaction.reply('❌ Não foi possível acessar o canal de pedidos de músicas.');
+async function handleClearReactions(interaction: ChatInputCommandInteraction): Promise<void> {
+  const channel = await interaction.client.channels.fetch(MUSIC_CHANNEL_ID);
+  if (!channel?.isTextBased()) {
+    await interaction.reply({
+      content: i18n.t('music.channelError'),
+      components: undefined
+    });
     return;
   }
 
-  // 2) Busca as últimas 50 mensagens (ou limite que desejar)
-  const messages = await pedidosChannel.messages.fetch({ limit: 50 });
-  const botId = interaction.client.user.id;
-  const coelhinho = '🐰';
-  let removidas = 0;
+  try {
+    const messages = await (channel as TextChannel).messages.fetch();
+    let count = 0;
 
-  // 3) Para cada mensagem, procura reação 🐰 e, se o bot tiver reagido, remove apenas a reação do bot
-  for (const msg of messages.values()) {
-    const reaction = msg.reactions.cache.get(coelhinho);
-    if (!reaction) continue;
-
-    // reaction.users.remove(botId) remove apenas a reação daquele usuário específico
-    try {
-      await reaction.users.remove(botId);
-      removidas += 1;
-    } catch {
-      // se falhar em alguma mensagem, apenas ignora e continua
+    for (const message of messages.values()) {
+      const bunnyReaction = message.reactions.cache.find(r => r.emoji.name === '🐰');
+      if (bunnyReaction) {
+        await bunnyReaction.remove();
+        count++;
+      }
     }
-  }
 
-  // 4) Responde ao usuário informando quantas remoções foram feitas
-  await interaction.reply(`✅ Removidas ${removidas} reações 🐰 feitas pelo bot.`);
+    await interaction.reply({
+      content: i18n.t('music.reactionsCleared', { count }),
+      components: undefined
+    });
+  } catch (error) {
+    console.error('Error clearing reactions:', error);
+    await interaction.reply({
+      content: i18n.t('music.processError'),
+      components: undefined
+    });
+  }
 }
 
 async function handlePlayButton(interaction: ButtonInteraction): Promise<void> {
@@ -248,7 +256,7 @@ async function handlePlayButton(interaction: ButtonInteraction): Promise<void> {
 
   if (!channel?.isTextBased()) {
     await interaction.reply({
-      content: '❌ Falha ao processar a música (canal de música não encontrado).',
+      content: i18n.t('music.channelError'),
       flags: 1 << 6
     });
     return;
@@ -257,103 +265,107 @@ async function handlePlayButton(interaction: ButtonInteraction): Promise<void> {
   try {
     const originalMsg = await (channel as TextChannel).messages.fetch(originalMessageId);
     const linkRegex = /https?:\/\/\S+/i;
-    let linkParaPlay: string;
+    let linkToPlay: string;
 
-    if (originalMsg.attachments.size > 0) {
-      linkParaPlay = originalMsg.attachments.first()!.url;
+    if (originalMsg.attachments?.size > 0) {
+      linkToPlay = originalMsg.attachments.first()!.url;
     } else if (linkRegex.test(originalMsg.content)) {
       const match = linkRegex.exec(originalMsg.content);
-      linkParaPlay = match![0];
-    } else if (originalMsg.embeds.length > 0) {
+      linkToPlay = match![0];
+    } else if (originalMsg.embeds?.length > 0) {
       const embed = originalMsg.embeds[0];
-      linkParaPlay = embed.url ?? embed.data?.url ?? '';
+      linkToPlay = embed.url ?? embed.data?.url ?? '';
     } else {
-      linkParaPlay = '';
+      linkToPlay = '';
     }
 
-    if (!linkParaPlay) {
+    if (!linkToPlay) {
       await interaction.reply({
-        content: '❌ Não foi possível extrair o link desta música.',
+        content: i18n.t('music.extractError'),
         flags: 1 << 6
       });
       return;
     }
 
-    // Marca a música com o emoji 🐰
     await originalMsg.react('🐰');
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setLabel('🔗 Abrir link da música')
+        .setLabel('🔗 Open song link')
         .setStyle(ButtonStyle.Link)
-        .setURL(linkParaPlay)
+        .setURL(linkToPlay)
     );
 
     await interaction.reply({
-      content:
-        `✅ Música marcada como tocada!\n\n` +
-        `🎵 Para tocar a música no bot, copie e envie o comando abaixo:\n` +
-        `\`\`\`\n/play ${linkParaPlay}\n\`\`\``,
+      content: i18n.t('music.marked', { link: linkToPlay }),
       components: [row],
       flags: 1 << 6
     });
 
   } catch (error) {
-    console.error('Erro no botão "play_": ', error);
+    console.error('Error in play button: ', error);
     await interaction.reply({
-      content: '❌ Ocorreu um erro ao processar a música.',
+      content: i18n.t('music.processError'),
       flags: 1 << 6
     });
   }
 }
 
-
 // =================== Slash Commands ===================
 const commands = [
   new SlashCommandBuilder()
-    .setName('cadastrar')
-    .setDescription('Cadastra um usuário pelo nome')
-    .addStringOption(opt =>
-      opt.setName('nome')
-        .setDescription('Nome de exibição do usuário')
+    .setName(i18n.getCommandName('register'))
+    .setDescription(i18n.getCommandDescription('register'))
+    .addStringOption(option =>
+      option
+        .setName(i18n.getOptionName('register', 'name'))
+        .setDescription(i18n.getOptionDescription('register', 'name'))
         .setRequired(true)
     ),
   new SlashCommandBuilder()
-    .setName('entrar')
-    .setDescription('Adiciona você mesmo à lista de usuários'),
+    .setName(i18n.getCommandName('join'))
+    .setDescription(i18n.getCommandDescription('join')),
   new SlashCommandBuilder()
-    .setName('remover')
-    .setDescription('Remove um usuário')
-    .addStringOption(opt =>
-      opt.setName('nome')
-        .setDescription('Nome de exibição do usuário')
+    .setName(i18n.getCommandName('remove'))
+    .setDescription(i18n.getCommandDescription('remove'))
+    .addStringOption(option =>
+      option
+        .setName(i18n.getOptionName('remove', 'name'))
+        .setDescription(i18n.getOptionDescription('remove', 'name'))
         .setRequired(true)
     ),
   new SlashCommandBuilder()
-    .setName('listar')
-    .setDescription('Lista todos os usuários cadastrados'),
+    .setName(i18n.getCommandName('list'))
+    .setDescription(i18n.getCommandDescription('list')),
   new SlashCommandBuilder()
-    .setName('selecionar')
-    .setDescription('Seleciona aleatoriamente o próximo usuário'),
+    .setName(i18n.getCommandName('select'))
+    .setDescription(i18n.getCommandDescription('select')),
   new SlashCommandBuilder()
-    .setName('resetar')
-    .setDescription('Reseta a lista, tornando todos os usuários disponíveis novamente'),
+    .setName(i18n.getCommandName('reset'))
+    .setDescription(i18n.getCommandDescription('reset')),
   new SlashCommandBuilder()
-    .setName('proxima-musica')
-    .setDescription('Seleciona a próxima música do canal de pedidos'),
+    .setName(i18n.getCommandName('next-song'))
+    .setDescription(i18n.getCommandDescription('next-song')),
   new SlashCommandBuilder()
-    .setName('limpar-coelhinhos')
-    .setDescription('Limpa todas as reações 🐰 feitas pelo bot')
+    .setName(i18n.getCommandName('clear-bunnies'))
+    .setDescription(i18n.getCommandDescription('clear-bunnies')),
+  new SlashCommandBuilder()
+    .setName(i18n.getCommandName('readd'))
+    .setDescription(i18n.getCommandDescription('readd'))
+    .addStringOption(option =>
+      option
+        .setName(i18n.getOptionName('readd', 'name'))
+        .setDescription(i18n.getOptionDescription('readd', 'name'))
+        .setRequired(true)
+    )
 ].map(cmd => cmd.toJSON());
 
-// =================== Inicialização ===================
+// =================== Initialization ===================
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-
-    // Esta linha é essencial para "ver" e remover reações:
     GatewayIntentBits.GuildMessageReactions
   ],
   partials: [
@@ -365,77 +377,70 @@ const client = new Client({
 
 if (process.env.NODE_ENV !== 'test') {
   const commandHandlers: Record<string, (i: ChatInputCommandInteraction, d: UserData) => Promise<void>> = {
-    cadastrar: handleCadastrar,
-    remover: handleRemover,
-    listar: handleListar,
-    selecionar: handleSelecionar,
-    entrar: handleEntrar,
-    resetar: handleResetar,
-    'proxima-musica': async interaction => {
-      await handleProximaMusica(interaction);
+    [i18n.getCommandName('register')]: handleRegister,
+    [i18n.getCommandName('remove')]: handleRemove,
+    [i18n.getCommandName('list')]: handleList,
+    [i18n.getCommandName('select')]: handleSelect,
+    [i18n.getCommandName('join')]: handleJoin,
+    [i18n.getCommandName('reset')]: handleReset,
+    [i18n.getCommandName('next-song')]: async interaction => {
+      await handleNextSong(interaction);
     },
-    'limpar-coelhinhos': async interaction => {
-      await handleLimparCoelhinhos(interaction);
-    }
+    [i18n.getCommandName('clear-bunnies')]: async interaction => {
+      await handleClearReactions(interaction);
+    },
+    [i18n.getCommandName('readd')]: handleReadd
   };
 
   client.once('ready', async () => {
-    if (!client.user) throw new Error('Cliente não inicializado corretamente');
+    if (!client.user) throw new Error('Client not properly initialized');
 
-    // Log de inicialização
-    console.log(`🤖 Bot online como ${client.user.tag}`);
+    console.log(`🤖 Bot online as ${client.user.tag}`);
 
     const rest = new REST({ version: '10' }).setToken(TOKEN);
     await rest.put(Routes.applicationGuildCommands(client.user.id, GUILD_ID), {
       body: commands
     });
 
-    // Log de registro de comandos
-    console.log('✅ Comandos registrados com sucesso.');
+    console.log('✅ Commands registered successfully.');
 
-    agendarSelecaoDiaria();
+    scheduleDailySelection();
   });
 
   client.on('interactionCreate', async (interaction) => {
     if (interaction.isChatInputCommand()) {
-      const data = carregarUsuarios();
+      const data = loadUsers();
       const handler = commandHandlers[interaction.commandName];
       if (handler) await handler(interaction, data);
     } else if (interaction.isButton()) {
       await handlePlayButton(interaction);
     }
   });
-  
 
   client.login(TOKEN);
 
-  // =================== Agendamento ===================
-  function agendarSelecaoDiaria(): void {
+  // =================== Scheduling ===================
+  function scheduleDailySelection(): void {
     cron.schedule(
       '0 9 * * 1-5',
       async () => {
-        // Verifica se é feriado
         if (isHoliday(new Date())) {
-          console.log('🎉 Hoje é feriado! Não haverá sorteio da daily.');
+          console.log(i18n.t('daily.holiday'));
           return;
         }
 
-        // 1) Seleciona quem conduz a daily
-        const data = carregarUsuarios();
-        const escolhido = escolherUsuario(data);
+        const data = loadUsers();
+        const selected = selectUser(data);
 
-        // 2) Recupera texto e componentes da próxima música
-        const { texto, componentes } = await buscarProximaMusica();
+        const { text, components } = await findNextSong();
 
-        // 3) Envia a mensagem no canal de daily, incluindo texto existente + próxima música + botão
-        const canal = await client.channels.fetch(CHANNEL_ID);
-        if (canal?.isTextBased()) {
-          (canal as TextChannel).send({
+        const channel = await client.channels.fetch(CHANNEL_ID);
+        if (channel?.isTextBased()) {
+          (channel as TextChannel).send({
             content:
-              `📢 Bom dia time!\n` +
-              `🎙️ Hoje a daily será conduzida por <@${escolhido.id}> (**${escolhido.name}**).\n\n` +
-              texto,
-            components: componentes
+              `${i18n.t('daily.announcement', { id: selected.id, name: selected.name })}\n\n` +
+              text,
+            components
           });
         }
       },
@@ -444,16 +449,20 @@ if (process.env.NODE_ENV !== 'test') {
   }
 }
 
-// Exportar funções para testes
+// Export functions for testing
 export {
-  carregarUsuarios,
-  salvarUsuarios,
-  escolherUsuario,
-  handleCadastrar,
-  handleEntrar,
-  handleRemover,
-  handleListar,
-  handleSelecionar,
-  handleResetar,
-  handleProximaMusica
+  loadUsers,
+  saveUsers,
+  selectUser,
+  formatUsers,
+  handleRegister,
+  handleJoin,
+  handleRemove,
+  handleList,
+  handleSelect,
+  handleReset,
+  handleNextSong,
+  findNextSong,
+  handlePlayButton,
+  handleClearReactions
 };
