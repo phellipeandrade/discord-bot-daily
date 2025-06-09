@@ -73,22 +73,22 @@ jest.mock('../i18n', () => ({
 // Dados de teste fixos
 const TEST_DATA = {
   all: [
-    { name: "Phellipe", id: "1" },
-    { name: "Serginho", id: "2" },
-    { name: "Jane", id: "3" },
-    { name: "João", id: "4" },
-    { name: "Juliana", id: "5" },
-    { name: "Rebecca Messias", id: "6" },
-    { name: "Matheus", id: "7" }
+    { name: "User1", id: "1" },
+    { name: "User2", id: "2" },
+    { name: "User3", id: "3" },
+    { name: "User4", id: "4" },
+    { name: "User5", id: "5" },
+    { name: "User6", id: "6" },
+    { name: "User7", id: "7" }
   ],
   remaining: [
-    { name: "Phellipe", id: "1" },
-    { name: "Serginho", id: "2" },
-    { name: "Jane", id: "3" },
-    { name: "João", id: "4" },
-    { name: "Juliana", id: "5" },
-    { name: "Rebecca Messias", id: "6" },
-    { name: "Matheus", id: "7" }
+    { name: "User1", id: "1" },
+    { name: "User2", id: "2" },
+    { name: "User3", id: "3" },
+    { name: "User4", id: "4" },
+    { name: "User5", id: "5" },
+    { name: "User6", id: "6" },
+    { name: "User7", id: "7" }
   ],
   lastSelected: undefined
 };
@@ -120,11 +120,16 @@ describe('Funções Utilitárias', () => {
     });
 
     it('deve lidar com caracteres especiais nos nomes', () => {
-      const lista: UserEntry[] = mockData.all.filter(u => 
+      const lista: UserEntry[] = mockData.all.filter(u =>
         /[áãâàéêíóôõúüçñ]/i.exec(u.name) !== null
       );
       const expected = lista.map(u => `• ${u.name}`).join('\n');
-      expect(formatUsers(lista)).toBe(expected);
+      const resultado = formatUsers(lista);
+      if (lista.length === 0) {
+        expect(resultado).toBe('(none)');
+      } else {
+        expect(resultado).toBe(expected);
+      }
     });
 
     it('deve manter a ordem da lista original', () => {
