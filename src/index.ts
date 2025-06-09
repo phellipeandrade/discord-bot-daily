@@ -29,6 +29,12 @@ const MUSIC_CHANNEL_ID = process.env.MUSIC_CHANNEL_ID!;
 const USERS_FILE = path.join(__dirname, 'users.json');
 const TIMEZONE = process.env.TIMEZONE ?? 'America/Sao_Paulo';
 const LANGUAGE = process.env.BOT_LANGUAGE ?? 'pt-br';
+const DAILY_TIME = process.env.DAILY_TIME ?? '09:00';
+const DAILY_DAYS = process.env.DAILY_DAYS ?? '1-5';
+const HOLIDAY_COUNTRIES = (process.env.HOLIDAY_COUNTRIES ?? 'BR')
+  .split(',')
+  .map(c => c.trim().toUpperCase())
+  .filter(c => c);
 
 // Set bot language
 i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
@@ -421,10 +427,12 @@ if (process.env.NODE_ENV !== 'test') {
 
   // =================== Scheduling ===================
   function scheduleDailySelection(): void {
+    const [hour, minute] = DAILY_TIME.split(':').map(n => parseInt(n, 10));
+    const cronExpr = `${minute} ${hour} * * ${DAILY_DAYS}`;
     cron.schedule(
-      '0 9 * * 1-5',
+      cronExpr,
       async () => {
-        if (isHoliday(new Date())) {
+        if (isHoliday(new Date(), HOLIDAY_COUNTRIES)) {
           console.log(i18n.t('daily.holiday'));
           return;
         }

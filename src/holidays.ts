@@ -1,5 +1,5 @@
 interface Holiday {
-  date: string; // formato: DD/MM
+  date: string; // format: DD/MM
   name: string;
 }
 
@@ -13,6 +13,34 @@ export const BRAZILIAN_FIXED_HOLIDAYS: Holiday[] = [
   { date: '15/11', name: 'Proclamação da República' },
   { date: '25/12', name: 'Natal' }
 ];
+
+const US_FIXED_HOLIDAYS: Holiday[] = [
+  { date: '01/01', name: "New Year's Day" },
+  { date: '04/07', name: 'Independence Day' },
+  { date: '11/11', name: 'Veterans Day' },
+  { date: '25/12', name: 'Christmas Day' }
+];
+
+function nthWeekdayOfMonth(year: number, month: number, weekday: number, n: number): Date {
+  const date = new Date(year, month, 1);
+  let count = 0;
+  while (date.getMonth() === month) {
+    if (date.getDay() === weekday) {
+      count++;
+      if (count === n) break;
+    }
+    date.setDate(date.getDate() + 1);
+  }
+  return date;
+}
+
+function lastWeekdayOfMonth(year: number, month: number, weekday: number): Date {
+  const date = new Date(year, month + 1, 0); // last day of month
+  while (date.getDay() !== weekday) {
+    date.setDate(date.getDate() - 1);
+  }
+  return date;
+}
 
 function calculateEasterDate(year: number): Date {
   const f = Math.floor;
@@ -33,7 +61,7 @@ function formatDate(date: Date): string {
   return `${day}/${month}`;
 }
 
-function getMovableHolidays(year: number): Holiday[] {
+function getBrazilianMovableHolidays(year: number): Holiday[] {
   const easter = calculateEasterDate(year);
   const holidays: Holiday[] = [];
 
@@ -55,12 +83,48 @@ function getMovableHolidays(year: number): Holiday[] {
   return holidays;
 }
 
-export function getBrazilianHolidays(year: number = new Date().getFullYear()): Holiday[] {
-  return [...BRAZILIAN_FIXED_HOLIDAYS, ...getMovableHolidays(year)];
+function getUSMovableHolidays(year: number): Holiday[] {
+  const holidays: Holiday[] = [];
+
+  const mlk = nthWeekdayOfMonth(year, 0, 1, 3); // third Monday January
+  holidays.push({ date: formatDate(mlk), name: 'Martin Luther King Jr. Day' });
+
+  const memorial = lastWeekdayOfMonth(year, 4, 1); // last Monday May
+  holidays.push({ date: formatDate(memorial), name: 'Memorial Day' });
+
+  const labor = nthWeekdayOfMonth(year, 8, 1, 1); // first Monday September
+  holidays.push({ date: formatDate(labor), name: 'Labor Day' });
+
+  const thanksgiving = nthWeekdayOfMonth(year, 10, 4, 4); // fourth Thursday November
+  holidays.push({ date: formatDate(thanksgiving), name: 'Thanksgiving' });
+
+  return holidays;
 }
 
-export function isHoliday(date: Date): boolean {
-  const holidays = getBrazilianHolidays(date.getFullYear());
+export function getBrazilianHolidays(year: number = new Date().getFullYear()): Holiday[] {
+  return [...BRAZILIAN_FIXED_HOLIDAYS, ...getBrazilianMovableHolidays(year)];
+}
+
+export function getUSHolidays(year: number = new Date().getFullYear()): Holiday[] {
+  return [...US_FIXED_HOLIDAYS, ...getUSMovableHolidays(year)];
+}
+
+export function getHolidays(countries: string[] = ['BR'], year: number = new Date().getFullYear()): Holiday[] {
+  const list: Holiday[] = [];
+  for (const c of countries.map(c => c.toUpperCase())) {
+    if (c === 'BR') list.push(...getBrazilianHolidays(year));
+    else if (c === 'US') list.push(...getUSHolidays(year));
+  }
+  const seen = new Set<string>();
+  return list.filter(h => {
+    if (seen.has(h.date)) return false;
+    seen.add(h.date);
+    return true;
+  });
+}
+
+export function isHoliday(date: Date, countries: string[] = ['BR']): boolean {
+  const holidays = getHolidays(countries, date.getFullYear());
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const dateStr = `${day}/${month}`;

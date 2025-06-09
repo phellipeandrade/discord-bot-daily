@@ -5,7 +5,8 @@ Discord bot that automatically selects a random user each weekday and manages mu
 ## Features
 
 - Slash commands to register users, list participants and manage selections
-- Daily selection at 9 AM (timezone configurable) skipping Brazilian holidays
+- Daily selection at a configurable time and weekdays
+  (timezone and holiday countries can be set via environment variables)
 - Music utilities to fetch the next unplayed song from a channel
 - Optional multilingual responses (English default, Portuguese-BR available)
 
@@ -32,7 +33,13 @@ MUSIC_CHANNEL_ID=id-of-channel-with-song-requests
 # Optional
 TIMEZONE=America/Sao_Paulo
 BOT_LANGUAGE=en
+DAILY_TIME=09:00
+DAILY_DAYS=1-5
+HOLIDAY_COUNTRIES=BR
 ```
+`DAILY_TIME` uses 24h format `HH:MM` and `DAILY_DAYS` follows cron day-of-week
+syntax (e.g. `1-5` for Monday–Friday). `HOLIDAY_COUNTRIES` is a comma-separated
+list of country codes (currently `BR` and `US` are supported).
 
 ## Usage
 

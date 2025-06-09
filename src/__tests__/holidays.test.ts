@@ -1,4 +1,9 @@
-import { isHoliday, getBrazilianHolidays, BRAZILIAN_FIXED_HOLIDAYS } from '../holidays';
+import {
+  isHoliday,
+  getBrazilianHolidays,
+  BRAZILIAN_FIXED_HOLIDAYS,
+  getUSHolidays
+} from '../holidays';
 
 describe('Módulo de Feriados', () => {
   describe('Feriados Fixos', () => {
@@ -73,4 +78,23 @@ describe('Módulo de Feriados', () => {
       expect(datasUnicas.size).toBe(datas.length);
     });
   });
-}); 
+
+  describe('Feriados dos EUA', () => {
+    const feriadosUS2024 = getUSHolidays(2024);
+
+    test('deve incluir Thanksgiving em 28/11/2024', () => {
+      const tg = feriadosUS2024.find(h => h.name === 'Thanksgiving');
+      expect(tg?.date).toBe('28/11');
+    });
+
+    test('isHoliday deve reconhecer Independence Day', () => {
+      const date = new Date(2024, 6, 4); // 4 de julho
+      expect(isHoliday(date, ['US'])).toBe(true);
+    });
+
+    test('isHoliday deve considerar múltiplos países', () => {
+      const date = new Date(2024, 0, 1); // 1 de janeiro
+      expect(isHoliday(date, ['BR', 'US'])).toBe(true);
+    });
+  });
+});
