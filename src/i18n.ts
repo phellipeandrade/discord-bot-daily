@@ -1,79 +1,74 @@
+import i18next from 'i18next';
 import * as fs from 'fs';
 import * as path from 'path';
 
-type Language = 'en' | 'pt-br';
+export type Language = 'en' | 'pt-br';
 
-interface I18nConfig {
-  defaultLanguage: Language;
-  currentLanguage: Language;
-  translations: Record<Language, any>;
+interface CommandOption {
+  name: string;
+  description: string;
 }
 
-class I18n {
-  private static instance: I18n;
-  private readonly config: I18nConfig;
-
-  private constructor() {
-    this.config = {
-      defaultLanguage: 'en',
-      currentLanguage: 'en',
-      translations: {
-        'en': process.env.NODE_ENV === 'test'
-          ? {}
-          : JSON.parse(fs.readFileSync(path.join(__dirname, 'i18n/en.json'), 'utf-8')),
-        'pt-br': process.env.NODE_ENV === 'test'
-          ? {}
-          : JSON.parse(fs.readFileSync(path.join(__dirname, 'i18n/pt-br.json'), 'utf-8'))
-      }
-    };
-  }
-
-  public static getInstance(): I18n {
-    if (!I18n.instance) {
-      I18n.instance = new I18n();
-    }
-    return I18n.instance;
-  }
-
-  public setLanguage(lang: Language): void {
-    this.config.currentLanguage = lang;
-  }
-
-  public t(key: string, params: Record<string, any> = {}): string {
-    const keys = key.split('.');
-    let value = this.config.translations[this.config.currentLanguage];
-
-    for (const k of keys) {
-      if (!value[k]) {
-        console.warn(`Translation key not found: ${key}`);
-        value = this.config.translations[this.config.defaultLanguage];
-        break;
-      }
-      value = value[k];
-    }
-
-    return this.interpolate(value, params);
-  }
-
-  private interpolate(text: string, params: Record<string, any>): string {
-    return text.replace(/\{\{(\w+)\}\}/g, (_, key) => params[key] ?? `{{${key}}}`);
-  }
-
-  public getCommandName(command: string): string {
-    return this.config.translations[this.config.currentLanguage]?.commands?.[command]?.name ?? command;
-  }
-
-  public getCommandDescription(command: string): string {
-    return this.config.translations[this.config.currentLanguage]?.commands?.[command]?.description ?? '';
-  }
-
-  public getOptionName(command: string, option: string): string {
-    return this.config.translations[this.config.currentLanguage]?.commands?.[command]?.options?.[option]?.name ?? option;
-  }
-
-  public getOptionDescription(command: string, option: string): string {
-    return this.config.translations[this.config.currentLanguage]?.commands?.[command]?.options?.[option]?.description ?? '';
-  }
+interface Command {
+  name: string;
+  description: string;
+  options?: Record<string, CommandOption>;
 }
 
-export const i18n = I18n.getInstance(); 
+interface TranslationResource {
+  commands: Record<string, Command>;
+  [key: string]: unknown;
+}
+
+const loadTranslations = (lang: Language): TranslationResource => {
+  try {
+    return process.env.NODE_ENV === 'test'
+      ? { commands: {} }
+      : JSON.parse(fs.readFileSync(path.join(__dirname, `i18n/${lang}.json`), 'utf-8'));
+  } catch (error) {
+    console.error(`Failed to load translations for ${lang}:`, error);
+    return { commands: {} };
+  }
+};
+
+i18next.init({
+  lng: 'en',
+  fallbackLng: 'en',
+  resources: {
+    en: {
+      translation: loadTranslations('en')
+    },
+    'pt-br': {
+      translation: loadTranslations('pt-br')
+    }
+  },
+  interpolation: {
+    escapeValue: false
+  }
+});
+
+export const i18n = {
+  t: (key: string, params: Record<string, string | number> = {}): string => {
+    return i18next.t(key, params);
+  },
+
+  setLanguage: (lang: Language): void => {
+    i18next.changeLanguage(lang);
+  },
+
+  getCommandName: (command: string): string => {
+    return i18next.t(`commands.${command}.name`, { defaultValue: command });
+  },
+
+  getCommandDescription: (command: string): string => {
+    return i18next.t(`commands.${command}.description`, { defaultValue: '' });
+  },
+
+  getOptionName: (command: string, option: string): string => {
+    return i18next.t(`commands.${command}.options.${option}.name`, { defaultValue: option });
+  },
+
+  getOptionDescription: (command: string, option: string): string => {
+    return i18next.t(`commands.${command}.options.${option}.description`, { defaultValue: '' });
+  }
+}; 

@@ -9,10 +9,17 @@ import {
 } from '../handlers';
 import { saveUsers, selectUser, type UserData } from '../users';
 import * as fs from 'fs';
+import { ChatInputCommandInteraction } from 'discord.js';
 
 jest.mock('../i18n', () => ({
   i18n: {
-    t: jest.fn((key: string) => key),
+    t: jest.fn((key: string, params: Record<string, string | number> = {}) => {
+      const text = key;
+      return text.replace(/\{\{(\w+)\}\}/g, (_, paramKey) => {
+        const value = params[paramKey];
+        return value !== undefined ? String(value) : `{{${paramKey}}}`;
+      });
+    }),
     getCommandName: jest.fn((c: string) => c),
     getCommandDescription: jest.fn(() => ''),
     getOptionName: jest.fn(() => ''),
@@ -21,21 +28,24 @@ jest.mock('../i18n', () => ({
 }));
 
 jest.mock('../users');
-
 jest.mock('fs');
 
 const mockSave = saveUsers as jest.Mock;
 const mockSelect = selectUser as jest.Mock;
-const mockFs: any = fs;
+const mockFs = fs as jest.Mocked<typeof fs>;
 
-function createInteraction(options: Record<string, any> = {}) {
+interface MockInteractionOptions {
+  [key: string]: string | undefined;
+}
+
+function createInteraction(options: MockInteractionOptions = {}) {
   return {
     options: {
       getString: jest.fn().mockImplementation((n: string) => options[n])
     },
     user: { id: '10', username: 'tester' },
     reply: jest.fn()
-  } as any;
+  } as unknown as ChatInputCommandInteraction;
 }
 
 describe('handlers', () => {
@@ -81,7 +91,8 @@ describe('handlers', () => {
   });
 
   test('handleSelect selects user', async () => {
-    mockSelect.mockResolvedValue({ name: 'A', id: '1' });
+    const selectedUser = { name: 'A', id: '1' };
+    mockSelect.mockImplementation(() => Promise.resolve(selectedUser));
     const interaction = createInteraction();
     await handleSelect(interaction, data);
     expect(mockSelect).toHaveBeenCalled();
@@ -89,7 +100,7 @@ describe('handlers', () => {
   });
 
   test('handleReset loads original file', async () => {
-    mockFs.promises.readFile.mockResolvedValue(JSON.stringify({ all: [] }));
+    (mockFs.promises.readFile as jest.Mock).mockResolvedValue(JSON.stringify({ all: [] }));
     const interaction = createInteraction();
     await handleReset(interaction, data);
     expect(mockSave).toHaveBeenCalled();

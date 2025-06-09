@@ -10,7 +10,12 @@
   "music.allPlayed": "✅ Todas as músicas recentes já foram tocadas.",
   "selection.readded": "✅ {{name}} foi readicionado(a) à lista de seleção.",
   "selection.notSelected": "❌ {{name}} já está na lista de seleção.",
+  "selection.resetOriginal": "✅ Lista de seleção foi resetada para o estado original.",
+  "selection.resetAll": "✅ {{count}} usuários foram readicionados à lista de seleção.",
   "user.notFound": "❌ Usuário {{name}} não encontrado.",
+  "user.registered": "✅ Usuário {{name}} foi registrado com sucesso!",
+  "user.selfRegistered": "✅ Você foi registrado(a) com sucesso!",
+  "user.removed": "✅ Usuário {{name}} foi removido com sucesso!",
   "commands": {
     "register": {
       "name": "registrar",
