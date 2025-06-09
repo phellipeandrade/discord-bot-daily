@@ -6,7 +6,6 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   Partials,
-  ButtonInteraction,
   TextChannel
 } from 'discord.js';
 import * as cron from 'node-cron';
@@ -144,7 +143,7 @@ if (process.env.NODE_ENV !== 'test') {
       const handler = commandHandlers[interaction.commandName];
       if (handler) await handler(interaction, data);
     } else if (interaction.isButton()) {
-      await handlePlayButton(interaction as ButtonInteraction);
+      await handlePlayButton(interaction);
     }
   });
 
