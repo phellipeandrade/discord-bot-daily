@@ -15,7 +15,7 @@
     "build-zip": "npm run clean && npm run build && npm run generate-zip"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "description": "",
   "dependencies": {
     "discord.js": "^14.19.3",
