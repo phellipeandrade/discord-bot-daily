@@ -18,8 +18,12 @@ class I18n {
       defaultLanguage: 'en',
       currentLanguage: 'en',
       translations: {
-        'en': process.env.NODE_ENV === 'test' ? {} : JSON.parse(fs.readFileSync(path.join(__dirname, '../i18n/en.json'), 'utf-8')),
-        'pt-br': process.env.NODE_ENV === 'test' ? {} : JSON.parse(fs.readFileSync(path.join(__dirname, '../i18n/pt-br.json'), 'utf-8'))
+        'en': process.env.NODE_ENV === 'test'
+          ? {}
+          : JSON.parse(fs.readFileSync(path.join(__dirname, 'i18n/en.json'), 'utf-8')),
+        'pt-br': process.env.NODE_ENV === 'test'
+          ? {}
+          : JSON.parse(fs.readFileSync(path.join(__dirname, 'i18n/pt-br.json'), 'utf-8'))
       }
     };
   }

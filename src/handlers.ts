@@ -12,7 +12,7 @@ export async function handleRegister(interaction: ChatInputCommandInteraction, d
     const newUser: UserEntry = { name: userName, id: userId };
     data.all.push(newUser);
     data.remaining.push(newUser);
-    saveUsers(data);
+    await saveUsers(data);
     await interaction.reply(i18n.t('user.registered', { name: userName }));
   } else {
     await interaction.reply(i18n.t('user.alreadyRegistered', { name: userName }));
@@ -27,7 +27,7 @@ export async function handleJoin(interaction: ChatInputCommandInteraction, data:
     const newUser: UserEntry = { name: displayName, id: userId };
     data.all.push(newUser);
     data.remaining.push(newUser);
-    saveUsers(data);
+    await saveUsers(data);
     await interaction.reply(i18n.t('user.selfRegistered', { name: displayName }));
   } else {
     await interaction.reply(i18n.t('user.alreadySelfRegistered', { name: displayName }));
@@ -38,7 +38,7 @@ export async function handleRemove(interaction: ChatInputCommandInteraction, dat
   const userName = interaction.options.getString('name', true);
   data.all = data.all.filter(u => u.name !== userName);
   data.remaining = data.remaining.filter(u => u.name !== userName);
-  saveUsers(data);
+  await saveUsers(data);
   await interaction.reply(i18n.t('user.removed', { name: userName }));
 }
 
@@ -53,18 +53,18 @@ export async function handleList(interaction: ChatInputCommandInteraction, data:
 }
 
 export async function handleSelect(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
-  const selected = selectUser(data);
+  const selected = await selectUser(data);
   await interaction.reply(i18n.t('selection.nextUser', { id: selected.id, name: selected.name }));
 }
 
 export async function handleReset(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
   try {
-    const originalData = JSON.parse(fs.readFileSync(path.join(__dirname, 'users.original.json'), 'utf-8'));
-    saveUsers(originalData);
+    const originalData = JSON.parse(await fs.promises.readFile(path.join(__dirname, 'users.original.json'), 'utf-8'));
+    await saveUsers(originalData);
     await interaction.reply(i18n.t('selection.resetOriginal', { count: originalData.all.length }));
   } catch {
     data.remaining = [...data.all];
-    saveUsers(data);
+    await saveUsers(data);
     await interaction.reply(i18n.t('selection.resetAll', { count: data.all.length }));
   }
 }
@@ -75,7 +75,7 @@ export async function handleReadd(interaction: ChatInputCommandInteraction, data
 
   if (user && !data.remaining.some(u => u.id === user.id)) {
     data.remaining.push(user);
-    saveUsers(data);
+    await saveUsers(data);
     await interaction.reply(i18n.t('selection.readded', { name: userName }));
   } else if (user) {
     await interaction.reply(i18n.t('selection.notSelected', { name: userName }));

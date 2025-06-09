@@ -7,12 +7,14 @@
     "test:watch": "NODE_ENV=test jest --watch",
     "test:coverage": "NODE_ENV=test jest --coverage",
     "clean": "rm -rf dist build bot.zip",
-    "prebuild": "mkdir -p build && cp src/users.json build/ && cp src/users.original.json build/",
+    "prebuild": "mkdir -p build && cp src/users.json build/ && cp src/users.original.json build/ && cp -r src/i18n build/",
     "build": "tsc && esbuild dist/index.js --bundle --platform=node --outfile=build/index.js",
     "start": "node build/index.js",
     "dev": "ts-node src/index.ts",
     "generate-zip": "rm -f bot.zip && zip -r bot.zip package.json .env build/",
-    "build-zip": "npm run clean && npm run build && npm run generate-zip"
+    "build-zip": "npm run clean && npm run build && npm run generate-zip",
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\""
   },
   "author": "",
   "license": "MIT",
@@ -31,6 +33,11 @@
     "mock-fs": "^5.5.0",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "eslint": "^8.57.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "prettier": "^3.1.1",
+    "eslint-config-prettier": "^9.0.0"
   }
 }

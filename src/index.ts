@@ -139,7 +139,7 @@ if (process.env.NODE_ENV !== 'test') {
 
   client.on('interactionCreate', async interaction => {
     if (interaction.isChatInputCommand()) {
-      const data = loadUsers();
+      const data = await loadUsers();
       const handler = commandHandlers[interaction.commandName];
       if (handler) await handler(interaction, data);
     } else if (interaction.isButton()) {
@@ -160,8 +160,8 @@ if (process.env.NODE_ENV !== 'test') {
           return;
         }
 
-        const data = loadUsers();
-        const selected = selectUser(data);
+        const data = await loadUsers();
+        const selected = await selectUser(data);
 
         const { text, components } = await findNextSong(client);
 

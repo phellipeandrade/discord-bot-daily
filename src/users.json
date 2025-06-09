@@ -1,58 +1,19 @@
 {
   "all": [
-    {
-      "name": "Phellipe",
-      "id": "339607705977094144"
-    },
-    {
-      "name": "Serginho",
-      "id": "1071040654857224242"
-    },
-    {
-      "name": "Jane",
-      "id": "874367685201367090"
-    },
-    {
-      "name": "João",
-      "id": "463857217389592577"
-    },
-    {
-      "name": "Juliana",
-      "id": "631214851066429461"
-    },
-    {
-      "name": "Rebecca Messias",
-      "id": "424611539144671234"
-    },
-    {
-      "name": "Matheus",
-      "id": "695007163000815646"
-    }
+    {"name": "Phellipe", "id": "1"},
+    {"name": "Serginho", "id": "2"},
+    {"name": "Jane", "id": "3"},
+    {"name": "João", "id": "4"},
+    {"name": "Juliana", "id": "5"},
+    {"name": "Rebecca Messias", "id": "6"},
+    {"name": "Matheus", "id": "7"}
   ],
   "remaining": [
-    {
-      "name": "Phellipe",
-      "id": "339607705977094144"
-    },
-    {
-      "name": "Serginho",
-      "id": "1071040654857224242"
-    },
-    {
-      "name": "Juliana",
-      "id": "631214851066429461"
-    },
-    {
-      "name": "Rebecca Messias",
-      "id": "424611539144671234"
-    },
-    {
-      "name": "Matheus",
-      "id": "695007163000815646"
-    }
+    {"name": "Phellipe", "id": "1"},
+    {"name": "Serginho", "id": "2"},
+    {"name": "Juliana", "id": "5"},
+    {"name": "Rebecca Messias", "id": "6"},
+    {"name": "Matheus", "id": "7"}
   ],
-  "lastSelected": {
-    "name": "Jane",
-    "id": "874367685201367090"
-  }
+  "lastSelected": {"name": "Jane", "id": "3"}
 }

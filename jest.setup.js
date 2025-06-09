@@ -2,37 +2,42 @@ const path = require('path');
 const fs = require('fs');
 
 // Configurar variáveis de ambiente para teste
-process.env.USERS_TEST_FILE = path.join(__dirname, 'users.test.json');
+process.env.USERS_FILE = path.join(__dirname, 'users.test.json');
 
 // Garantir que o arquivo de teste existe
-if (!fs.existsSync(process.env.USERS_TEST_FILE)) {
+if (!fs.existsSync(process.env.USERS_FILE)) {
   const testData = {
     all: [
-      { name: "Phellipe", id: "339607705977094144" },
-      { name: "Serginho", id: "1071040654857224242" },
-      { name: "Jane", id: "874367685201367090" },
-      { name: "João", id: "463857217389592577" },
-      { name: "Juliana", id: "631214851066429461" },
-      { name: "Rebecca Messias", id: "424611539144671234" },
-      { name: "Matheus", id: "695007163000815646" }
+      { name: "Phellipe", id: "1" },
+      { name: "Serginho", id: "2" },
+      { name: "Jane", id: "3" },
+      { name: "João", id: "4" },
+      { name: "Juliana", id: "5" },
+      { name: "Rebecca Messias", id: "6" },
+      { name: "Matheus", id: "7" }
     ],
     remaining: [
-      { name: "Phellipe", id: "339607705977094144" },
-      { name: "Serginho", id: "1071040654857224242" },
-      { name: "Jane", id: "874367685201367090" },
-      { name: "João", id: "463857217389592577" },
-      { name: "Juliana", id: "631214851066429461" },
-      { name: "Rebecca Messias", id: "424611539144671234" },
-      { name: "Matheus", id: "695007163000815646" }
+      { name: "Phellipe", id: "1" },
+      { name: "Serginho", id: "2" },
+      { name: "Jane", id: "3" },
+      { name: "João", id: "4" },
+      { name: "Juliana", id: "5" },
+      { name: "Rebecca Messias", id: "6" },
+      { name: "Matheus", id: "7" }
     ],
     lastSelected: null
   };
-  fs.writeFileSync(process.env.USERS_TEST_FILE, JSON.stringify(testData, null, 2));
+  fs.writeFileSync(process.env.USERS_FILE, JSON.stringify(testData, null, 2));
 }
 
 // Mock das funções do fs
 jest.mock('fs', () => ({
   existsSync: jest.fn(),
   readFileSync: jest.fn(),
-  writeFileSync: jest.fn()
-})); 
+  writeFileSync: jest.fn(),
+  promises: {
+    access: jest.fn(),
+    readFile: jest.fn(),
+    writeFile: jest.fn()
+  }
+}));

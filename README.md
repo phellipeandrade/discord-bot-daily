@@ -36,7 +36,9 @@ BOT_LANGUAGE=en
 DAILY_TIME=09:00
 DAILY_DAYS=1-5
 HOLIDAY_COUNTRIES=BR
+USERS_FILE=./src/users.json
 ```
+Set `BOT_LANGUAGE` to `en` or `pt-br` to change the bot responses.
 `DAILY_TIME` uses 24h format `HH:MM` and `DAILY_DAYS` follows cron day-of-week
 syntax (e.g. `1-5` for Monday–Friday). `HOLIDAY_COUNTRIES` is a comma-separated
 list of country codes (currently `BR` and `US` are supported).
@@ -54,6 +56,12 @@ Build and start:
 ```bash
 npm run build
 npm start
+```
+
+To create a production zip with translations and data:
+
+```bash
+npm run build-zip
 ```
 
 ### Commands

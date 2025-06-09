@@ -1,3 +1,33 @@
+import * as fs from 'fs';
+
+jest.mock('fs', () => ({
+  existsSync: jest.fn(),
+  readFileSync: jest.fn(),
+  writeFileSync: jest.fn(),
+  promises: {
+    access: jest.fn(),
+    readFile: jest.fn(),
+    writeFile: jest.fn()
+  }
+}));
+
+jest.mock('../i18n', () => ({
+  i18n: {
+    t: jest.fn((key: string, params: Record<string, any> = {}) => {
+      const translations: Record<string, string> = {
+        'list.empty': '(none)'
+      };
+      let text = translations[key] || key;
+      return text.replace(/\{\{(\w+)\}\}/g, (_, key) => params[key] ?? `{{${key}}}`);
+    }),
+    getCommandName: jest.fn((command: string) => command),
+    getCommandDescription: jest.fn((command: string) => `Command ${command}`),
+    getOptionName: jest.fn((command: string, option: string) => option),
+    getOptionDescription: jest.fn((command: string, option: string) => `Option ${option}`),
+    setLanguage: jest.fn((lang: 'en' | 'pt-br') => {})
+  }
+}));
+
 import {
   loadUsers,
   saveUsers,
@@ -6,13 +36,17 @@ import {
   type UserEntry,
   formatUsers
 } from '../index';
-import * as fs from 'fs';
 
 // Mock do módulo fs
 jest.mock('fs', () => ({
   existsSync: jest.fn(),
   readFileSync: jest.fn(),
-  writeFileSync: jest.fn()
+  writeFileSync: jest.fn(),
+  promises: {
+    access: jest.fn(),
+    readFile: jest.fn(),
+    writeFile: jest.fn()
+  }
 }));
 
 // Mock do discord.js
@@ -111,22 +145,22 @@ jest.mock('../i18n', () => ({
 // Dados de teste fixos
 const TEST_DATA: UserData = {
   all: [
-    { name: "Phellipe", id: "339607705977094144" },
-    { name: "Serginho", id: "1071040654857224242" },
-    { name: "Jane", id: "874367685201367090" },
-    { name: "João", id: "463857217389592577" },
-    { name: "Juliana", id: "631214851066429461" },
-    { name: "Rebecca Messias", id: "424611539144671234" },
-    { name: "Matheus", id: "695007163000815646" }
+    { name: "Phellipe", id: "1" },
+    { name: "Serginho", id: "2" },
+    { name: "Jane", id: "3" },
+    { name: "João", id: "4" },
+    { name: "Juliana", id: "5" },
+    { name: "Rebecca Messias", id: "6" },
+    { name: "Matheus", id: "7" }
   ],
   remaining: [
-    { name: "Phellipe", id: "339607705977094144" },
-    { name: "Serginho", id: "1071040654857224242" },
-    { name: "Jane", id: "874367685201367090" },
-    { name: "João", id: "463857217389592577" },
-    { name: "Juliana", id: "631214851066429461" },
-    { name: "Rebecca Messias", id: "424611539144671234" },
-    { name: "Matheus", id: "695007163000815646" }
+    { name: "Phellipe", id: "1" },
+    { name: "Serginho", id: "2" },
+    { name: "Jane", id: "3" },
+    { name: "João", id: "4" },
+    { name: "Juliana", id: "5" },
+    { name: "Rebecca Messias", id: "6" },
+    { name: "Matheus", id: "7" }
   ],
   lastSelected: undefined
 };
@@ -173,45 +207,45 @@ describe('Funções Utilitárias', () => {
   });
 
   describe('loadUsers', () => {
-    it('deve criar arquivo se não existir', () => {
+    it('deve criar arquivo se não existir', async () => {
       (fs.existsSync as jest.Mock).mockReturnValue(false);
-      (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
-      (fs.readFileSync as jest.Mock).mockReturnValue('{"all":[],"remaining":[]}');
+      (fs.promises.writeFile as jest.Mock).mockResolvedValue(undefined);
+      (fs.promises.readFile as jest.Mock).mockResolvedValue('{"all":[],"remaining":[]}');
 
-      const resultado = loadUsers();
+      const resultado = await loadUsers();
       
       expect(resultado).toEqual({ all: [], remaining: [] });
-      expect(fs.writeFileSync).toHaveBeenCalled();
+      expect(fs.promises.writeFile).toHaveBeenCalled();
     });
 
-    it('deve carregar arquivo existente', () => {
+    it('deve carregar arquivo existente', async () => {
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.readFileSync as jest.Mock).mockReturnValue(JSON.stringify(mockData));
+      (fs.promises.readFile as jest.Mock).mockResolvedValue(JSON.stringify(mockData));
 
-      const resultado = loadUsers();
+      const resultado = await loadUsers();
       
       expect(resultado).toEqual(mockData);
     });
   });
 
   describe('saveUsers', () => {
-    it('deve salvar corretamente os dados dos usuários', () => {
-      saveUsers(mockData);
+    it('deve salvar corretamente os dados dos usuários', async () => {
+      await saveUsers(mockData);
 
-      expect(fs.writeFileSync).toHaveBeenCalledWith(
+      expect(fs.promises.writeFile).toHaveBeenCalledWith(
         expect.any(String),
         JSON.stringify(mockData, null, 2),
         'utf-8'
       );
     });
 
-    it('deve manter a estrutura correta dos dados', () => {
+    it('deve manter a estrutura correta dos dados', async () => {
       let savedData: any;
-      (fs.writeFileSync as jest.Mock).mockImplementation((file, data) => {
+      (fs.promises.writeFile as jest.Mock).mockImplementation((file, data) => {
         savedData = JSON.parse(data as string);
       });
 
-      saveUsers(mockData);
+      await saveUsers(mockData);
 
       expect(savedData).toHaveProperty('all');
       expect(savedData).toHaveProperty('remaining');
@@ -223,22 +257,22 @@ describe('Funções Utilitárias', () => {
   });
 
   describe('selectUser', () => {
-    it('deve resetar remaining quando vazio', () => {
+    it('deve resetar remaining quando vazio', async () => {
       const dados = JSON.parse(JSON.stringify(mockData));
       dados.remaining = [];
 
-      const resultado = selectUser(dados);
+      const resultado = await selectUser(dados);
       
       expect(resultado).toBeDefined();
       expect(dados.remaining.length).toBeLessThan(mockData.all.length);
       expect(dados.lastSelected).toBeDefined();
     });
 
-    it('deve escolher usuário aleatoriamente', () => {
+    it('deve escolher usuário aleatoriamente', async () => {
       const dados = JSON.parse(JSON.stringify(mockData));
       const remainingAntes = dados.remaining.length;
 
-      const resultado = selectUser(dados);
+      const resultado = await selectUser(dados);
       
       expect(resultado).toBeDefined();
       expect(dados.remaining.length).toBe(remainingAntes - 1);

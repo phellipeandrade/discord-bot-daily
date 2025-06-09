@@ -13,33 +13,34 @@ export interface UserData {
   lastSelected?: UserEntry;
 }
 
-export function loadUsers(): UserData {
+export async function loadUsers(): Promise<UserData> {
   try {
     if (!fs.existsSync(USERS_FILE)) {
       const emptyData: UserData = { all: [], remaining: [] };
-      saveUsers(emptyData);
+      await saveUsers(emptyData);
       return emptyData;
     }
-    return JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'));
+    const data = await fs.promises.readFile(USERS_FILE, 'utf-8');
+    return JSON.parse(data);
   } catch {
     const emptyData: UserData = { all: [], remaining: [] };
-    saveUsers(emptyData);
+    await saveUsers(emptyData);
     return emptyData;
   }
 }
 
-export function saveUsers(data: UserData): void {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2), 'utf-8');
+export async function saveUsers(data: UserData): Promise<void> {
+  await fs.promises.writeFile(USERS_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-export function selectUser(data: UserData): UserEntry {
+export async function selectUser(data: UserData): Promise<UserEntry> {
   if (data.remaining.length === 0) {
     data.remaining = [...data.all];
   }
   const index = Math.floor(Math.random() * data.remaining.length);
   const selected = data.remaining.splice(index, 1)[0];
   data.lastSelected = selected;
-  saveUsers(data);
+  await saveUsers(data);
   return selected;
 }
 
