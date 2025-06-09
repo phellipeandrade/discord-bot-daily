@@ -1,0 +1,70 @@
+{
+  "list.empty": "(nenhum)",
+  "music.noValidMusic": "✅ Nenhuma música válida encontrada.",
+  "music.marked": "✅ Música marcada como tocada!\n\n🎵 Para tocar a música no bot, copie e envie o comando abaixo:\n```\n/play {{link}}\n```",
+  "music.reactionsCleared": "✅ Removidas {{count}} reações 🐰 feitas pelo bot.",
+  "music.channelError": "Não foi possível acessar o canal de música.",
+  "music.processError": "Erro ao processar a música.",
+  "music.extractError": "Não foi possível extrair o link da música.",
+  "music.next": "🎵 Próxima música: {{link}}\n\n📎 Link da mensagem: {{messageUrl}}",
+  "music.allPlayed": "✅ Todas as músicas recentes já foram tocadas.",
+  "selection.readded": "✅ {{name}} foi readicionado(a) à lista de seleção.",
+  "selection.notSelected": "❌ {{name}} já está na lista de seleção.",
+  "user.notFound": "❌ Usuário {{name}} não encontrado.",
+  "commands": {
+    "register": {
+      "name": "registrar",
+      "description": "Registra um novo usuário",
+      "options": {
+        "name": {
+          "name": "nome",
+          "description": "Nome do usuário"
+        }
+      }
+    },
+    "join": {
+      "name": "entrar",
+      "description": "Entra na lista de seleção"
+    },
+    "remove": {
+      "name": "remover",
+      "description": "Remove um usuário",
+      "options": {
+        "name": {
+          "name": "nome",
+          "description": "Nome do usuário"
+        }
+      }
+    },
+    "list": {
+      "name": "listar",
+      "description": "Lista os usuários"
+    },
+    "select": {
+      "name": "selecionar",
+      "description": "Seleciona um usuário aleatório"
+    },
+    "reset": {
+      "name": "resetar",
+      "description": "Reseta a lista de seleção"
+    },
+    "next-song": {
+      "name": "proxima-musica",
+      "description": "Mostra a próxima música não tocada"
+    },
+    "clear-bunnies": {
+      "name": "limpar-coelhos",
+      "description": "Remove as reações de coelho feitas pelo bot"
+    },
+    "readd": {
+      "name": "readicionar",
+      "description": "Readiciona um usuário à lista de seleção",
+      "options": {
+        "name": {
+          "name": "nome",
+          "description": "Nome do usuário"
+        }
+      }
+    }
+  }
+} 
