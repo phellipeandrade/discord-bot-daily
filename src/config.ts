@@ -18,3 +18,17 @@ export const HOLIDAY_COUNTRIES = (process.env.HOLIDAY_COUNTRIES ?? 'BR')
   .split(',')
   .map(c => c.trim().toUpperCase())
   .filter(c => c);
+
+export function logConfig(): void {
+  console.log(
+    '📚 Loaded configuration:',
+    {
+      TIMEZONE,
+      BOT_LANGUAGE: LANGUAGE,
+      DAILY_TIME,
+      DAILY_DAYS,
+      HOLIDAY_COUNTRIES,
+      USERS_FILE
+    }
+  );
+}

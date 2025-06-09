@@ -19,7 +19,8 @@ import {
   LANGUAGE,
   DAILY_TIME,
   DAILY_DAYS,
-  HOLIDAY_COUNTRIES
+  HOLIDAY_COUNTRIES,
+  logConfig
 } from './config';
 import {
   UserData,
@@ -46,6 +47,7 @@ import {
 } from './music';
 
 i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
+logConfig();
 
 const commands = [
   new SlashCommandBuilder()
