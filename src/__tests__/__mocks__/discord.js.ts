@@ -1,16 +1,16 @@
 import { MockCollection } from './MockCollection';
 
 export class MockActionRowBuilder {
-  private readonly components: any[] = [];
+  private readonly components: unknown[] = [];
   
-  addComponents(...components: any[]) {
+  addComponents(...components: unknown[]) {
     this.components.push(...components);
     return this;
   }
 }
 
 export class MockButtonBuilder {
-  private readonly data: any = {};
+  private readonly data: Record<string, unknown> = {};
   
   setCustomId(customId: string) {
     this.data.customId = customId;
@@ -22,7 +22,7 @@ export class MockButtonBuilder {
     return this;
   }
   
-  setStyle(style: any) {
+  setStyle(style: number) {
     this.data.style = style;
     return this;
   }
@@ -33,10 +33,19 @@ export class MockButtonBuilder {
   }
 }
 
+interface MockOption {
+  name: string;
+  description: string;
+  required: boolean;
+  setName(name: string): this;
+  setDescription(description: string): this;
+  setRequired(required: boolean): this;
+}
+
 export class MockSlashCommandBuilder {
   private name = '';
   private description = '';
-  private readonly options: any[] = [];
+  private readonly options: MockOption[] = [];
 
   setName(name: string) {
     this.name = name;
@@ -48,8 +57,8 @@ export class MockSlashCommandBuilder {
     return this;
   }
 
-  addStringOption(fn: (option: any) => any) {
-    const option = {
+  addStringOption(fn: (option: MockOption) => MockOption) {
+    const option: MockOption = {
       name: '',
       description: '',
       required: false,
@@ -130,6 +139,23 @@ export const ButtonStyle = {
   Success: 3,
   Danger: 4,
   Link: 5
+};
+
+export const ApplicationCommandType = {
+  ChatInput: 1,
+  User: 2,
+  Message: 3
+};
+
+export const ComponentType = {
+  ActionRow: 1,
+  Button: 2,
+  StringSelect: 3,
+  TextInput: 4,
+  UserSelect: 5,
+  RoleSelect: 6,
+  MentionableSelect: 7,
+  ChannelSelect: 8
 };
 
 export const Client = jest.fn(() => mockClient);

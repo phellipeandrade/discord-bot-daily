@@ -7,10 +7,11 @@ import {
   handleReset,
   handleReadd
 } from '../handlers';
-import { saveUsers, selectUser, type UserData } from '../users';
+import type { UserData } from '../users';
 import * as fs from 'fs';
 import { ChatInputCommandInteraction } from 'discord.js';
 
+// Mock do i18n
 jest.mock('../i18n', () => ({
   i18n: {
     t: jest.fn((key: string, params: Record<string, string | number> = {}) => {
@@ -27,11 +28,21 @@ jest.mock('../i18n', () => ({
   }
 }));
 
-jest.mock('../users');
+// Mock das funções
+const mockSaveUsers = jest.fn();
+const mockSelectUser = jest.fn();
+const mockFormatUsers = jest.fn((users: Array<{ name: string; id: string }>) => 
+  users.map((u: { name: string; id: string }) => u.name).join(', ') || '(none)'
+);
+
+jest.mock('../users', () => ({
+  saveUsers: (data: UserData) => mockSaveUsers(data),
+  selectUser: (data: UserData) => mockSelectUser(data),
+  formatUsers: (users: Array<{ name: string; id: string }>) => mockFormatUsers(users)
+}));
+
 jest.mock('fs');
 
-const mockSave = saveUsers as jest.Mock;
-const mockSelect = selectUser as jest.Mock;
 const mockFs = fs as jest.Mocked<typeof fs>;
 
 interface MockInteractionOptions {
@@ -60,7 +71,7 @@ describe('handlers', () => {
     const interaction = createInteraction({ name: 'Tester' });
     await handleRegister(interaction, data);
     expect(data.all.length).toBe(1);
-    expect(mockSave).toHaveBeenCalled();
+    expect(mockSaveUsers).toHaveBeenCalled();
     expect(interaction.reply).toHaveBeenCalled();
   });
 
@@ -68,7 +79,7 @@ describe('handlers', () => {
     const interaction = createInteraction();
     await handleJoin(interaction, data);
     expect(data.all[0].id).toBe('10');
-    expect(mockSave).toHaveBeenCalled();
+    expect(mockSaveUsers).toHaveBeenCalled();
   });
 
   test('handleRemove removes user', async () => {
@@ -77,7 +88,7 @@ describe('handlers', () => {
     const interaction = createInteraction({ name: 'Tester' });
     await handleRemove(interaction, data);
     expect(data.all.length).toBe(0);
-    expect(mockSave).toHaveBeenCalled();
+    expect(mockSaveUsers).toHaveBeenCalled();
   });
 
   test('handleList replies with formatted lists', async () => {
@@ -92,10 +103,10 @@ describe('handlers', () => {
 
   test('handleSelect selects user', async () => {
     const selectedUser = { name: 'A', id: '1' };
-    mockSelect.mockImplementation(() => Promise.resolve(selectedUser));
+    mockSelectUser.mockResolvedValue(selectedUser);
     const interaction = createInteraction();
     await handleSelect(interaction, data);
-    expect(mockSelect).toHaveBeenCalled();
+    expect(mockSelectUser).toHaveBeenCalled();
     expect(interaction.reply).toHaveBeenCalled();
   });
 
@@ -103,7 +114,7 @@ describe('handlers', () => {
     (mockFs.promises.readFile as jest.Mock).mockResolvedValue(JSON.stringify({ all: [] }));
     const interaction = createInteraction();
     await handleReset(interaction, data);
-    expect(mockSave).toHaveBeenCalled();
+    expect(mockSaveUsers).toHaveBeenCalled();
   });
 
   test('handleReadd restores user', async () => {
@@ -111,6 +122,6 @@ describe('handlers', () => {
     const interaction = createInteraction({ name: 'A' });
     await handleReadd(interaction, data);
     expect(data.remaining.length).toBe(1);
-    expect(mockSave).toHaveBeenCalled();
+    expect(mockSaveUsers).toHaveBeenCalled();
   });
 });
