@@ -21,14 +21,13 @@ export const HOLIDAY_COUNTRIES = (process.env.HOLIDAY_COUNTRIES ?? 'BR')
 
 export function logConfig(): void {
   console.log(
-    '📚 Loaded configuration:',
-    {
-      TIMEZONE,
-      BOT_LANGUAGE: LANGUAGE,
-      DAILY_TIME,
-      DAILY_DAYS,
-      HOLIDAY_COUNTRIES,
-      USERS_FILE
-    }
+    '📚 Config:',
+    [
+      `TZ=${TIMEZONE}`,
+      `LANG=${LANGUAGE}`,
+      `DAILY=${DAILY_TIME} (${DAILY_DAYS})`,
+      `HOLIDAYS=${HOLIDAY_COUNTRIES.join(',')}`,
+      `USERS=${USERS_FILE}`
+    ].join(' | ')
   );
 }
