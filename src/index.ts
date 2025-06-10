@@ -52,6 +52,9 @@ logConfig();
 function scheduleDailySelection(client: Client): void {
   const [hour, minute] = DAILY_TIME.split(':').map(n => parseInt(n, 10));
   const cronExpr = `${minute} ${hour} * * ${DAILY_DAYS}`;
+  console.log(
+    `📅 Scheduling daily selection with expression "${cronExpr}" (timezone: ${TIMEZONE})`
+  );
   cron.schedule(
     cronExpr,
     async () => {
@@ -159,6 +162,9 @@ if (process.env.NODE_ENV !== 'test') {
 
     console.log(`🤖 Bot online as ${client.user.tag}`);
 
+    const users = await loadUsers();
+    console.log('👥 Loaded users:', users.all.map(u => u.name).join(', ') || '(none)');
+
     const rest = new REST({ version: '10' }).setToken(TOKEN);
     await rest.put(Routes.applicationGuildCommands(client.user.id, GUILD_ID), {
       body: commands
@@ -171,6 +177,9 @@ if (process.env.NODE_ENV !== 'test') {
 
   client.on('interactionCreate', async interaction => {
     if (interaction.isChatInputCommand()) {
+      console.log(
+        `➡️ Command received: /${interaction.commandName} from ${interaction.user.tag}`
+      );
       const data = await loadUsers();
       const handler = commandHandlers[interaction.commandName];
       if (handler) await handler(interaction, data);

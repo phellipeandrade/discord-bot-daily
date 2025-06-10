@@ -1,5 +1,8 @@
 {
   "list.empty": "(nenhum)",
+  "list.registered": "**Usuários registrados:**\n{{users}}",
+  "list.pending": "**Aguardando seleção:**\n{{users}}",
+  "list.selected": "**Já selecionados:**\n{{users}}",
   "music.noValidMusic": "✅ Nenhuma música válida encontrada.",
   "music.marked": "✅ Música marcada como tocada!\n\n🎵 Para tocar a música no bot, copie e envie o comando abaixo:\n```\n/play {{link}}\n```",
   "music.reactionsCleared": "✅ Removidas {{count}} reações 🐰 feitas pelo bot.",
