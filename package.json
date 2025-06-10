@@ -7,7 +7,7 @@
     "test:watch": "NODE_ENV=test jest --watch",
     "test:coverage": "NODE_ENV=test jest --coverage",
     "clean": "rm -rf dist build bot.zip",
-    "prebuild": "mkdir -p build && cp src/users.json build/ && cp src/users.original.json build/ && cp -r src/i18n build/",
+    "prebuild": "mkdir -p build && cp src/users.original.json build/users.json && cp -r src/i18n build/",
     "build": "tsc && esbuild dist/index.js --bundle --platform=node --outfile=build/index.js",
     "start": "node build/index.js",
     "dev": "ts-node src/index.ts",
