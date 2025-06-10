@@ -49,6 +49,36 @@ import {
 i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
 logConfig();
 
+function scheduleDailySelection(client: Client): void {
+  const [hour, minute] = DAILY_TIME.split(':').map(n => parseInt(n, 10));
+  const cronExpr = `${minute} ${hour} * * ${DAILY_DAYS}`;
+  cron.schedule(
+    cronExpr,
+    async () => {
+      if (isHoliday(new Date(), HOLIDAY_COUNTRIES)) {
+        console.log(i18n.t('daily.holiday'));
+        return;
+      }
+
+      const data = await loadUsers();
+      const selected = await selectUser(data);
+
+      const { text, components } = await findNextSong(client);
+
+      const channel = await client.channels.fetch(CHANNEL_ID);
+      if (channel?.isTextBased()) {
+        (channel as TextChannel).send({
+          content:
+            `${i18n.t('daily.announcement', { id: selected.id, name: selected.name })}\n\n` +
+            text,
+          components
+        });
+      }
+    },
+    { timezone: TIMEZONE }
+  );
+}
+
 const commands = [
   new SlashCommandBuilder()
     .setName(i18n.getCommandName('register'))
@@ -136,7 +166,7 @@ if (process.env.NODE_ENV !== 'test') {
 
     console.log('✅ Commands registered successfully.');
 
-    scheduleDailySelection();
+    scheduleDailySelection(client);
   });
 
   client.on('interactionCreate', async interaction => {
@@ -150,36 +180,6 @@ if (process.env.NODE_ENV !== 'test') {
   });
 
   client.login(TOKEN);
-
-  function scheduleDailySelection(): void {
-    const [hour, minute] = DAILY_TIME.split(':').map(n => parseInt(n, 10));
-    const cronExpr = `${minute} ${hour} * * ${DAILY_DAYS}`;
-    cron.schedule(
-      cronExpr,
-      async () => {
-        if (isHoliday(new Date(), HOLIDAY_COUNTRIES)) {
-          console.log(i18n.t('daily.holiday'));
-          return;
-        }
-
-        const data = await loadUsers();
-        const selected = await selectUser(data);
-
-        const { text, components } = await findNextSong(client);
-
-        const channel = await client.channels.fetch(CHANNEL_ID);
-        if (channel?.isTextBased()) {
-          (channel as TextChannel).send({
-            content:
-              `${i18n.t('daily.announcement', { id: selected.id, name: selected.name })}\n\n` +
-              text,
-            components
-          });
-        }
-      },
-      { timezone: TIMEZONE }
-    );
-  }
 }
 
 export {
