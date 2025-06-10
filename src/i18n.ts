@@ -22,9 +22,13 @@ interface TranslationResource {
 
 const loadTranslations = (lang: Language): TranslationResource => {
   try {
-    return process.env.NODE_ENV === 'test'
-      ? { commands: {} }
-      : JSON.parse(fs.readFileSync(path.join(__dirname, `i18n/${lang}.json`), 'utf-8'));
+    const json = fs.readFileSync(path.join(__dirname, `i18n/${lang}.json`), 'utf-8');
+    const result = JSON.parse(json);
+    console.log(
+      `\u{1F50D} Debug - Loaded translations for ${lang}:`,
+      JSON.stringify(result.commands, null, 2)
+    );
+    return result;
   } catch (error) {
     console.error(`Failed to load translations for ${lang}:`, error);
     return { commands: {} };
@@ -34,6 +38,12 @@ const loadTranslations = (lang: Language): TranslationResource => {
 i18next.init({
   lng: 'en',
   fallbackLng: 'en',
+  // normalize language codes to lowercase so resources like "pt-br" match
+  // environment variables regardless of casing
+  lowerCaseLng: true,
+  // load resources synchronously to ensure translations are available
+  initImmediate: false,
+  saveMissing: true,
   resources: {
     en: {
       translation: loadTranslations('en')
@@ -45,6 +55,10 @@ i18next.init({
   interpolation: {
     escapeValue: false
   }
+});
+
+i18next.on('missingKey', (lngs, ns, key) => {
+  console.log(`\u{1F50D} Debug - Fallback used for key "${key}"`);
 });
 
 export const i18n = {
