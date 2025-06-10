@@ -53,7 +53,7 @@ function scheduleDailySelection(client: Client): void {
   const [hour, minute] = DAILY_TIME.split(':').map(n => parseInt(n, 10));
   const cronExpr = `${minute} ${hour} * * ${DAILY_DAYS}`;
   console.log(
-    `📅 Scheduling daily selection with expression "${cronExpr}" (timezone: ${TIMEZONE})`
+    `📅 Daily job scheduled at ${DAILY_TIME} (${DAILY_DAYS}) [TZ ${TIMEZONE}]`
   );
   cron.schedule(
     cronExpr,
@@ -160,17 +160,21 @@ if (process.env.NODE_ENV !== 'test') {
   client.once('ready', async () => {
     if (!client.user) throw new Error('Client not properly initialized');
 
-    console.log(`🤖 Bot online as ${client.user.tag}`);
+    console.log(`🤖 Logged in as ${client.user.tag}`);
 
     const users = await loadUsers();
-    console.log('👥 Loaded users:', users.all.map(u => u.name).join(', ') || '(none)');
+    console.log(
+      `👥 Users loaded (${users.all.length}): ${users.all
+        .map(u => u.name)
+        .join(', ') || '(none)'}`
+    );
 
     const rest = new REST({ version: '10' }).setToken(TOKEN);
     await rest.put(Routes.applicationGuildCommands(client.user.id, GUILD_ID), {
       body: commands
     });
 
-    console.log('✅ Commands registered successfully.');
+    console.log('✅ Commands registered');
 
     scheduleDailySelection(client);
   });

@@ -37,8 +37,7 @@ describe('i18n module', () => {
     expect(i18n.getCommandName('list')).toBe('listar');
     expect(i18n.getCommandName('register')).toBe('registrar');
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('🔍 Debug - Loaded translations for pt-br:'),
-      expect.any(String)
+      expect.stringContaining('🔍 [pt-br] translations loaded:')
     );
     consoleSpy.mockRestore();
   });
