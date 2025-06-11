@@ -37,6 +37,7 @@ DAILY_TIME=09:00
 DAILY_DAYS=1-5
 HOLIDAY_COUNTRIES=BR
 USERS_FILE=./src/users.json
+DATE_FORMAT=YYYY-MM-DD
 ```
 Set `BOT_LANGUAGE` to `en` or `pt-br` to change the bot responses.
 `DAILY_TIME` uses 24h format `HH:MM` and `DAILY_DAYS` follows cron day-of-week
@@ -76,7 +77,7 @@ npm run build-zip
 - `clear-bunnies` – remove bunny reactions added by the bot
 - `readd <name>` – re-add a previously selected user back into the pool
 - `skip-today <name>` – skip today's draw for the specified user
-- `skip-until <name> <date>` – skip selection of a user until the given date (YYYY-MM-DD)
+- `skip-until <name> <date>` – skip selection of a user until the given date (format defined by `DATE_FORMAT`, default `YYYY-MM-DD`)
 
 ## Testing
 

@@ -17,7 +17,7 @@
   "daily.holiday": "🌴 Holiday detected, skipping today's selection.",
   "selection.skipToday": "✅ {{name}} will be skipped today.",
   "selection.skipUntil": "✅ {{name}} will be skipped until {{date}}.",
-  "selection.invalidDate": "❌ Invalid date.",
+  "selection.invalidDate": "❌ Invalid date. Expected format: {{format}}.",
   "selection.noEligibleUsers": "❌ No eligible users to select.",
   "user.notFound": "❌ User {{name}} not found.",
   "commands": {
@@ -95,7 +95,7 @@
         },
         "date": {
           "name": "date",
-          "description": "Date (YYYY-MM-DD)"
+          "description": "Date ({{format}})"
         }
       }
     }

@@ -18,6 +18,7 @@ export const HOLIDAY_COUNTRIES = (process.env.HOLIDAY_COUNTRIES ?? 'BR')
   .split(',')
   .map(c => c.trim().toUpperCase())
   .filter(c => c);
+export const DATE_FORMAT = process.env.DATE_FORMAT ?? 'YYYY-MM-DD';
 
 export function logConfig(): void {
   console.log(
@@ -27,7 +28,8 @@ export function logConfig(): void {
       `LANG=${LANGUAGE}`,
       `DAILY=${DAILY_TIME} (${DAILY_DAYS})`,
       `HOLIDAYS=${HOLIDAY_COUNTRIES.join(',')}`,
-      `USERS=${USERS_FILE}`
+      `USERS=${USERS_FILE}`,
+      `DATE_FMT=${DATE_FORMAT}`
     ].join(' | ')
   );
 }

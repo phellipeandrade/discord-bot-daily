@@ -17,7 +17,7 @@
   "daily.holiday": "🌴 Feriado detectado, sem seleção hoje.",
   "selection.skipToday": "✅ {{name}} não será sorteado(a) hoje.",
   "selection.skipUntil": "✅ {{name}} não será sorteado(a) até {{date}}.",
-  "selection.invalidDate": "❌ Data inválida.",
+  "selection.invalidDate": "❌ Data inválida. Formato esperado: {{format}}.",
   "selection.noEligibleUsers": "❌ Nenhum usuário elegível para selecionar.",
   "selection.resetOriginal": "✅ Lista de seleção foi resetada para o estado original.",
   "selection.resetAll": "✅ {{count}} usuários foram readicionados à lista de seleção.",
@@ -100,7 +100,7 @@
         },
         "date": {
           "name": "data",
-          "description": "Data (AAAA-MM-DD)"
+          "description": "Data ({{format}})"
         }
       }
     }

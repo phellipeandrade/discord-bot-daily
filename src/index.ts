@@ -20,6 +20,7 @@ import {
   DAILY_TIME,
   DAILY_DAYS,
   HOLIDAY_COUNTRIES,
+  DATE_FORMAT,
   logConfig
 } from './config';
 import {
@@ -151,7 +152,11 @@ const commands = [
     .addStringOption(option =>
       option
         .setName(i18n.getOptionName('skip-until', 'date'))
-        .setDescription(i18n.getOptionDescription('skip-until', 'date'))
+        .setDescription(
+          i18n.t('commands.skip-until.options.date.description', {
+            format: DATE_FORMAT
+          })
+        )
         .setRequired(true)
     )
 ].map(cmd => cmd.toJSON());

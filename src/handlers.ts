@@ -3,6 +3,8 @@ import * as path from 'path';
 import { ChatInputCommandInteraction } from 'discord.js';
 import { i18n } from './i18n';
 import { UserEntry, UserData, saveUsers, selectUser, formatUsers } from './users';
+import { parseDateString, todayISO } from './date';
+import { DATE_FORMAT } from './config';
 
 export async function handleRegister(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
   const userName = interaction.options.getString('name', true);
@@ -96,7 +98,7 @@ export async function handleSkipToday(
     return;
   }
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = todayISO();
   data.skips = data.skips || {};
   data.skips[user.id] = today;
   await saveUsers(data);
@@ -116,12 +118,11 @@ export async function handleSkipUntil(
     return;
   }
 
-  if (isNaN(Date.parse(dateStr))) {
-    await interaction.reply(i18n.t('selection.invalidDate'));
+  const iso = parseDateString(dateStr);
+  if (!iso) {
+    await interaction.reply(i18n.t('selection.invalidDate', { format: DATE_FORMAT }));
     return;
   }
-
-  const iso = new Date(dateStr).toISOString().split('T')[0];
   data.skips = data.skips || {};
   data.skips[user.id] = iso;
   await saveUsers(data);
