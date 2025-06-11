@@ -96,16 +96,16 @@ store guild and channel information.
 
 **User**
 
-- `register <name>` – register a user by name
 - `join` – self-register using your Discord name
 - `list` – display registered, pending and already selected users
 - `select` – manually select a random user
 - `next-song` – show the next unplayed song from the request channel
-- `clear-bunnies` – remove bunny reactions added by the bot
-- `check-config` – verify if the bot configuration is complete.
 
 **Admin**
 
+- `register <name>` – register a user by name
+- `clear-bunnies` – remove bunny reactions added by the bot
+- `check-config` – verify if the bot configuration is complete.
 - `remove <name>` – remove a user
 - `reset` – reset selection list (or restore original list)
 - `readd <name>` – re-add a previously selected user back into the pool
@@ -124,9 +124,10 @@ Discord user does not need to be registered to become an admin.
 
 The initial admin list can be provided using the `ADMIN_IDS` environment variable or the `admins` field in the config file.
 
-Only admins may run configuration commands such as `/setup`, `/import`,
-`/export`, `/skip-*` and `/role` itself. Regular users can still use the basic
-commands like `/register`, `/join`, `/list` and `/select`.
+Only admins may run privileged commands such as `/register`, `/clear-bunnies`,
+`/check-config`, `/setup`, `/import`, `/export`, `/skip-*` and `/role` itself.
+Regular users can still use basic commands like `/join`, `/list`, `/select` and
+`/next-song`.
 
 Use the `/role` command to grant or revoke admin access:
 

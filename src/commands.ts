@@ -232,7 +232,10 @@ export function createAdminCommands(): Set<string> {
     i18n.getCommandName('setup'),
     i18n.getCommandName('export'),
     i18n.getCommandName('import'),
-    i18n.getCommandName('role')
+    i18n.getCommandName('role'),
+    i18n.getCommandName('clear-bunnies'),
+    i18n.getCommandName('check-config'),
+    i18n.getCommandName('register')
   ]);
 }
 

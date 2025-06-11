@@ -82,19 +82,21 @@ Esse arquivo inclui `serverConfig.json` usado pelo comando `/setup` para armazen
 
 ### Comandos
 
-- `registrar <nome>` – registra um usuário pelo nome
+- `registrar <nome>` – registra um usuário pelo nome **(admin)**
 - `entrar` – auto-registro usando seu nome do Discord
 - `remover <nome>` – remove um usuário
 - `listar` – mostra usuários registrados, pendentes e já selecionados
 - `selecionar` – seleciona manualmente um usuário aleatório
 - `resetar` – reseta a lista de seleção (ou restaura a lista original)
 - `proxima-musica` – mostra a próxima música não tocada do canal de pedidos
-- `limpar-coelhos` – remove reações de coelhinho adicionadas pelo bot
+- `limpar-coelhos` – remove reações de coelhinho adicionadas pelo bot **(admin)**
 - `readicionar <nome>` – readiciona um usuário previamente selecionado
 - `pular-hoje <nome>` – pula o sorteio de hoje para o usuário informado
 - `pular-ate <nome> <data>` – pula a seleção de um usuário até a data especificada (formato definido por `DATE_FORMAT`, padrão `YYYY-MM-DD`)
 - `configurar` – configura canais, horário e outras definições. Informe apenas os parâmetros que deseja atualizar.
-- `verificar-config` – verifica se a configuração do bot está completa.
+- `verificar-config` – verifica se a configuração do bot está completa **(admin)**
+
+Os comandos marcados com **(admin)** só podem ser executados por administradores.
 
 ## Testes
 
