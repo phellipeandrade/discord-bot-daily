@@ -1,13 +1,17 @@
-import { handleNextSong, handlePlayButton, handleClearReactions } from '../index';
-import { 
-  Client, 
-  GatewayIntentBits, 
-  Message, 
-  TextChannel, 
-  ChatInputCommandInteraction, 
-  Collection, 
-  Attachment, 
-  CommandInteractionOptionResolver, 
+import {
+  handleNextSong,
+  handlePlayButton,
+  handleClearReactions
+} from '../index';
+import {
+  Client,
+  GatewayIntentBits,
+  Message,
+  TextChannel,
+  ChatInputCommandInteraction,
+  Collection,
+  Attachment,
+  CommandInteractionOptionResolver,
   CacheType,
   ButtonInteraction,
   ApplicationCommandType,
@@ -22,8 +26,12 @@ jest.mock('../i18n', () => {
   mockTranslations = {
     'list.empty': '(none)',
     'music.noValidMusic': '✅ No valid music found.',
-    'music.marked': '✅ Song marked as played!\n\n🎵 To play the song in the bot, copy and send the command below:\n```\n/play {{link}}\n```',
-    'music.reactionsCleared': '✅ Removed {{count}} 🐰 reactions made by the bot.',
+    'music.marked':
+      '✅ Song marked as played!\n\n🎵 To play the song in the bot, copy and send the command below:\n```\n{{command}} {{link}}\n```',
+    'music.markedAuto':
+      '✅ Song marked as played!\n\n🎵 Sent `{{command}} {{link}}` to Jockie Music.',
+    'music.reactionsCleared':
+      '✅ Removed {{count}} 🐰 reactions made by the bot.',
     'music.channelError': 'Could not access the music channel.',
     'music.processError': 'Error processing the music.',
     'music.extractError': 'Could not extract music link.',
@@ -33,17 +41,21 @@ jest.mock('../i18n', () => {
 
   return {
     i18n: {
-      t: jest.fn((key: string, params: Record<string, string | number> = {}) => {
-        const text = mockTranslations[key] || key;
-        return text.replace(/\{\{(\w+)\}\}/g, (_, paramKey) => {
-          const value = params[paramKey];
-          return value !== undefined ? String(value) : `{{${paramKey}}}`;
-        });
-      }),
+      t: jest.fn(
+        (key: string, params: Record<string, string | number> = {}) => {
+          const text = mockTranslations[key] || key;
+          return text.replace(/\{\{(\w+)\}\}/g, (_, paramKey) => {
+            const value = params[paramKey];
+            return value !== undefined ? String(value) : `{{${paramKey}}}`;
+          });
+        }
+      ),
       getCommandName: jest.fn((command: string) => command),
       getCommandDescription: jest.fn((command: string) => `Command ${command}`),
       getOptionName: jest.fn((command: string, option: string) => option),
-      getOptionDescription: jest.fn((command: string, option: string) => `Option ${option}`),
+      getOptionDescription: jest.fn(
+        (command: string, option: string) => `Option ${option}`
+      ),
       setLanguage: jest.fn(() => undefined)
     }
   };
@@ -58,11 +70,14 @@ interface MockMessage extends PartialMessage {
   attachments: Collection<string, Attachment>;
   react: jest.Mock;
   reactions: {
-    cache: Collection<string, { 
-      remove: jest.Mock;
-      emoji?: { name: string };
-      count?: number;
-    }>;
+    cache: Collection<
+      string,
+      {
+        remove: jest.Mock;
+        emoji?: { name: string };
+        count?: number;
+      }
+    >;
   };
 }
 
@@ -77,12 +92,17 @@ interface MockMessageManager {
 interface MockChannel {
   isTextBased: () => this is TextChannel;
   messages: MockMessageManager;
+  send: jest.Mock;
 }
 
-type BaseMockInteraction = Omit<ChatInputCommandInteraction<CacheType>, 'client' | 'reply' | 'options'>;
+type BaseMockInteraction = Omit<
+  ChatInputCommandInteraction<CacheType>,
+  'client' | 'reply' | 'options'
+>;
 
 interface MockInteractionOptions extends CommandInteractionOptionResolver {
   getString: jest.Mock;
+  getBoolean: jest.Mock;
 }
 
 interface MockInteraction extends BaseMockInteraction {
@@ -91,7 +111,11 @@ interface MockInteraction extends BaseMockInteraction {
   options: MockInteractionOptions;
 }
 
-interface MockButtonInteraction extends Omit<ButtonInteraction<CacheType>, 'client' | 'reply' | 'componentType' | 'component'> {
+interface MockButtonInteraction
+  extends Omit<
+    ButtonInteraction<CacheType>,
+    'client' | 'reply' | 'componentType' | 'component'
+  > {
   client: Client<true>;
   reply: jest.Mock;
   customId: string;
@@ -119,6 +143,7 @@ describe('Comandos de Música', () => {
 
     const config = await import('../config');
     config.MUSIC_CHANNEL_ID = 'requests';
+    config.SEND_PLAY_COMMAND = true;
 
     mockClientInstance = {
       intents: [
@@ -134,12 +159,13 @@ describe('Comandos de Música', () => {
 
     mockChannelInstance = {
       ...mockChannel,
-      isTextBased: function(this: MockChannel): this is TextChannel {
+      isTextBased: function (this: MockChannel): this is TextChannel {
         return true;
       },
       messages: {
         fetch: jest.fn()
-      }
+      },
+      send: jest.fn()
     };
 
     mockMessageInstance = {
@@ -153,10 +179,9 @@ describe('Comandos de Música', () => {
       }
     } as unknown as MockMessage;
 
-
-
     const mockOptions: MockInteractionOptions = {
-      getString: jest.fn()
+      getString: jest.fn(),
+      getBoolean: jest.fn()
     } as unknown as MockInteractionOptions;
 
     mockInteraction = {
@@ -178,7 +203,9 @@ describe('Comandos de Música', () => {
       deferUpdate: jest.fn()
     } as unknown as MockButtonInteraction;
 
-    (mockClientInstance.channels as unknown as MockChannelManager).fetch.mockResolvedValue(mockChannelInstance);
+    (
+      mockClientInstance.channels as unknown as MockChannelManager
+    ).fetch.mockResolvedValue(mockChannelInstance);
   });
 
   afterEach(() => {
@@ -187,9 +214,13 @@ describe('Comandos de Música', () => {
 
   describe('handleNextSong', () => {
     it('deve retornar erro se não conseguir acessar o canal', async () => {
-      (mockClientInstance.channels as unknown as MockChannelManager).fetch.mockResolvedValue(null);
+      (
+        mockClientInstance.channels as unknown as MockChannelManager
+      ).fetch.mockResolvedValue(null);
 
-      await handleNextSong(mockInteraction as unknown as ChatInputCommandInteraction);
+      await handleNextSong(
+        mockInteraction as unknown as ChatInputCommandInteraction
+      );
 
       expect(mockInteraction.reply).toHaveBeenCalledWith({
         content: mockTranslations['music.channelError'],
@@ -202,9 +233,13 @@ describe('Comandos de Música', () => {
         ...mockChannelInstance,
         isTextBased: (): false => false
       };
-      (mockClientInstance.channels as unknown as MockChannelManager).fetch.mockResolvedValue(nonTextChannel);
+      (
+        mockClientInstance.channels as unknown as MockChannelManager
+      ).fetch.mockResolvedValue(nonTextChannel);
 
-      await handleNextSong(mockInteraction as unknown as ChatInputCommandInteraction);
+      await handleNextSong(
+        mockInteraction as unknown as ChatInputCommandInteraction
+      );
 
       expect(mockInteraction.reply).toHaveBeenCalledWith({
         content: mockTranslations['music.channelError'],
@@ -213,12 +248,16 @@ describe('Comandos de Música', () => {
     });
 
     it('deve encontrar a próxima música não marcada', async () => {
-      (mockClientInstance.channels as unknown as MockChannelManager).fetch.mockResolvedValue(mockChannelInstance);
-      mockChannelInstance.messages.fetch.mockResolvedValue(new MockCollection([
-        ['123', mockMessageInstance]
-      ]));
+      (
+        mockClientInstance.channels as unknown as MockChannelManager
+      ).fetch.mockResolvedValue(mockChannelInstance);
+      mockChannelInstance.messages.fetch.mockResolvedValue(
+        new MockCollection([['123', mockMessageInstance]])
+      );
 
-      await handleNextSong(mockInteraction as unknown as ChatInputCommandInteraction);
+      await handleNextSong(
+        mockInteraction as unknown as ChatInputCommandInteraction
+      );
 
       expect(mockInteraction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining('Next song'),
@@ -227,17 +266,21 @@ describe('Comandos de Música', () => {
     });
 
     it('deve informar quando todas as músicas foram tocadas', async () => {
-      mockMessageInstance.reactions.cache.set('🐰', { 
+      mockMessageInstance.reactions.cache.set('🐰', {
         remove: jest.fn(),
-        emoji: { name: '🐰' }, 
-        count: 1 
+        emoji: { name: '🐰' },
+        count: 1
       });
-      (mockClientInstance.channels as unknown as MockChannelManager).fetch.mockResolvedValue(mockChannelInstance);
-      mockChannelInstance.messages.fetch.mockResolvedValue(new MockCollection([
-        ['123', mockMessageInstance]
-      ]));
+      (
+        mockClientInstance.channels as unknown as MockChannelManager
+      ).fetch.mockResolvedValue(mockChannelInstance);
+      mockChannelInstance.messages.fetch.mockResolvedValue(
+        new MockCollection([['123', mockMessageInstance]])
+      );
 
-      await handleNextSong(mockInteraction as unknown as ChatInputCommandInteraction);
+      await handleNextSong(
+        mockInteraction as unknown as ChatInputCommandInteraction
+      );
 
       expect(mockInteraction.reply).toHaveBeenCalledWith({
         content: mockTranslations['music.allPlayed'],
@@ -248,12 +291,19 @@ describe('Comandos de Música', () => {
 
   describe('handlePlayButton', () => {
     it('deve marcar a música como tocada', async () => {
-      (mockClientInstance.channels as unknown as MockChannelManager).fetch.mockResolvedValue(mockChannelInstance);
+      (
+        mockClientInstance.channels as unknown as MockChannelManager
+      ).fetch.mockResolvedValue(mockChannelInstance);
       mockChannelInstance.messages.fetch.mockResolvedValue(mockMessageInstance);
 
-      await handlePlayButton(mockButtonInteraction as unknown as ButtonInteraction);
+      await handlePlayButton(
+        mockButtonInteraction as unknown as ButtonInteraction
+      );
 
       expect(mockMessageInstance.react).toHaveBeenCalledWith('🐰');
+      expect(mockChannelInstance.send).toHaveBeenCalledWith(
+        '/play https://example.com/song'
+      );
       expect(mockButtonInteraction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining('Song marked as played'),
         components: expect.any(Array),
@@ -262,10 +312,16 @@ describe('Comandos de Música', () => {
     });
 
     it('deve lidar com erro ao processar a música', async () => {
-      (mockClientInstance.channels as unknown as MockChannelManager).fetch.mockResolvedValue(mockChannelInstance);
-      mockChannelInstance.messages.fetch.mockRejectedValue(new Error('Test error'));
+      (
+        mockClientInstance.channels as unknown as MockChannelManager
+      ).fetch.mockResolvedValue(mockChannelInstance);
+      mockChannelInstance.messages.fetch.mockRejectedValue(
+        new Error('Test error')
+      );
 
-      await handlePlayButton(mockButtonInteraction as unknown as ButtonInteraction);
+      await handlePlayButton(
+        mockButtonInteraction as unknown as ButtonInteraction
+      );
 
       expect(mockButtonInteraction.reply).toHaveBeenCalledWith({
         content: mockTranslations['music.processError'],
@@ -282,43 +338,52 @@ describe('Comandos de Música', () => {
           cache: new MockCollection()
         }
       };
-      
-      (mockClientInstance.channels as unknown as MockChannelManager).fetch.mockResolvedValue(mockChannelInstance);
+
+      (
+        mockClientInstance.channels as unknown as MockChannelManager
+      ).fetch.mockResolvedValue(mockChannelInstance);
       mockChannelInstance.messages.fetch.mockResolvedValue(messageWithLink);
 
-      await handlePlayButton(mockButtonInteraction as unknown as ButtonInteraction);
+      await handlePlayButton(
+        mockButtonInteraction as unknown as ButtonInteraction
+      );
 
       expect(mockButtonInteraction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining('Song marked as played'),
         components: expect.any(Array),
         flags: 1 << 6
       });
+      expect(mockChannelInstance.send).toHaveBeenCalledWith(
+        '/play https://example.com/song.mp3'
+      );
     });
   });
 
   describe('handleClearReactions', () => {
     it('deve limpar as reações do bot', async () => {
-      const mockBunnyReaction = { 
+      const mockBunnyReaction = {
         remove: jest.fn(),
         emoji: { name: '🐰' }
       };
-      
+
       // Criar uma mensagem mock com reação
       const messageWithReaction = {
         ...mockMessageInstance,
         reactions: {
-          cache: new MockCollection([
-            ['🐰', mockBunnyReaction]
-          ])
+          cache: new MockCollection([['🐰', mockBunnyReaction]])
         }
       };
-      
-      (mockClientInstance.channels as unknown as MockChannelManager).fetch.mockResolvedValue(mockChannelInstance);
-      mockChannelInstance.messages.fetch.mockResolvedValue(new MockCollection([
-        ['123', messageWithReaction]
-      ]));
 
-      await handleClearReactions(mockInteraction as unknown as ChatInputCommandInteraction);
+      (
+        mockClientInstance.channels as unknown as MockChannelManager
+      ).fetch.mockResolvedValue(mockChannelInstance);
+      mockChannelInstance.messages.fetch.mockResolvedValue(
+        new MockCollection([['123', messageWithReaction]])
+      );
+
+      await handleClearReactions(
+        mockInteraction as unknown as ChatInputCommandInteraction
+      );
 
       expect(mockBunnyReaction.remove).toHaveBeenCalled();
       expect(mockInteraction.reply).toHaveBeenCalledWith({
@@ -327,4 +392,4 @@ describe('Comandos de Música', () => {
       });
     });
   });
-}); 
+});

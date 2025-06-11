@@ -83,6 +83,10 @@ export class MockSlashCommandBuilder {
     return this;
   }
 
+  addBooleanOption(fn: (option: MockOption) => MockOption) {
+    return this.addStringOption(fn);
+  }
+
   addAttachmentOption(fn: (option: MockOption) => MockOption) {
     return this.addStringOption(fn);
   }
@@ -134,7 +138,8 @@ export const mockChannel = {
   isTextBased: () => true,
   messages: {
     fetch: jest.fn()
-  }
+  },
+  send: jest.fn()
 };
 
 export const GatewayIntentBits = {

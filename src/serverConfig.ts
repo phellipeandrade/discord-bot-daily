@@ -13,6 +13,8 @@ export interface ServerConfig {
   holidayCountries?: string[];
   dateFormat?: string;
   admins?: string[];
+  sendPlayCommand?: boolean;
+  playCommand?: string;
 }
 
 const CONFIG_PATH = path.join(__dirname, 'serverConfig.json');

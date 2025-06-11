@@ -4,7 +4,8 @@
   "list.pending": "**Aguardando seleção:**\n{{users}}",
   "list.selected": "**Já selecionados:**\n{{users}}",
   "music.noValidMusic": "✅ Nenhuma música válida encontrada.",
-  "music.marked": "✅ Música marcada como tocada!\n\n🎵 Para tocar a música no bot, copie e envie o comando abaixo:\n```\n/play {{link}}\n```",
+  "music.marked": "✅ Música marcada como tocada!\n\n🎵 Para tocar a música no bot, copie e envie o comando abaixo:\n```\n{{command}} {{link}}\n```",
+  "music.markedAuto": "✅ Música marcada como tocada!\n\n🎵 Comando `{{command}} {{link}}` enviado para o Jockie Music.",
   "music.reactionsCleared": "✅ Removidas {{count}} reações 🐰 feitas pelo bot.",
   "music.channelError": "Não foi possível acessar o canal de música.",
   "music.processError": "Erro ao processar a música.",
@@ -152,6 +153,14 @@
         "dateFormat": {
           "name": "formato",
           "description": "Formato da data (ex.: YYYY-MM-DD)"
+        },
+        "sendPlayCommand": {
+          "name": "habilitar-comando-play",
+          "description": "Enviar comando de play para o Jockie"
+        },
+        "playCommand": {
+          "name": "comando-play",
+          "description": "Comando de play a ser enviado"
         }
       }
     },

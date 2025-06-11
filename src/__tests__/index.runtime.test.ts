@@ -36,6 +36,7 @@ jest.mock('discord.js', () => {
     addChannelOption(fn: (o: Option) => unknown) { fn(new Option()); return this; }
     addAttachmentOption(fn: (o: Option) => unknown) { fn(new Option()); return this; }
     addUserOption(fn: (o: Option) => unknown) { fn(new Option()); return this; }
+    addBooleanOption(fn: (o: Option) => unknown) { fn(new Option()); return this; }
     toJSON() { return {}; }
   }
   return {

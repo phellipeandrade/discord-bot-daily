@@ -8,9 +8,11 @@ import {
   TextChannel
 } from 'discord.js';
 import { i18n } from './i18n';
-import { MUSIC_CHANNEL_ID } from './config';
+import { MUSIC_CHANNEL_ID, PLAY_COMMAND, SEND_PLAY_COMMAND } from './config';
 
-export async function findNextSong(client: Client): Promise<{ text: string; components?: ActionRowBuilder<ButtonBuilder>[] }> {
+export async function findNextSong(
+  client: Client
+): Promise<{ text: string; components?: ActionRowBuilder<ButtonBuilder>[] }> {
   if (!MUSIC_CHANNEL_ID) {
     return { text: i18n.t('music.channelError') };
   }
@@ -20,12 +22,16 @@ export async function findNextSong(client: Client): Promise<{ text: string; comp
     return { text: i18n.t('music.channelError') };
   }
 
-  const messages = await (requestsChannel as TextChannel).messages.fetch({ limit: 50 });
+  const messages = await (requestsChannel as TextChannel).messages.fetch({
+    limit: 50
+  });
   const bunny = '🐰';
   const linkRegex = /https?:\/\/\S+/i;
 
   for (const msg of Array.from(messages.values()).reverse()) {
-    const bunnyReaction = msg.reactions.cache.find(r => r.emoji.name === bunny);
+    const bunnyReaction = msg.reactions.cache.find(
+      (r) => r.emoji.name === bunny
+    );
     const alreadyPlayed = !!bunnyReaction && bunnyReaction?.count > 0;
     if (alreadyPlayed) continue;
 
@@ -59,12 +65,16 @@ export async function findNextSong(client: Client): Promise<{ text: string; comp
   return { text: i18n.t('music.allPlayed') };
 }
 
-export async function handleNextSong(interaction: ChatInputCommandInteraction): Promise<void> {
+export async function handleNextSong(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
   const { text, components } = await findNextSong(interaction.client);
   await interaction.reply({ content: text, components });
 }
 
-export async function handleClearReactions(interaction: ChatInputCommandInteraction): Promise<void> {
+export async function handleClearReactions(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
   const channel = await interaction.client.channels.fetch(MUSIC_CHANNEL_ID);
   if (!channel?.isTextBased()) {
     await interaction.reply({
@@ -79,7 +89,9 @@ export async function handleClearReactions(interaction: ChatInputCommandInteract
     let count = 0;
 
     for (const message of messages.values()) {
-      const bunnyReaction = message.reactions.cache.find(r => r.emoji.name === '🐰');
+      const bunnyReaction = message.reactions.cache.find(
+        (r) => r.emoji.name === '🐰'
+      );
       if (bunnyReaction) {
         await bunnyReaction.remove();
         count++;
@@ -99,7 +111,9 @@ export async function handleClearReactions(interaction: ChatInputCommandInteract
   }
 }
 
-export async function handlePlayButton(interaction: ButtonInteraction): Promise<void> {
+export async function handlePlayButton(
+  interaction: ButtonInteraction
+): Promise<void> {
   const customId = interaction.customId;
   if (!customId.startsWith('play_')) return;
 
@@ -115,7 +129,9 @@ export async function handlePlayButton(interaction: ButtonInteraction): Promise<
   }
 
   try {
-    const originalMsg = await (channel as TextChannel).messages.fetch(originalMessageId);
+    const originalMsg = await (channel as TextChannel).messages.fetch(
+      originalMessageId
+    );
     const linkRegex = /https?:\/\/\S+/i;
     let linkToPlay: string;
 
@@ -140,6 +156,9 @@ export async function handlePlayButton(interaction: ButtonInteraction): Promise<
     }
 
     await originalMsg.react('🐰');
+    if (SEND_PLAY_COMMAND) {
+      await (channel as TextChannel).send(`${PLAY_COMMAND} ${linkToPlay}`);
+    }
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
@@ -148,8 +167,9 @@ export async function handlePlayButton(interaction: ButtonInteraction): Promise<
         .setURL(linkToPlay)
     );
 
+    const key = SEND_PLAY_COMMAND ? 'music.markedAuto' : 'music.marked';
     await interaction.reply({
-      content: i18n.t('music.marked', { link: linkToPlay }),
+      content: i18n.t(key, { link: linkToPlay, command: PLAY_COMMAND }),
       components: [row],
       flags: 1 << 6
     });
