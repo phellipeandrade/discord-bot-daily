@@ -10,5 +10,6 @@ module.exports = {
       tsconfig: 'tsconfig.json'
     }]
   },
-  testMatch: ['**/__tests__/**/*.test.[jt]s?(x)']
-}; 
+  testMatch: ['**/__tests__/**/*.test.[jt]s?(x)'],
+  coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary']
+};

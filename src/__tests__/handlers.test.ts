@@ -144,4 +144,48 @@ describe('handlers', () => {
     expect(data.skips?.['1']).toBe(future);
     expect(mockSaveUsers).toHaveBeenCalled();
   });
+
+  test('handleSetup writes configuration', async () => {
+    jest.resetModules();
+    const saveServerConfig = jest.fn();
+    const updateServerConfig = jest.fn();
+    jest.doMock('../serverConfig', () => ({ saveServerConfig }));
+    jest.doMock('../config', () => ({ TOKEN: 'tok', updateServerConfig }));
+    const { handleSetup } = await import('../handlers');
+    const interaction = {
+      guildId: 'guild',
+      options: {
+        getChannel: jest
+          .fn()
+          .mockReturnValueOnce({ id: 'daily' })
+          .mockReturnValueOnce({ id: 'music' }),
+        getString: jest.fn().mockReturnValue('tok')
+      },
+      reply: jest.fn()
+    } as unknown as ChatInputCommandInteraction;
+    await handleSetup(interaction);
+    expect(saveServerConfig).toHaveBeenCalledWith({
+      guildId: 'guild',
+      channelId: 'daily',
+      musicChannelId: 'music',
+      token: 'tok'
+    });
+    expect(updateServerConfig).toHaveBeenCalled();
+    expect(interaction.reply).toHaveBeenCalled();
+  });
+
+  test('handleSetup ignores missing guildId', async () => {
+    jest.resetModules();
+    const saveServerConfig = jest.fn();
+    jest.doMock('../serverConfig', () => ({ saveServerConfig }));
+    const { handleSetup } = await import('../handlers');
+    const interaction = {
+      guildId: undefined,
+      options: { getChannel: jest.fn(), getString: jest.fn() },
+      reply: jest.fn()
+    } as unknown as ChatInputCommandInteraction;
+    await handleSetup(interaction);
+    expect(saveServerConfig).not.toHaveBeenCalled();
+    expect(interaction.reply).not.toHaveBeenCalled();
+  });
 });
