@@ -136,7 +136,7 @@ export async function handleReset(
   try {
     const originalData = JSON.parse(
       await fs.promises.readFile(
-        path.join(__dirname, 'users.original.json'),
+        path.join(__dirname, 'users.sample.json'),
         'utf-8'
       )
     );

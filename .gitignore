@@ -38,6 +38,6 @@ coverage/
 .npm
 .eslintcache 
 
-src/users.original.json
+src/users.json
 src/serverConfig.json
 bot.zip
