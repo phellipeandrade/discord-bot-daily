@@ -167,18 +167,62 @@ const commands = [
       option
         .setName(i18n.getOptionName('setup', 'daily'))
         .setDescription(i18n.getOptionDescription('setup', 'daily'))
-        .setRequired(true)
+        .setRequired(false)
     )
     .addChannelOption((option) =>
       option
         .setName(i18n.getOptionName('setup', 'music'))
         .setDescription(i18n.getOptionDescription('setup', 'music'))
-        .setRequired(true)
+        .setRequired(false)
     )
     .addStringOption((option) =>
       option
         .setName(i18n.getOptionName('setup', 'token'))
         .setDescription(i18n.getOptionDescription('setup', 'token'))
+        .setRequired(false)
+    )
+    .addStringOption((option) =>
+      option
+        .setName(i18n.getOptionName('setup', 'timezone'))
+        .setDescription(i18n.getOptionDescription('setup', 'timezone'))
+        .addChoices(
+          { name: 'America/Sao_Paulo', value: 'America/Sao_Paulo' },
+          { name: 'America/New_York', value: 'America/New_York' },
+          { name: 'UTC', value: 'UTC' }
+        )
+        .setRequired(false)
+    )
+    .addStringOption((option) =>
+      option
+        .setName(i18n.getOptionName('setup', 'language'))
+        .setDescription(i18n.getOptionDescription('setup', 'language'))
+        .addChoices(
+          { name: 'en', value: 'en' },
+          { name: 'pt-br', value: 'pt-br' }
+        )
+        .setRequired(false)
+    )
+    .addStringOption((option) =>
+      option
+        .setName(i18n.getOptionName('setup', 'dailyTime'))
+        .setDescription(i18n.getOptionDescription('setup', 'dailyTime'))
+        .setRequired(false)
+    )
+    .addStringOption((option) =>
+      option
+        .setName(i18n.getOptionName('setup', 'dailyDays'))
+        .setDescription(i18n.getOptionDescription('setup', 'dailyDays'))
+        .setRequired(false)
+    )
+    .addStringOption((option) =>
+      option
+        .setName(i18n.getOptionName('setup', 'holidayCountries'))
+        .setDescription(i18n.getOptionDescription('setup', 'holidayCountries'))
+        .addChoices(
+          { name: 'BR', value: 'BR' },
+          { name: 'US', value: 'US' },
+          { name: 'BR,US', value: 'BR,US' }
+        )
         .setRequired(false)
     )
 ].map((cmd) => cmd.toJSON());

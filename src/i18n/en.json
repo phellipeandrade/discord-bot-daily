@@ -116,6 +116,26 @@
         "token": {
           "name": "token",
           "description": "Bot token (optional)"
+        },
+        "timezone": {
+          "name": "timezone",
+          "description": "Timezone"
+        },
+        "language": {
+          "name": "language",
+          "description": "Bot language"
+        },
+        "dailyTime": {
+          "name": "dailytime",
+          "description": "Daily draw time (HH:MM)"
+        },
+        "dailyDays": {
+          "name": "dailydays",
+          "description": "Cron days for the draw"
+        },
+        "holidayCountries": {
+          "name": "holidays",
+          "description": "Holiday countries"
         }
       }
     }

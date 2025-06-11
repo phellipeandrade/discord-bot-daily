@@ -121,6 +121,26 @@
         "token": {
           "name": "token",
           "description": "Token do bot (opcional)"
+        },
+        "timezone": {
+          "name": "timezone",
+          "description": "Fuso horário"
+        },
+        "language": {
+          "name": "idioma",
+          "description": "Idioma do bot"
+        },
+        "dailyTime": {
+          "name": "horario",
+          "description": "Horário do sorteio (HH:MM)"
+        },
+        "dailyDays": {
+          "name": "dias",
+          "description": "Dias do sorteio (cron)"
+        },
+        "holidayCountries": {
+          "name": "feriados",
+          "description": "Países de feriado"
         }
       }
     }

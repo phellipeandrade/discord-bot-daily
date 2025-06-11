@@ -14,11 +14,18 @@ export let MUSIC_CHANNEL_ID =
 export const USERS_FILE = process.env.USERS_FILE
   ? path.resolve(process.env.USERS_FILE)
   : path.join(__dirname, 'users.json');
-export const TIMEZONE = process.env.TIMEZONE ?? 'America/Sao_Paulo';
-export const LANGUAGE = process.env.BOT_LANGUAGE ?? 'pt-br';
-export const DAILY_TIME = process.env.DAILY_TIME ?? '09:00';
-export const DAILY_DAYS = process.env.DAILY_DAYS ?? '1-5';
-export const HOLIDAY_COUNTRIES = (process.env.HOLIDAY_COUNTRIES ?? 'BR')
+export let TIMEZONE =
+  process.env.TIMEZONE || fileConfig?.timezone || 'America/Sao_Paulo';
+export let LANGUAGE =
+  process.env.BOT_LANGUAGE || fileConfig?.language || 'pt-br';
+export let DAILY_TIME =
+  process.env.DAILY_TIME || fileConfig?.dailyTime || '09:00';
+export let DAILY_DAYS =
+  process.env.DAILY_DAYS || fileConfig?.dailyDays || '1-5';
+export let HOLIDAY_COUNTRIES = (
+  process.env.HOLIDAY_COUNTRIES ||
+  (fileConfig?.holidayCountries ? fileConfig.holidayCountries.join(',') : 'BR')
+)
   .split(',')
   .map((c) => c.trim().toUpperCase())
   .filter((c) => c);
@@ -29,6 +36,11 @@ export function updateServerConfig(config: ServerConfig): void {
   GUILD_ID = config.guildId;
   MUSIC_CHANNEL_ID = config.musicChannelId;
   if (config.token) TOKEN = config.token;
+  if (config.timezone) TIMEZONE = config.timezone;
+  if (config.language) LANGUAGE = config.language;
+  if (config.dailyTime) DAILY_TIME = config.dailyTime;
+  if (config.dailyDays) DAILY_DAYS = config.dailyDays;
+  if (config.holidayCountries) HOLIDAY_COUNTRIES = config.holidayCountries;
 }
 
 export function logConfig(): void {

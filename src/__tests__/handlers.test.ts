@@ -31,14 +31,17 @@ jest.mock('../i18n', () => ({
 // Mock das funções
 const mockSaveUsers = jest.fn();
 const mockSelectUser = jest.fn();
-const mockFormatUsers = jest.fn((users: Array<{ name: string; id: string }>) => 
-  users.map((u: { name: string; id: string }) => u.name).join(', ') || '(none)'
+const mockFormatUsers = jest.fn(
+  (users: Array<{ name: string; id: string }>) =>
+    users.map((u: { name: string; id: string }) => u.name).join(', ') ||
+    '(none)'
 );
 
 jest.mock('../users', () => ({
   saveUsers: (data: UserData) => mockSaveUsers(data),
   selectUser: (data: UserData) => mockSelectUser(data),
-  formatUsers: (users: Array<{ name: string; id: string }>) => mockFormatUsers(users)
+  formatUsers: (users: Array<{ name: string; id: string }>) =>
+    mockFormatUsers(users)
 }));
 
 jest.mock('fs');
@@ -111,7 +114,9 @@ describe('handlers', () => {
   });
 
   test('handleReset loads original file', async () => {
-    (mockFs.promises.readFile as jest.Mock).mockResolvedValue(JSON.stringify({ all: [] }));
+    (mockFs.promises.readFile as jest.Mock).mockResolvedValue(
+      JSON.stringify({ all: [] })
+    );
     const interaction = createInteraction();
     await handleReset(interaction, data);
     expect(mockSaveUsers).toHaveBeenCalled();
@@ -149,26 +154,56 @@ describe('handlers', () => {
     jest.resetModules();
     const saveServerConfig = jest.fn();
     const updateServerConfig = jest.fn();
-    jest.doMock('../serverConfig', () => ({ saveServerConfig }));
-    jest.doMock('../config', () => ({ TOKEN: 'tok', updateServerConfig }));
+    jest.doMock('../serverConfig', () => ({
+      saveServerConfig,
+      loadServerConfig: jest.fn().mockReturnValue({
+        guildId: 'guild',
+        channelId: 'old',
+        musicChannelId: 'music',
+        token: 'tok',
+        timezone: 'America/Sao_Paulo',
+        language: 'en',
+        dailyTime: '09:00',
+        dailyDays: '1-5',
+        holidayCountries: ['BR']
+      })
+    }));
+    jest.doMock('../config', () => ({
+      TOKEN: 'tok',
+      CHANNEL_ID: 'old',
+      MUSIC_CHANNEL_ID: 'music',
+      TIMEZONE: 'America/Sao_Paulo',
+      LANGUAGE: 'en',
+      DAILY_TIME: '09:00',
+      DAILY_DAYS: '1-5',
+      HOLIDAY_COUNTRIES: ['BR'],
+      updateServerConfig
+    }));
     const { handleSetup } = await import('../handlers');
     const interaction = {
       guildId: 'guild',
       options: {
         getChannel: jest
           .fn()
-          .mockReturnValueOnce({ id: 'daily' })
-          .mockReturnValueOnce({ id: 'music' }),
-        getString: jest.fn().mockReturnValue('tok')
+          .mockReturnValueOnce({ id: 'newDaily' })
+          .mockReturnValueOnce(null),
+        getString: jest.fn((name: string) =>
+          name === 'timezone' ? 'UTC' : null
+        )
       },
       reply: jest.fn()
     } as unknown as ChatInputCommandInteraction;
     await handleSetup(interaction);
     expect(saveServerConfig).toHaveBeenCalledWith({
       guildId: 'guild',
-      channelId: 'daily',
+      channelId: 'newDaily',
       musicChannelId: 'music',
-      token: 'tok'
+      token: 'tok',
+      timezone: 'UTC',
+      language: 'en',
+      dailyTime: '09:00',
+      dailyDays: '1-5',
+      holidayCountries: ['BR']
     });
     expect(updateServerConfig).toHaveBeenCalled();
     expect(interaction.reply).toHaveBeenCalled();

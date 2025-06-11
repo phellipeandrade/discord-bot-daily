@@ -18,12 +18,17 @@ jest.mock('../i18n', () => ({
         'list.empty': '(none)'
       };
       let text = translations[key] || key;
-      return text.replace(/\{\{(\w+)\}\}/g, (_, key) => params[key] ?? `{{${key}}}`);
+      return text.replace(
+        /\{\{(\w+)\}\}/g,
+        (_, key) => params[key] ?? `{{${key}}}`
+      );
     }),
     getCommandName: jest.fn((command: string) => command),
     getCommandDescription: jest.fn((command: string) => `Command ${command}`),
     getOptionName: jest.fn((command: string, option: string) => option),
-    getOptionDescription: jest.fn((command: string, option: string) => `Option ${option}`),
+    getOptionDescription: jest.fn(
+      (command: string, option: string) => `Option ${option}`
+    ),
     setLanguage: jest.fn((lang: 'en' | 'pt-br') => {})
   }
 }));
@@ -82,6 +87,9 @@ jest.mock('discord.js', () => {
         setRequired(required: boolean) {
           this.required = required;
           return this;
+        },
+        addChoices(..._choices: any[]) {
+          return this;
         }
       };
       this.options.push(fn(option));
@@ -136,12 +144,17 @@ jest.mock('../i18n', () => ({
       };
 
       let text = translations[key] || key;
-      return text.replace(/\{\{(\w+)\}\}/g, (_, key) => params[key] ?? `{{${key}}}`);
+      return text.replace(
+        /\{\{(\w+)\}\}/g,
+        (_, key) => params[key] ?? `{{${key}}}`
+      );
     }),
     getCommandName: jest.fn((command: string) => command),
     getCommandDescription: jest.fn((command: string) => `Command ${command}`),
     getOptionName: jest.fn((command: string, option: string) => option),
-    getOptionDescription: jest.fn((command: string, option: string) => `Option ${option}`),
+    getOptionDescription: jest.fn(
+      (command: string, option: string) => `Option ${option}`
+    ),
     setLanguage: jest.fn((lang: 'en' | 'pt-br') => {})
   }
 }));
@@ -149,22 +162,22 @@ jest.mock('../i18n', () => ({
 // Dados de teste fixos
 const TEST_DATA: UserData = {
   all: [
-    { name: "User1", id: "1" },
-    { name: "User2", id: "2" },
-    { name: "User3", id: "3" },
-    { name: "User4", id: "4" },
-    { name: "User5", id: "5" },
-    { name: "User6", id: "6" },
-    { name: "User7", id: "7" }
+    { name: 'User1', id: '1' },
+    { name: 'User2', id: '2' },
+    { name: 'User3', id: '3' },
+    { name: 'User4', id: '4' },
+    { name: 'User5', id: '5' },
+    { name: 'User6', id: '6' },
+    { name: 'User7', id: '7' }
   ],
   remaining: [
-    { name: "User1", id: "1" },
-    { name: "User2", id: "2" },
-    { name: "User3", id: "3" },
-    { name: "User4", id: "4" },
-    { name: "User5", id: "5" },
-    { name: "User6", id: "6" },
-    { name: "User7", id: "7" }
+    { name: 'User1', id: '1' },
+    { name: 'User2', id: '2' },
+    { name: 'User3', id: '3' },
+    { name: 'User4', id: '4' },
+    { name: 'User5', id: '5' },
+    { name: 'User6', id: '6' },
+    { name: 'User7', id: '7' }
   ],
   lastSelected: undefined
 };
@@ -191,15 +204,15 @@ describe('Funções Utilitárias', () => {
 
     it('deve formatar lista com múltiplos usuários', () => {
       const lista: UserEntry[] = mockData.all.slice(0, 3);
-      const expected = lista.map(u => `• ${u.name}`).join('\n');
+      const expected = lista.map((u) => `• ${u.name}`).join('\n');
       expect(formatUsers(lista)).toBe(expected);
     });
 
     it('deve lidar com caracteres especiais nos nomes', () => {
-      const lista: UserEntry[] = mockData.all.filter(u =>
-        /[áãâàéêíóôõúüçñ]/i.exec(u.name) !== null
+      const lista: UserEntry[] = mockData.all.filter(
+        (u) => /[áãâàéêíóôõúüçñ]/i.exec(u.name) !== null
       );
-      const expected = lista.map(u => `• ${u.name}`).join('\n');
+      const expected = lista.map((u) => `• ${u.name}`).join('\n');
       const resultado = formatUsers(lista);
       if (lista.length === 0) {
         expect(resultado).toBe('(none)');
@@ -210,7 +223,7 @@ describe('Funções Utilitárias', () => {
 
     it('deve manter a ordem da lista original', () => {
       const lista: UserEntry[] = mockData.all.slice(0, 3);
-      const expected = lista.map(u => `• ${u.name}`).join('\n');
+      const expected = lista.map((u) => `• ${u.name}`).join('\n');
       expect(formatUsers(lista)).toBe(expected);
     });
   });
@@ -219,20 +232,24 @@ describe('Funções Utilitárias', () => {
     it('deve criar arquivo se não existir', async () => {
       (fs.existsSync as jest.Mock).mockReturnValue(false);
       (fs.promises.writeFile as jest.Mock).mockResolvedValue(undefined);
-      (fs.promises.readFile as jest.Mock).mockResolvedValue('{"all":[],"remaining":[]}');
+      (fs.promises.readFile as jest.Mock).mockResolvedValue(
+        '{"all":[],"remaining":[]}'
+      );
 
       const resultado = await loadUsers();
-      
+
       expect(resultado).toEqual({ all: [], remaining: [], skips: {} });
       expect(fs.promises.writeFile).toHaveBeenCalled();
     });
 
     it('deve carregar arquivo existente', async () => {
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.promises.readFile as jest.Mock).mockResolvedValue(JSON.stringify(mockData));
+      (fs.promises.readFile as jest.Mock).mockResolvedValue(
+        JSON.stringify(mockData)
+      );
 
       const resultado = await loadUsers();
-      
+
       expect(resultado).toEqual({ ...mockData, skips: {} });
     });
   });
@@ -271,7 +288,7 @@ describe('Funções Utilitárias', () => {
       dados.remaining = [];
 
       const resultado = await selectUser(dados);
-      
+
       expect(resultado).toBeDefined();
       expect(dados.remaining.length).toBeLessThan(mockData.all.length);
       expect(dados.lastSelected).toBeDefined();
@@ -282,10 +299,10 @@ describe('Funções Utilitárias', () => {
       const remainingAntes = dados.remaining.length;
 
       const resultado = await selectUser(dados);
-      
+
       expect(resultado).toBeDefined();
       expect(dados.remaining.length).toBe(remainingAntes - 1);
       expect(dados.lastSelected).toEqual(resultado);
     });
   });
-}); 
+});

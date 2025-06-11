@@ -6,6 +6,11 @@ export interface ServerConfig {
   channelId: string;
   musicChannelId: string;
   token?: string;
+  timezone?: string;
+  language?: string;
+  dailyTime?: string;
+  dailyDays?: string;
+  holidayCountries?: string[];
 }
 
 const CONFIG_PATH = path.join(__dirname, 'serverConfig.json');

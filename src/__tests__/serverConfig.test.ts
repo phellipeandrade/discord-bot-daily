@@ -20,7 +20,12 @@ describe('serverConfig module', () => {
       guildId: '1',
       channelId: '2',
       musicChannelId: '3',
-      token: 'abc'
+      token: 'abc',
+      timezone: 'UTC',
+      language: 'en',
+      dailyTime: '08:00',
+      dailyDays: '1-5',
+      holidayCountries: ['BR']
     };
     jest.doMock('fs', () => ({
       existsSync: jest.fn().mockReturnValue(true),
@@ -51,9 +56,22 @@ describe('serverConfig module', () => {
       promises: { writeFile }
     }));
     const { saveServerConfig } = require('../serverConfig');
-    const cfg = { guildId: '1', channelId: '2', musicChannelId: '3', token: 't' };
+    const cfg = {
+      guildId: '1',
+      channelId: '2',
+      musicChannelId: '3',
+      token: 't',
+      timezone: 'UTC',
+      language: 'en',
+      dailyTime: '09:00',
+      dailyDays: '1-5',
+      holidayCountries: ['BR']
+    };
     await saveServerConfig(cfg);
-    const expectedPath = path.join(path.resolve(__dirname, '..'), 'serverConfig.json');
+    const expectedPath = path.join(
+      path.resolve(__dirname, '..'),
+      'serverConfig.json'
+    );
     expect(writeFile).toHaveBeenCalledWith(
       expectedPath,
       JSON.stringify(cfg, null, 2),
@@ -72,11 +90,21 @@ describe('serverConfig module', () => {
       guildId: 'g',
       channelId: 'c',
       musicChannelId: 'm',
-      token: 'tok'
+      token: 'tok',
+      timezone: 'UTC',
+      language: 'en',
+      dailyTime: '10:00',
+      dailyDays: '1-5',
+      holidayCountries: ['BR', 'US']
     });
     expect(config.GUILD_ID).toBe('g');
     expect(config.CHANNEL_ID).toBe('c');
     expect(config.MUSIC_CHANNEL_ID).toBe('m');
     expect(config.TOKEN).toBe('tok');
+    expect(config.TIMEZONE).toBe('UTC');
+    expect(config.LANGUAGE).toBe('en');
+    expect(config.DAILY_TIME).toBe('10:00');
+    expect(config.DAILY_DAYS).toBe('1-5');
+    expect(config.HOLIDAY_COUNTRIES).toEqual(['BR', 'US']);
   });
 });
