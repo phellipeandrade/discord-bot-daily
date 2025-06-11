@@ -4,7 +4,8 @@ import { ChatInputCommandInteraction } from 'discord.js';
 import { i18n } from './i18n';
 import { UserEntry, UserData, saveUsers, selectUser, formatUsers } from './users';
 import { parseDateString, todayISO } from './date';
-import { DATE_FORMAT } from './config';
+import { DATE_FORMAT, updateServerConfig } from './config';
+import { saveServerConfig, ServerConfig } from './serverConfig';
 
 export async function handleRegister(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
   const userName = interaction.options.getString('name', true);
@@ -129,4 +130,18 @@ export async function handleSkipUntil(
   await interaction.reply(
     i18n.t('selection.skipUntil', { name: userName, date: iso })
   );
+}
+
+export async function handleSetup(interaction: ChatInputCommandInteraction): Promise<void> {
+  if (!interaction.guildId) return;
+  const daily = interaction.options.getChannel('daily', true);
+  const music = interaction.options.getChannel('music', true);
+  const cfg: ServerConfig = {
+    guildId: interaction.guildId,
+    channelId: daily.id,
+    musicChannelId: music.id
+  };
+  await saveServerConfig(cfg);
+  updateServerConfig(cfg);
+  await interaction.reply(i18n.t('setup.saved'));
 }

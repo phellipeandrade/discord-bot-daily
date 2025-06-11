@@ -27,6 +27,8 @@ Create an `.env` file with the following variables:
 
 ```
 DISCORD_TOKEN=your-bot-token
+# The variables below are optional. If omitted, run /setup in your server to configure
+# the guild and channel ids.
 GUILD_ID=your-guild-id
 CHANNEL_ID=id-of-channel-for-daily-messages
 MUSIC_CHANNEL_ID=id-of-channel-with-song-requests

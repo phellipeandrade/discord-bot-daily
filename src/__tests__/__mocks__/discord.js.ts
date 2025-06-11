@@ -79,6 +79,10 @@ export class MockSlashCommandBuilder {
     return this;
   }
 
+  addChannelOption(fn: (option: MockOption) => MockOption) {
+    return this.addStringOption(fn);
+  }
+
   toJSON() {
     return {
       name: this.name,

@@ -88,6 +88,10 @@ jest.mock('discord.js', () => {
       return this;
     }
 
+    addChannelOption(fn: (option: any) => any) {
+      return this.addStringOption(fn);
+    }
+
     toJSON() {
       return {
         name: this.name,

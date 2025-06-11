@@ -1,12 +1,17 @@
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import { loadServerConfig, ServerConfig } from './serverConfig';
 
 dotenv.config();
 
 export const TOKEN = process.env.DISCORD_TOKEN!;
-export const CHANNEL_ID = process.env.CHANNEL_ID!;
-export const GUILD_ID = process.env.GUILD_ID!;
-export const MUSIC_CHANNEL_ID = process.env.MUSIC_CHANNEL_ID!;
+
+const fileConfig = loadServerConfig();
+
+export let CHANNEL_ID = process.env.CHANNEL_ID || fileConfig?.channelId || '';
+export let GUILD_ID = process.env.GUILD_ID || fileConfig?.guildId || '';
+export let MUSIC_CHANNEL_ID =
+  process.env.MUSIC_CHANNEL_ID || fileConfig?.musicChannelId || '';
 export const USERS_FILE = process.env.USERS_FILE
   ? path.resolve(process.env.USERS_FILE)
   : path.join(__dirname, 'users.json');
@@ -19,6 +24,12 @@ export const HOLIDAY_COUNTRIES = (process.env.HOLIDAY_COUNTRIES ?? 'BR')
   .map(c => c.trim().toUpperCase())
   .filter(c => c);
 export const DATE_FORMAT = process.env.DATE_FORMAT ?? 'YYYY-MM-DD';
+
+export function updateServerConfig(config: ServerConfig): void {
+  CHANNEL_ID = config.channelId;
+  GUILD_ID = config.guildId;
+  MUSIC_CHANNEL_ID = config.musicChannelId;
+}
 
 export function logConfig(): void {
   console.log(
