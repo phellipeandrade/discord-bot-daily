@@ -25,7 +25,8 @@ describe('serverConfig module', () => {
       language: 'en',
       dailyTime: '08:00',
       dailyDays: '1-5',
-      holidayCountries: ['BR']
+      holidayCountries: ['BR'],
+      dateFormat: 'YYYY-MM-DD'
     };
     jest.doMock('fs', () => ({
       existsSync: jest.fn().mockReturnValue(true),
@@ -65,7 +66,8 @@ describe('serverConfig module', () => {
       language: 'en',
       dailyTime: '09:00',
       dailyDays: '1-5',
-      holidayCountries: ['BR']
+      holidayCountries: ['BR'],
+      dateFormat: 'YYYY-MM-DD'
     };
     await saveServerConfig(cfg);
     const expectedPath = path.join(
@@ -95,7 +97,8 @@ describe('serverConfig module', () => {
       language: 'en',
       dailyTime: '10:00',
       dailyDays: '1-5',
-      holidayCountries: ['BR', 'US']
+      holidayCountries: ['BR', 'US'],
+      dateFormat: 'YYYY-MM-DD'
     });
     expect(config.GUILD_ID).toBe('g');
     expect(config.CHANNEL_ID).toBe('c');
@@ -106,5 +109,6 @@ describe('serverConfig module', () => {
     expect(config.DAILY_TIME).toBe('10:00');
     expect(config.DAILY_DAYS).toBe('1-5');
     expect(config.HOLIDAY_COUNTRIES).toEqual(['BR', 'US']);
+    expect(config.DATE_FORMAT).toBe('YYYY-MM-DD');
   });
 });

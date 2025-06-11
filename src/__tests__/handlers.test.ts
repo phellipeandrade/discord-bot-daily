@@ -168,7 +168,8 @@ describe('handlers', () => {
         language: 'en',
         dailyTime: '09:00',
         dailyDays: '1-5',
-        holidayCountries: ['BR']
+        holidayCountries: ['BR'],
+        dateFormat: 'YYYY-MM-DD'
       })
     }));
     jest.doMock('../config', () => ({
@@ -180,6 +181,7 @@ describe('handlers', () => {
       DAILY_TIME: '09:00',
       DAILY_DAYS: '1-5',
       HOLIDAY_COUNTRIES: ['BR'],
+      DATE_FORMAT: 'YYYY-MM-DD',
       updateServerConfig
     }));
     jest.doMock('../scheduler', () => ({ scheduleDailySelection }));
@@ -208,11 +210,59 @@ describe('handlers', () => {
       language: 'en',
       dailyTime: '09:00',
       dailyDays: '1-5',
-      holidayCountries: ['BR']
+      holidayCountries: ['BR'],
+      dateFormat: 'YYYY-MM-DD'
     });
     expect(updateServerConfig).toHaveBeenCalled();
     expect(scheduleDailySelection).toHaveBeenCalledWith(interaction.client);
     expect(interaction.reply).toHaveBeenCalled();
+  });
+
+  test('handleSetup validates dateFormat', async () => {
+    jest.resetModules();
+    const saveServerConfig = jest.fn();
+    jest.doMock('../serverConfig', () => ({
+      saveServerConfig,
+      loadServerConfig: jest.fn().mockReturnValue({
+        guildId: 'g',
+        channelId: 'c',
+        musicChannelId: 'm',
+        token: 'tok',
+        timezone: 'UTC',
+        language: 'en',
+        dailyTime: '09:00',
+        dailyDays: '1-5',
+        holidayCountries: ['BR'],
+        dateFormat: 'YYYY-MM-DD'
+      })
+    }));
+    const updateServerConfig = jest.fn();
+    jest.doMock('../config', () => ({
+      TOKEN: 'tok',
+      CHANNEL_ID: 'c',
+      MUSIC_CHANNEL_ID: 'm',
+      TIMEZONE: 'UTC',
+      LANGUAGE: 'en',
+      DAILY_TIME: '09:00',
+      DAILY_DAYS: '1-5',
+      HOLIDAY_COUNTRIES: ['BR'],
+      DATE_FORMAT: 'YYYY-MM-DD',
+      updateServerConfig
+    }));
+    jest.doMock('../scheduler', () => ({ scheduleDailySelection: jest.fn() }));
+    const { handleSetup } = await import('../handlers');
+    const interaction = {
+      guildId: 'g',
+      options: {
+        getChannel: jest.fn(),
+        getString: jest.fn((n: string) => (n === 'dateFormat' ? 'bad' : null))
+      },
+      reply: jest.fn(),
+      client: {} as Client
+    } as unknown as ChatInputCommandInteraction;
+    await handleSetup(interaction);
+    expect(saveServerConfig).not.toHaveBeenCalled();
+    expect(interaction.reply).toHaveBeenCalledWith('setup.invalidDateFormat');
   });
 
   test('handleSetup ignores missing guildId', async () => {
@@ -336,7 +386,8 @@ describe('handlers', () => {
       language: 'en',
       dailyTime: '09:00',
       dailyDays: '1-5',
-      holidayCountries: ['BR']
+      holidayCountries: ['BR'],
+      dateFormat: 'YYYY-MM-DD'
     });
     const { handleCheckConfig } = require('../handlers');
     await handleCheckConfig(interaction);
@@ -352,7 +403,8 @@ describe('handlers', () => {
       guildId: '',
       channelId: '',
       musicChannelId: '',
-      token: ''
+      token: '',
+      dateFormat: 'YYYY-MM-DD'
     });
     const { handleCheckConfig } = require('../handlers');
     await handleCheckConfig(interaction);

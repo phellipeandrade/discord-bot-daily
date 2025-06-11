@@ -11,6 +11,7 @@ export interface ServerConfig {
   dailyTime?: string;
   dailyDays?: string;
   holidayCountries?: string[];
+  dateFormat?: string;
 }
 
 const CONFIG_PATH = path.join(__dirname, 'serverConfig.json');

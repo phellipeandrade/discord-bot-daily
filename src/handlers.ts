@@ -10,7 +10,7 @@ import {
   selectUser,
   formatUsers
 } from './users';
-import { parseDateString, todayISO } from './date';
+import { parseDateString, todayISO, isDateFormatValid } from './date';
 import {
   DATE_FORMAT,
   updateServerConfig,
@@ -244,7 +244,8 @@ export async function handleSetup(
     language: LANGUAGE,
     dailyTime: DAILY_TIME,
     dailyDays: DAILY_DAYS,
-    holidayCountries: HOLIDAY_COUNTRIES
+    holidayCountries: HOLIDAY_COUNTRIES,
+    dateFormat: DATE_FORMAT
   };
 
   const daily = interaction.options.getChannel(
@@ -273,6 +274,14 @@ export async function handleSetup(
   const holidays = interaction.options.getString(
     i18n.getOptionName('setup', 'holidayCountries')
   );
+  const dateFormat = interaction.options.getString(
+    i18n.getOptionName('setup', 'dateFormat')
+  ) ?? existing.dateFormat;
+
+  if (dateFormat && !isDateFormatValid(dateFormat)) {
+    await interaction.reply(i18n.t('setup.invalidDateFormat'));
+    return;
+  }
 
   const cfg: ServerConfig = {
     guildId: interaction.guildId,
@@ -285,7 +294,8 @@ export async function handleSetup(
     dailyDays,
     holidayCountries: holidays
       ? holidays.split(',').map((c) => c.trim().toUpperCase())
-      : existing.holidayCountries
+      : existing.holidayCountries,
+    dateFormat
   };
 
   await saveServerConfig(cfg);

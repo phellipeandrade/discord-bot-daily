@@ -27,6 +27,7 @@
   "user.removed": "✅ Usuário {{name}} foi removido com sucesso!",
   "setup.saved": "✅ Configuração salva!",
   "setup.instructions": "Use /configurar para definir canais e token.",
+  "setup.invalidDateFormat": "❌ Formato de data inválido. Use YYYY, MM e DD.",
   "export.success": "✅ Arquivos de dados anexados.",
   "export.noFiles": "❌ Nenhum arquivo de dados encontrado.",
   "commands": {
@@ -143,6 +144,10 @@
         "holidayCountries": {
           "name": "feriados",
           "description": "Países de feriado"
+        },
+        "dateFormat": {
+          "name": "formato",
+          "description": "Formato da data (ex.: YYYY-MM-DD)"
         }
       }
     },

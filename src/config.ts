@@ -29,7 +29,8 @@ export let HOLIDAY_COUNTRIES = (
   .split(',')
   .map((c) => c.trim().toUpperCase())
   .filter((c) => c);
-export const DATE_FORMAT = process.env.DATE_FORMAT ?? 'YYYY-MM-DD';
+export let DATE_FORMAT =
+  process.env.DATE_FORMAT || fileConfig?.dateFormat || 'YYYY-MM-DD';
 
 export function updateServerConfig(config: ServerConfig): void {
   CHANNEL_ID = config.channelId;
@@ -41,6 +42,7 @@ export function updateServerConfig(config: ServerConfig): void {
   if (config.dailyTime) DAILY_TIME = config.dailyTime;
   if (config.dailyDays) DAILY_DAYS = config.dailyDays;
   if (config.holidayCountries) HOLIDAY_COUNTRIES = config.holidayCountries;
+  if (config.dateFormat) DATE_FORMAT = config.dateFormat;
 }
 
 export function logConfig(): void {

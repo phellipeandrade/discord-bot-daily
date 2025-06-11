@@ -27,4 +27,16 @@ describe('date utilities', () => {
     expect(todayISO()).toBe('2024-05-20');
     jest.useRealTimers();
   });
+
+  test('isDateFormatValid detects valid patterns', () => {
+    const { isDateFormatValid } = require('../date');
+    expect(isDateFormatValid('YYYY-MM-DD')).toBe(true);
+    expect(isDateFormatValid('DD/MM/YYYY')).toBe(true);
+  });
+
+  test('isDateFormatValid detects invalid patterns', () => {
+    const { isDateFormatValid } = require('../date');
+    expect(isDateFormatValid('YYYY/DD')).toBe(false);
+    expect(isDateFormatValid('ABC')).toBe(false);
+  });
 });

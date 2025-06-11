@@ -190,6 +190,12 @@ const commands = [
           { name: 'BR,US', value: 'BR,US' }
         )
         .setRequired(false)
+    )
+    .addStringOption((option) =>
+      option
+        .setName(i18n.getOptionName('setup', 'dateFormat'))
+        .setDescription(i18n.getOptionDescription('setup', 'dateFormat'))
+        .setRequired(false)
     ),
   new SlashCommandBuilder()
     .setName(i18n.getCommandName('export'))
