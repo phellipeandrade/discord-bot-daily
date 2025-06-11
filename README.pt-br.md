@@ -1,7 +1,7 @@
 # Bot de Seleção Diária do Discord
 [Leia esta página em inglês](README.md)
 
-Bot do Discord que seleciona automaticamente um usuário aleatório a cada dia útil e gerencia recomendações musicais. Ele suporta inglês e português brasileiro.
+Bot do Discord que seleciona automaticamente um usuário aleatório a cada dia útil e gerencia recomendações musicais. Suporta inglês e português brasileiro.
 
 ## Recursos
 
@@ -13,7 +13,7 @@ Bot do Discord que seleciona automaticamente um usuário aleatório a cada dia �
 ## Requisitos
 
 - Node.js >= 18
-- Token do bot do Discord e permissões para registrar comandos de barra
+- Token do bot do Discord e permissões para registrar comandos slash (/comando)
 
 ## Instalação
 
