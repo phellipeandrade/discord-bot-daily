@@ -5,7 +5,8 @@ import {
   handleList,
   handleSelect,
   handleReset,
-  handleReadd
+  handleReadd,
+  handleExport
 } from '../handlers';
 import type { UserData } from '../users';
 import * as fs from 'fs';
@@ -222,5 +223,22 @@ describe('handlers', () => {
     await handleSetup(interaction);
     expect(saveServerConfig).not.toHaveBeenCalled();
     expect(interaction.reply).not.toHaveBeenCalled();
+  });
+
+  test('handleExport attaches files when present', async () => {
+    mockFs.existsSync.mockReturnValueOnce(true).mockReturnValueOnce(true);
+    const interaction = createInteraction();
+    await handleExport(interaction);
+    expect(interaction.reply).toHaveBeenCalledWith({
+      content: expect.any(String),
+      files: expect.any(Array)
+    });
+  });
+
+  test('handleExport reports missing files', async () => {
+    mockFs.existsSync.mockReturnValue(false);
+    const interaction = createInteraction();
+    await handleExport(interaction);
+    expect(interaction.reply).toHaveBeenCalledWith(expect.any(String));
   });
 });

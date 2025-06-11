@@ -27,6 +27,8 @@
   "user.removed": "✅ Usuário {{name}} foi removido com sucesso!",
   "setup.saved": "✅ Configuração salva!",
   "setup.instructions": "Use /configurar para definir canais e token.",
+  "export.success": "✅ Arquivos de dados anexados.",
+  "export.noFiles": "❌ Nenhum arquivo de dados encontrado.",
   "commands": {
     "register": {
       "name": "registrar",
@@ -143,6 +145,10 @@
           "description": "Países de feriado"
         }
       }
+    },
+    "export": {
+      "name": "exportar",
+      "description": "Exporta os arquivos de dados"
     }
   },
   "user.alreadyRegistered": "❌ Usuário {{name}} já está registrado.",

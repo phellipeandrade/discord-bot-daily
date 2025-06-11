@@ -20,7 +20,8 @@ import {
   LANGUAGE,
   DAILY_TIME,
   DAILY_DAYS,
-  HOLIDAY_COUNTRIES
+  HOLIDAY_COUNTRIES,
+  USERS_FILE
 } from './config';
 import {
   saveServerConfig,
@@ -275,4 +276,28 @@ export async function handleSetup(
   await saveServerConfig(cfg);
   updateServerConfig(cfg);
   await interaction.reply(i18n.t('setup.saved'));
+}
+
+export async function handleExport(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  const usersPath = USERS_FILE;
+  const configPath = path.join(__dirname, 'serverConfig.json');
+
+  const files: Array<{ attachment: string; name: string }> = [];
+  if (fs.existsSync(usersPath)) {
+    files.push({ attachment: usersPath, name: 'users.json' });
+  }
+  if (fs.existsSync(configPath)) {
+    files.push({ attachment: configPath, name: 'serverConfig.json' });
+  }
+
+  if (files.length === 0) {
+    await interaction.reply(i18n.t('export.noFiles'));
+  } else {
+    await interaction.reply({
+      content: i18n.t('export.success'),
+      files
+    });
+  }
 }
