@@ -321,4 +321,41 @@ describe('handlers', () => {
     await handleImport(interaction);
     expect(interaction.reply).toHaveBeenCalled();
   });
+
+  test('handleCheckConfig reports valid config', async () => {
+    jest.resetModules();
+    jest.dontMock('../config');
+    const interaction = createInteraction();
+    const config = require('../config');
+    config.updateServerConfig({
+      guildId: 'g',
+      channelId: 'c',
+      musicChannelId: 'm',
+      token: 't',
+      timezone: 'UTC',
+      language: 'en',
+      dailyTime: '09:00',
+      dailyDays: '1-5',
+      holidayCountries: ['BR']
+    });
+    const { handleCheckConfig } = require('../handlers');
+    await handleCheckConfig(interaction);
+    expect(interaction.reply).toHaveBeenCalledWith('config.valid');
+  });
+
+  test('handleCheckConfig reports missing config', async () => {
+    jest.resetModules();
+    jest.dontMock('../config');
+    const interaction = createInteraction();
+    const config = require('../config');
+    config.updateServerConfig({
+      guildId: '',
+      channelId: '',
+      musicChannelId: '',
+      token: ''
+    });
+    const { handleCheckConfig } = require('../handlers');
+    await handleCheckConfig(interaction);
+    expect(interaction.reply).toHaveBeenCalledWith('config.invalid');
+  });
 });

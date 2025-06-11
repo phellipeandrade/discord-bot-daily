@@ -22,7 +22,8 @@ import {
   DAILY_TIME,
   DAILY_DAYS,
   HOLIDAY_COUNTRIES,
-  USERS_FILE
+  USERS_FILE,
+  checkRequiredConfig
 } from './config';
 import { scheduleDailySelection } from './scheduler';
 import {
@@ -353,5 +354,18 @@ export async function handleImport(
     await interaction.reply(i18n.t('import.success'));
   } catch {
     await interaction.reply(i18n.t('import.invalid'));
+  }
+}
+
+export async function handleCheckConfig(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  const missing = checkRequiredConfig();
+  if (missing.length === 0) {
+    await interaction.reply(i18n.t('config.valid'));
+  } else {
+    await interaction.reply(
+      i18n.t('config.invalid', { fields: missing.join(', ') })
+    );
   }
 }

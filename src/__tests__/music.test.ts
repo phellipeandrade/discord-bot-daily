@@ -114,8 +114,11 @@ describe('Comandos de Música', () => {
   beforeEach(() => {
     originalConsoleError = console.error;
     console.error = jest.fn();
-    
+
     jest.clearAllMocks();
+
+    const config = require('../config');
+    config.MUSIC_CHANNEL_ID = 'requests';
 
     mockClientInstance = {
       intents: [

@@ -56,3 +56,16 @@ export function logConfig(): void {
     ].join(' | ')
   );
 }
+
+export function checkRequiredConfig(): string[] {
+  const missing: string[] = [];
+  if (!TOKEN) missing.push('TOKEN');
+  if (!GUILD_ID) missing.push('GUILD_ID');
+  if (!CHANNEL_ID) missing.push('CHANNEL_ID');
+  if (!MUSIC_CHANNEL_ID) missing.push('MUSIC_CHANNEL_ID');
+  return missing;
+}
+
+export function isConfigValid(): boolean {
+  return checkRequiredConfig().length === 0;
+}

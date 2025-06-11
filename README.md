@@ -98,6 +98,7 @@ store guild and channel information.
 - `skip-today <name>` – skip today's draw for the specified user
 - `skip-until <name> <date>` – skip selection of a user until the given date (format defined by `DATE_FORMAT`, default `YYYY-MM-DD`)
 - `setup` – configure channels, time and other settings. Provide only the parameters you want to update.
+- `check-config` – verify if the bot configuration is complete.
 
 ## Testing
 
