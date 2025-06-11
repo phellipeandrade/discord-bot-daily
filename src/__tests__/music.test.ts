@@ -111,13 +111,13 @@ describe('Comandos de Música', () => {
   let mockMessageInstance: MockMessage;
   let originalConsoleError: typeof console.error;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     originalConsoleError = console.error;
     console.error = jest.fn();
 
     jest.clearAllMocks();
 
-    const config = require('../config');
+    const config = await import('../config');
     config.MUSIC_CHANNEL_ID = 'requests';
 
     mockClientInstance = {

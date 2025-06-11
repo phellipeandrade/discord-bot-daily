@@ -33,10 +33,10 @@ describe('i18n module', () => {
     }));
   });
 
-  test('loads Portuguese command names', () => {
+  test('loads Portuguese command names', async () => {
     process.env.NODE_ENV = 'development';
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const { i18n } = require('../i18n');
+    const { i18n } = await import('../i18n');
     i18n.setLanguage('pt-br');
     expect(i18n.getCommandName('list')).toBe('listar');
     expect(i18n.getCommandName('register')).toBe('registrar');
@@ -46,10 +46,10 @@ describe('i18n module', () => {
     consoleSpy.mockRestore();
   });
 
-  test('logs fallback usage', () => {
+  test('logs fallback usage', async () => {
     process.env.NODE_ENV = 'development';
     const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    const { i18n } = require('../i18n');
+    const { i18n } = await import('../i18n');
     i18n.setLanguage('pt-br');
     i18n.t('nonexistent.key');
     expect(consoleSpy).toHaveBeenCalledWith(
@@ -58,15 +58,15 @@ describe('i18n module', () => {
     consoleSpy.mockRestore();
   });
 
-  test('formats daily announcement message', () => {
-    const { i18n } = require('../i18n');
+  test('formats daily announcement message', async () => {
+    const { i18n } = await import('../i18n');
     i18n.setLanguage('en');
     const text = i18n.t('daily.announcement', { id: '42', name: 'Alice' });
     expect(text).toBe("Today's user: <@42> (Alice)");
   });
 
-  test('returns holiday message', () => {
-    const { i18n } = require('../i18n');
+  test('returns holiday message', async () => {
+    const { i18n } = await import('../i18n');
     i18n.setLanguage('pt-br');
     expect(i18n.t('daily.holiday')).toBe('Feriado');
   });
