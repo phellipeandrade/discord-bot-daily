@@ -35,6 +35,11 @@ export function scheduleDailySelection(client: Client): void {
 
       const { text, components } = await findNextSong(client);
 
+      if (!CHANNEL_ID) {
+        console.error('CHANNEL_ID not configured. Skipping daily announcement');
+        return;
+      }
+
       const channel = await client.channels.fetch(CHANNEL_ID);
       if (channel?.isTextBased()) {
         (channel as TextChannel).send({
