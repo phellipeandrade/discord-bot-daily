@@ -1,4 +1,5 @@
 # Discord Daily Selection Bot
+[Leia esta página em Português](README.pt-br.md)
 
 Discord bot that automatically selects a random user each weekday and manages music recommendations. It supports English and Brazilian Portuguese.
 
@@ -7,6 +8,7 @@ Discord bot that automatically selects a random user each weekday and manages mu
 - Slash commands to register users, list participants and manage selections
 - Daily selection at a configurable time and weekdays
   (timezone and holiday countries can be set via environment variables)
+- Slash command names are also available in Portuguese (pt-br)
 - Music utilities to fetch the next unplayed song from a channel
 - Optional multilingual responses (English default, Portuguese-BR available)
 
