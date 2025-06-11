@@ -144,8 +144,24 @@
     "export": {
       "name": "export",
       "description": "Export runtime data files"
+    },
+    "import": {
+      "name": "import",
+      "description": "Import runtime data files",
+      "options": {
+        "users": {
+          "name": "users",
+          "description": "Users JSON file"
+        },
+        "config": {
+          "name": "config",
+          "description": "Server config JSON file"
+        }
+      }
     }
   },
+  "import.success": "✅ Data imported successfully.",
+  "import.invalid": "❌ Invalid or missing files.",
   "user.registered": "✅ User {{name}} has been registered!",
   "user.alreadyRegistered": "❌ User {{name}} is already registered.",
   "user.selfRegistered": "✅ You have been registered!",

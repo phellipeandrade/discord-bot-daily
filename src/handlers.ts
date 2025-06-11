@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as https from 'https';
 import { ChatInputCommandInteraction } from 'discord.js';
 import { i18n } from './i18n';
 import {
@@ -29,6 +30,18 @@ import {
   loadServerConfig,
   ServerConfig
 } from './serverConfig';
+
+async function fetchText(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    https
+      .get(url, (res) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (d) => chunks.push(d));
+        res.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+      })
+      .on('error', reject);
+  });
+}
 
 export async function handleRegister(
   interaction: ChatInputCommandInteraction,
@@ -301,5 +314,44 @@ export async function handleExport(
       content: i18n.t('export.success'),
       files
     });
+  }
+}
+
+export async function handleImport(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  const usersFile = interaction.options.getAttachment(
+    i18n.getOptionName('import', 'users'),
+    false
+  );
+  const configFile = interaction.options.getAttachment(
+    i18n.getOptionName('import', 'config'),
+    false
+  );
+
+  if (!usersFile && !configFile) {
+    await interaction.reply(i18n.t('import.invalid'));
+    return;
+  }
+
+  try {
+    if (usersFile) {
+      if (!usersFile.name.endsWith('.json')) throw new Error('invalid');
+      const text = await fetchText(usersFile.url);
+      await fs.promises.writeFile(USERS_FILE, text, 'utf-8');
+    }
+
+    if (configFile) {
+      if (!configFile.name.endsWith('.json')) throw new Error('invalid');
+      const text = await fetchText(configFile.url);
+      const cfg = JSON.parse(text) as ServerConfig;
+      await saveServerConfig(cfg);
+      updateServerConfig(cfg);
+      scheduleDailySelection(interaction.client);
+    }
+
+    await interaction.reply(i18n.t('import.success'));
+  } catch {
+    await interaction.reply(i18n.t('import.invalid'));
   }
 }

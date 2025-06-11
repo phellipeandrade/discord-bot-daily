@@ -35,7 +35,8 @@ import {
   handleSkipToday,
   handleSkipUntil,
   handleSetup,
-  handleExport
+  handleExport,
+  handleImport
 } from './handlers';
 import {
   handleNextSong,
@@ -189,7 +190,22 @@ const commands = [
     ),
   new SlashCommandBuilder()
     .setName(i18n.getCommandName('export'))
-    .setDescription(i18n.getCommandDescription('export'))
+    .setDescription(i18n.getCommandDescription('export')),
+  new SlashCommandBuilder()
+    .setName(i18n.getCommandName('import'))
+    .setDescription(i18n.getCommandDescription('import'))
+    .addAttachmentOption((option) =>
+      option
+        .setName(i18n.getOptionName('import', 'users'))
+        .setDescription(i18n.getOptionDescription('import', 'users'))
+        .setRequired(false)
+    )
+    .addAttachmentOption((option) =>
+      option
+        .setName(i18n.getOptionName('import', 'config'))
+        .setDescription(i18n.getOptionDescription('import', 'config'))
+        .setRequired(false)
+    )
 ].map((cmd) => cmd.toJSON());
 
 const client = new Client({
@@ -227,6 +243,9 @@ if (process.env.NODE_ENV !== 'test') {
     },
     [i18n.getCommandName('export')]: async (interaction) => {
       await handleExport(interaction);
+    },
+    [i18n.getCommandName('import')]: async (interaction) => {
+      await handleImport(interaction);
     }
   };
 
@@ -298,5 +317,6 @@ export {
   handleSkipUntil,
   handleSetup,
   handleExport,
+  handleImport,
   scheduleDailySelection
 };
