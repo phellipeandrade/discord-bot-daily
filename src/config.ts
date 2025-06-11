@@ -42,7 +42,7 @@ export let ADMINS: string[] = envAdmins
 
 const rbac = RBAC({ enableLogger: false })({
   user: { can: ['basic'] },
-  admin: { can: ['basic', 'admin'], inherits: ['user'] }
+  admin: { can: ['admin'], inherits: ['user'] }
 });
 
 export function updateServerConfig(config: ServerConfig): void {

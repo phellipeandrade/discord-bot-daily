@@ -7,7 +7,7 @@
     "test:watch": "NODE_ENV=test jest --watch",
     "test:coverage": "NODE_ENV=test jest --coverage && jest-coverage-badges",
     "clean": "rm -rf dist build bot.zip",
-    "copy-assets": "mkdir -p build && cp src/users.original.json build/users.json && cp -r src/i18n build/ && cp src/serverConfig.sample.json build/serverConfig.json",
+    "copy-assets": "mkdir -p build && cp src/users.original.json build/users.json && cp -r src/i18n build/ && cp src/serverConfig.json build/serverConfig.json",
     "compile": "tsc",
     "bundle": "esbuild dist/index.js --bundle --platform=node --outfile=build/index.js",
     "build": "npm run copy-assets && npm run compile && npm run bundle",
