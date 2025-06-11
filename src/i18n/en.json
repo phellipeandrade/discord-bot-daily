@@ -167,6 +167,14 @@
     "check-config": {
       "name": "check-config",
       "description": "Verify bot configuration"
+    },
+    "role": {
+      "name": "role",
+      "description": "Set user role",
+      "options": {
+        "user": { "name": "user", "description": "Target user" },
+        "role": { "name": "role", "description": "Role" }
+      }
     }
   },
   "import.success": "✅ Data imported successfully.",
@@ -180,5 +188,7 @@
   "user.removed": "✅ User {{name}} has been removed!",
   "selection.nextUser": "➡️ Selected user: <@{{id}}> ({{name}})",
   "selection.resetOriginal": "✅ Selection list has been reset to original state.",
-  "selection.resetAll": "✅ {{count}} users have been readded to the selection list."
+  "selection.resetAll": "✅ {{count}} users have been readded to the selection list.",
+  "errors.unauthorized": "❌ You do not have permission to use this command.",
+  "role.updated": "✅ {{name}} is now {{role}}."
 }

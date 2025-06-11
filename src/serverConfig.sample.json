@@ -9,4 +9,6 @@
   "dailyDays": "1-5",
   "holidayCountries": ["BR"],
   "dateFormat": "YYYY-MM-DD"
+  , "admins": []
 }
+

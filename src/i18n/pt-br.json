@@ -172,6 +172,14 @@
     "check-config": {
       "name": "verificar-config",
       "description": "Verifica a configuração do bot"
+    },
+    "role": {
+      "name": "role",
+      "description": "Define o papel de um usuário",
+      "options": {
+        "user": { "name": "usuario", "description": "Usuário" },
+        "role": { "name": "papel", "description": "Papel" }
+      }
     }
   },
   "import.success": "✅ Dados importados com sucesso.",
@@ -180,5 +188,7 @@
   "config.invalid": "❌ Faltam valores de configuração: {{fields}}.",
   "user.alreadyRegistered": "❌ Usuário {{name}} já está registrado.",
   "user.alreadySelfRegistered": "❌ Você já está registrado(a).",
-  "selection.nextUser": "➡️ Próximo usuário selecionado: <@{{id}}> ({{name}})"
+  "selection.nextUser": "➡️ Próximo usuário selecionado: <@{{id}}> ({{name}})",
+  "errors.unauthorized": "❌ Você não tem permissão para usar este comando.",
+  "role.updated": "✅ {{name}} agora é {{role}}."
 }

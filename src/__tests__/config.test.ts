@@ -24,3 +24,17 @@ test('isConfigValid returns true when all fields set', () => {
   config.MUSIC_CHANNEL_ID = 'm';
   expect(config.isConfigValid()).toBe(true);
 });
+
+test('isAdmin checks list', () => {
+  const config = require('../config');
+  config.ADMINS = ['1'];
+  expect(config.isAdmin('1')).toBe(true);
+  expect(config.isAdmin('2')).toBe(false);
+});
+
+test('canUseAdminCommands respects roles', async () => {
+  const config = require('../config');
+  config.ADMINS = ['1'];
+  await expect(config.canUseAdminCommands('1')).resolves.toBe(true);
+  await expect(config.canUseAdminCommands('2')).resolves.toBe(false);
+});
