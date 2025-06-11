@@ -20,6 +20,7 @@ import {
   DAILY_TIME,
   DAILY_DAYS,
   HOLIDAY_COUNTRIES,
+  DATE_FORMAT,
   logConfig
 } from './config';
 import {
@@ -37,7 +38,9 @@ import {
   handleList,
   handleSelect,
   handleReset,
-  handleReadd
+  handleReadd,
+  handleSkipToday,
+  handleSkipUntil
 } from './handlers';
 import {
   handleNextSong,
@@ -127,6 +130,34 @@ const commands = [
         .setName(i18n.getOptionName('readd', 'name'))
         .setDescription(i18n.getOptionDescription('readd', 'name'))
         .setRequired(true)
+    ),
+  new SlashCommandBuilder()
+    .setName(i18n.getCommandName('skip-today'))
+    .setDescription(i18n.getCommandDescription('skip-today'))
+    .addStringOption(option =>
+      option
+        .setName(i18n.getOptionName('skip-today', 'name'))
+        .setDescription(i18n.getOptionDescription('skip-today', 'name'))
+        .setRequired(true)
+    ),
+  new SlashCommandBuilder()
+    .setName(i18n.getCommandName('skip-until'))
+    .setDescription(i18n.getCommandDescription('skip-until'))
+    .addStringOption(option =>
+      option
+        .setName(i18n.getOptionName('skip-until', 'name'))
+        .setDescription(i18n.getOptionDescription('skip-until', 'name'))
+        .setRequired(true)
+    )
+    .addStringOption(option =>
+      option
+        .setName(i18n.getOptionName('skip-until', 'date'))
+        .setDescription(
+          i18n.t('commands.skip-until.options.date.description', {
+            format: DATE_FORMAT
+          })
+        )
+        .setRequired(true)
     )
 ].map(cmd => cmd.toJSON());
 
@@ -154,7 +185,9 @@ if (process.env.NODE_ENV !== 'test') {
     [i18n.getCommandName('clear-bunnies')]: async interaction => {
       await handleClearReactions(interaction);
     },
-    [i18n.getCommandName('readd')]: handleReadd
+    [i18n.getCommandName('readd')]: handleReadd,
+    [i18n.getCommandName('skip-today')]: handleSkipToday,
+    [i18n.getCommandName('skip-until')]: handleSkipUntil
   };
 
   client.once('ready', async () => {
@@ -211,5 +244,7 @@ export {
   handleNextSong,
   findNextSong,
   handlePlayButton,
-  handleClearReactions
+  handleClearReactions,
+  handleSkipToday,
+  handleSkipUntil
 };

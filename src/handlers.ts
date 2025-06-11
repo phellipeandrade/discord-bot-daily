@@ -3,6 +3,8 @@ import * as path from 'path';
 import { ChatInputCommandInteraction } from 'discord.js';
 import { i18n } from './i18n';
 import { UserEntry, UserData, saveUsers, selectUser, formatUsers } from './users';
+import { parseDateString, todayISO } from './date';
+import { DATE_FORMAT } from './config';
 
 export async function handleRegister(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
   const userName = interaction.options.getString('name', true);
@@ -82,4 +84,49 @@ export async function handleReadd(interaction: ChatInputCommandInteraction, data
   } else {
     await interaction.reply(i18n.t('user.notFound', { name: userName }));
   }
+}
+
+export async function handleSkipToday(
+  interaction: ChatInputCommandInteraction,
+  data: UserData
+): Promise<void> {
+  const userName = interaction.options.getString('name', true);
+  const user = data.all.find(u => u.name === userName);
+
+  if (!user) {
+    await interaction.reply(i18n.t('user.notFound', { name: userName }));
+    return;
+  }
+
+  const today = todayISO();
+  data.skips = data.skips || {};
+  data.skips[user.id] = today;
+  await saveUsers(data);
+  await interaction.reply(i18n.t('selection.skipToday', { name: userName }));
+}
+
+export async function handleSkipUntil(
+  interaction: ChatInputCommandInteraction,
+  data: UserData
+): Promise<void> {
+  const userName = interaction.options.getString('name', true);
+  const dateStr = interaction.options.getString('date', true);
+  const user = data.all.find(u => u.name === userName);
+
+  if (!user) {
+    await interaction.reply(i18n.t('user.notFound', { name: userName }));
+    return;
+  }
+
+  const iso = parseDateString(dateStr);
+  if (!iso) {
+    await interaction.reply(i18n.t('selection.invalidDate', { format: DATE_FORMAT }));
+    return;
+  }
+  data.skips = data.skips || {};
+  data.skips[user.id] = iso;
+  await saveUsers(data);
+  await interaction.reply(
+    i18n.t('selection.skipUntil', { name: userName, date: iso })
+  );
 }

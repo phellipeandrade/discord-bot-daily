@@ -124,4 +124,24 @@ describe('handlers', () => {
     expect(data.remaining.length).toBe(1);
     expect(mockSaveUsers).toHaveBeenCalled();
   });
+
+  test('handleSkipToday sets skip for today', async () => {
+    data.all.push({ name: 'A', id: '1' });
+    const interaction = createInteraction({ name: 'A' });
+    const today = new Date().toISOString().split('T')[0];
+    const { handleSkipToday } = await import('../handlers');
+    await handleSkipToday(interaction, data);
+    expect(data.skips?.['1']).toBe(today);
+    expect(mockSaveUsers).toHaveBeenCalled();
+  });
+
+  test('handleSkipUntil sets future skip', async () => {
+    data.all.push({ name: 'A', id: '1' });
+    const future = '2099-01-01';
+    const interaction = createInteraction({ name: 'A', date: future });
+    const { handleSkipUntil } = await import('../handlers');
+    await handleSkipUntil(interaction, data);
+    expect(data.skips?.['1']).toBe(future);
+    expect(mockSaveUsers).toHaveBeenCalled();
+  });
 });

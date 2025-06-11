@@ -147,7 +147,7 @@ describe('Funções Utilitárias', () => {
 
       const resultado = await loadUsers();
       
-      expect(resultado).toEqual({ all: [], remaining: [] });
+      expect(resultado).toEqual({ all: [], remaining: [], skips: {} });
       expect(fs.promises.writeFile).toHaveBeenCalled();
     });
 
@@ -157,7 +157,7 @@ describe('Funções Utilitárias', () => {
 
       const resultado = await loadUsers();
       
-      expect(resultado).toEqual(mockData);
+      expect(resultado).toEqual({ ...mockData, skips: {} });
     });
   });
 
@@ -210,6 +210,15 @@ describe('Funções Utilitárias', () => {
       expect(resultado).toBeDefined();
       expect(dados.remaining.length).toBe(remainingAntes - 1);
       expect(dados.lastSelected).toEqual(resultado);
+    });
+
+    it('não deve selecionar usuário pulado', async () => {
+      const dados = JSON.parse(JSON.stringify(mockData));
+      dados.skips = { '1': '2999-01-01' };
+
+      const resultado = await selectUser(dados);
+
+      expect(resultado.id).not.toBe('1');
     });
   });
 });

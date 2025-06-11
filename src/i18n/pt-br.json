@@ -15,6 +15,10 @@
   "selection.notSelected": "❌ {{name}} já está na lista de seleção.",
   "daily.announcement": "🎉 Usuário selecionado hoje: <@{{id}}> ({{name}})",
   "daily.holiday": "🌴 Feriado detectado, sem seleção hoje.",
+  "selection.skipToday": "✅ {{name}} não será sorteado(a) hoje.",
+  "selection.skipUntil": "✅ {{name}} não será sorteado(a) até {{date}}.",
+  "selection.invalidDate": "❌ Data inválida. Formato esperado: {{format}}.",
+  "selection.noEligibleUsers": "❌ Nenhum usuário elegível para selecionar.",
   "selection.resetOriginal": "✅ Lista de seleção foi resetada para o estado original.",
   "selection.resetAll": "✅ {{count}} usuários foram readicionados à lista de seleção.",
   "user.notFound": "❌ Usuário {{name}} não encontrado.",
@@ -75,6 +79,30 @@
           "description": "Nome do usuário"
         }
       }
+    },
+    "skip-today": {
+      "name": "pular-hoje",
+      "description": "Pula o sorteio de um usuário hoje",
+      "options": {
+        "name": {
+          "name": "nome",
+          "description": "Nome do usuário"
+        }
+      }
+    },
+    "skip-until": {
+      "name": "pular-ate",
+      "description": "Suspende o sorteio de um usuário até a data",
+      "options": {
+        "name": {
+          "name": "nome",
+          "description": "Nome do usuário"
+        },
+        "date": {
+          "name": "data",
+          "description": "Data ({{format}})"
+        }
+      }
     }
   }
-} 
+}

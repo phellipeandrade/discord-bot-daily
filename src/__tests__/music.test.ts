@@ -17,34 +17,37 @@ import { MockCollection } from './__mocks__/MockCollection';
 import { mockChannel, mockMessageTemplate } from './__mocks__/discord.js';
 
 // Mock do i18n
-const mockTranslations: Record<string, string> = {
-  'list.empty': '(none)',
-  'music.noValidMusic': '✅ No valid music found.',
-  'music.marked': '✅ Song marked as played!\n\n🎵 To play the song in the bot, copy and send the command below:\n```\n/play {{link}}\n```',
-  'music.reactionsCleared': '✅ Removed {{count}} 🐰 reactions made by the bot.',
-  'music.channelError': 'Could not access the music channel.',
-  'music.processError': 'Error processing the music.',
-  'music.extractError': 'Could not extract music link.',
-  'music.next': '🎵 Next song: {{link}}\n\n📎 Message link: {{messageUrl}}',
-  'music.allPlayed': '✅ All recent songs have been played.'
-};
+var mockTranslations: Record<string, string>;
+jest.mock('../i18n', () => {
+  mockTranslations = {
+    'list.empty': '(none)',
+    'music.noValidMusic': '✅ No valid music found.',
+    'music.marked': '✅ Song marked as played!\n\n🎵 To play the song in the bot, copy and send the command below:\n```\n/play {{link}}\n```',
+    'music.reactionsCleared': '✅ Removed {{count}} 🐰 reactions made by the bot.',
+    'music.channelError': 'Could not access the music channel.',
+    'music.processError': 'Error processing the music.',
+    'music.extractError': 'Could not extract music link.',
+    'music.next': '🎵 Next song: {{link}}\n\n📎 Message link: {{messageUrl}}',
+    'music.allPlayed': '✅ All recent songs have been played.'
+  };
 
-jest.mock('../i18n', () => ({
-  i18n: {
-    t: jest.fn((key: string, params: Record<string, string | number> = {}) => {
-      const text = mockTranslations[key] || key;
-      return text.replace(/\{\{(\w+)\}\}/g, (_, paramKey) => {
-        const value = params[paramKey];
-        return value !== undefined ? String(value) : `{{${paramKey}}}`;
-      });
-    }),
-    getCommandName: jest.fn((command: string) => command),
-    getCommandDescription: jest.fn((command: string) => `Command ${command}`),
-    getOptionName: jest.fn((command: string, option: string) => option),
-    getOptionDescription: jest.fn((command: string, option: string) => `Option ${option}`),
-    setLanguage: jest.fn(() => undefined)
-  }
-}));
+  return {
+    i18n: {
+      t: jest.fn((key: string, params: Record<string, string | number> = {}) => {
+        const text = mockTranslations[key] || key;
+        return text.replace(/\{\{(\w+)\}\}/g, (_, paramKey) => {
+          const value = params[paramKey];
+          return value !== undefined ? String(value) : `{{${paramKey}}}`;
+        });
+      }),
+      getCommandName: jest.fn((command: string) => command),
+      getCommandDescription: jest.fn((command: string) => `Command ${command}`),
+      getOptionName: jest.fn((command: string, option: string) => option),
+      getOptionDescription: jest.fn((command: string, option: string) => `Option ${option}`),
+      setLanguage: jest.fn(() => undefined)
+    }
+  };
+});
 
 // Mock do Discord.js
 jest.mock('discord.js');
