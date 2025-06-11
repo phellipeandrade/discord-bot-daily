@@ -20,6 +20,7 @@ describe('serverConfig module', () => {
       guildId: '1',
       channelId: '2',
       musicChannelId: '3',
+      dailyVoiceChannelId: '4',
       token: 'abc',
       timezone: 'UTC',
       language: 'en',
@@ -64,6 +65,7 @@ describe('serverConfig module', () => {
       guildId: '1',
       channelId: '2',
       musicChannelId: '3',
+      dailyVoiceChannelId: '4',
       token: 't',
       timezone: 'UTC',
       language: 'en',
@@ -98,6 +100,7 @@ describe('serverConfig module', () => {
       guildId: 'g',
       channelId: 'c',
       musicChannelId: 'm',
+      dailyVoiceChannelId: 'v',
       token: 'tok',
       timezone: 'UTC',
       language: 'en',
@@ -112,6 +115,7 @@ describe('serverConfig module', () => {
     expect(config.GUILD_ID).toBe('g');
     expect(config.CHANNEL_ID).toBe('c');
     expect(config.MUSIC_CHANNEL_ID).toBe('m');
+    expect(config.DAILY_VOICE_CHANNEL_ID).toBe('v');
     expect(config.TOKEN).toBe('tok');
     expect(config.TIMEZONE).toBe('UTC');
     expect(config.LANGUAGE).toBe('en');

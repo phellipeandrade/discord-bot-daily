@@ -117,6 +117,10 @@
           "name": "music",
           "description": "Channel for music requests"
         },
+        "voice": {
+          "name": "voice",
+          "description": "Voice channel for playing music"
+        },
         "token": {
           "name": "token",
           "description": "Bot token (optional)"

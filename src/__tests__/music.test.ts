@@ -132,6 +132,7 @@ describe('Comandos de Música', () => {
   let mockButtonInteraction: MockButtonInteraction;
   let mockClientInstance: Client<true>;
   let mockChannelInstance: MockChannel;
+  let mockVoiceChannelInstance: MockChannel;
   let mockMessageInstance: MockMessage;
   let originalConsoleError: typeof console.error;
 
@@ -144,6 +145,7 @@ describe('Comandos de Música', () => {
     const config = await import('../config');
     config.MUSIC_CHANNEL_ID = 'requests';
     config.SEND_PLAY_COMMAND = true;
+    config.DAILY_VOICE_CHANNEL_ID = 'dailyVoice';
 
     mockClientInstance = {
       intents: [
@@ -167,6 +169,14 @@ describe('Comandos de Música', () => {
       },
       send: jest.fn()
     };
+  mockVoiceChannelInstance = {
+    ...mockChannel,
+    isTextBased: function (this: MockChannel): this is TextChannel {
+      return true;
+    },
+    messages: { fetch: jest.fn() },
+    send: jest.fn()
+  };
 
     mockMessageInstance = {
       ...mockMessageTemplate,
@@ -205,7 +215,11 @@ describe('Comandos de Música', () => {
 
     (
       mockClientInstance.channels as unknown as MockChannelManager
-    ).fetch.mockResolvedValue(mockChannelInstance);
+    ).fetch.mockImplementation((id: string) => {
+      if (id === 'requests') return Promise.resolve(mockChannelInstance);
+      if (id === 'dailyVoice') return Promise.resolve(mockVoiceChannelInstance);
+      return Promise.resolve(null);
+    });
   });
 
   afterEach(() => {
@@ -250,7 +264,11 @@ describe('Comandos de Música', () => {
     it('deve encontrar a próxima música não marcada', async () => {
       (
         mockClientInstance.channels as unknown as MockChannelManager
-      ).fetch.mockResolvedValue(mockChannelInstance);
+      ).fetch.mockImplementation((id: string) => {
+        if (id === 'requests') return Promise.resolve(mockChannelInstance);
+        if (id === 'dailyVoice') return Promise.resolve(mockVoiceChannelInstance);
+        return Promise.resolve(null);
+      });
       mockChannelInstance.messages.fetch.mockResolvedValue(
         new MockCollection([['123', mockMessageInstance]])
       );
@@ -273,7 +291,11 @@ describe('Comandos de Música', () => {
       });
       (
         mockClientInstance.channels as unknown as MockChannelManager
-      ).fetch.mockResolvedValue(mockChannelInstance);
+      ).fetch.mockImplementation((id: string) => {
+        if (id === 'requests') return Promise.resolve(mockChannelInstance);
+        if (id === 'dailyVoice') return Promise.resolve(mockVoiceChannelInstance);
+        return Promise.resolve(null);
+      });
       mockChannelInstance.messages.fetch.mockResolvedValue(
         new MockCollection([['123', mockMessageInstance]])
       );
@@ -293,7 +315,11 @@ describe('Comandos de Música', () => {
     it('deve marcar a música como tocada', async () => {
       (
         mockClientInstance.channels as unknown as MockChannelManager
-      ).fetch.mockResolvedValue(mockChannelInstance);
+      ).fetch.mockImplementation((id: string) => {
+        if (id === 'requests') return Promise.resolve(mockChannelInstance);
+        if (id === 'dailyVoice') return Promise.resolve(mockVoiceChannelInstance);
+        return Promise.resolve(null);
+      });
       mockChannelInstance.messages.fetch.mockResolvedValue(mockMessageInstance);
 
       await handlePlayButton(
@@ -301,7 +327,7 @@ describe('Comandos de Música', () => {
       );
 
       expect(mockMessageInstance.react).toHaveBeenCalledWith('🐰');
-      expect(mockChannelInstance.send).toHaveBeenCalledWith(
+      expect(mockVoiceChannelInstance.send).toHaveBeenCalledWith(
         '/play https://example.com/song'
       );
       expect(mockButtonInteraction.reply).toHaveBeenCalledWith({
@@ -314,7 +340,11 @@ describe('Comandos de Música', () => {
     it('deve lidar com erro ao processar a música', async () => {
       (
         mockClientInstance.channels as unknown as MockChannelManager
-      ).fetch.mockResolvedValue(mockChannelInstance);
+      ).fetch.mockImplementation((id: string) => {
+        if (id === 'requests') return Promise.resolve(mockChannelInstance);
+        if (id === 'dailyVoice') return Promise.resolve(mockVoiceChannelInstance);
+        return Promise.resolve(null);
+      });
       mockChannelInstance.messages.fetch.mockRejectedValue(
         new Error('Test error')
       );
@@ -341,7 +371,11 @@ describe('Comandos de Música', () => {
 
       (
         mockClientInstance.channels as unknown as MockChannelManager
-      ).fetch.mockResolvedValue(mockChannelInstance);
+      ).fetch.mockImplementation((id: string) => {
+        if (id === 'requests') return Promise.resolve(mockChannelInstance);
+        if (id === 'dailyVoice') return Promise.resolve(mockVoiceChannelInstance);
+        return Promise.resolve(null);
+      });
       mockChannelInstance.messages.fetch.mockResolvedValue(messageWithLink);
 
       await handlePlayButton(
@@ -353,7 +387,7 @@ describe('Comandos de Música', () => {
         components: expect.any(Array),
         flags: 1 << 6
       });
-      expect(mockChannelInstance.send).toHaveBeenCalledWith(
+      expect(mockVoiceChannelInstance.send).toHaveBeenCalledWith(
         '/play https://example.com/song.mp3'
       );
     });
@@ -376,7 +410,11 @@ describe('Comandos de Música', () => {
 
       (
         mockClientInstance.channels as unknown as MockChannelManager
-      ).fetch.mockResolvedValue(mockChannelInstance);
+      ).fetch.mockImplementation((id: string) => {
+        if (id === 'requests') return Promise.resolve(mockChannelInstance);
+        if (id === 'dailyVoice') return Promise.resolve(mockVoiceChannelInstance);
+        return Promise.resolve(null);
+      });
       mockChannelInstance.messages.fetch.mockResolvedValue(
         new MockCollection([['123', messageWithReaction]])
       );

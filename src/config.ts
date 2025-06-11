@@ -12,6 +12,8 @@ export let CHANNEL_ID = process.env.CHANNEL_ID || fileConfig?.channelId || '';
 export let GUILD_ID = process.env.GUILD_ID || fileConfig?.guildId || '';
 export let MUSIC_CHANNEL_ID =
   process.env.MUSIC_CHANNEL_ID || fileConfig?.musicChannelId || '';
+export let DAILY_VOICE_CHANNEL_ID =
+  process.env.DAILY_VOICE_CHANNEL_ID || fileConfig?.dailyVoiceChannelId || '';
 export let PLAY_COMMAND =
   process.env.PLAY_COMMAND || fileConfig?.playCommand || '/play';
 export let SEND_PLAY_COMMAND = process.env.SEND_PLAY_COMMAND
@@ -54,6 +56,8 @@ export function updateServerConfig(config: ServerConfig): void {
   CHANNEL_ID = config.channelId;
   GUILD_ID = config.guildId;
   MUSIC_CHANNEL_ID = config.musicChannelId;
+  if (config.dailyVoiceChannelId)
+    DAILY_VOICE_CHANNEL_ID = config.dailyVoiceChannelId;
   if (config.token) TOKEN = config.token;
   if (config.timezone) TIMEZONE = config.timezone;
   if (config.language) LANGUAGE = config.language;
