@@ -7,13 +7,17 @@ import {
   Client,
   TextChannel
 } from 'discord.js';
-import { i18n } from './i18n';
 import {
-  MUSIC_CHANNEL_ID,
-  DAILY_VOICE_CHANNEL_ID,
-  PLAY_COMMAND,
-  SEND_PLAY_COMMAND
-} from './config';
+  AudioPlayerStatus,
+  createAudioPlayer,
+  createAudioResource,
+  entersState,
+  joinVoiceChannel,
+  DiscordGatewayAdapterCreator
+} from '@discordjs/voice';
+import play from 'play-dl';
+import { i18n } from './i18n';
+import { MUSIC_CHANNEL_ID, DAILY_VOICE_CHANNEL_ID } from './config';
 
 export async function findNextSong(
   client: Client
@@ -116,6 +120,45 @@ export async function handleClearReactions(
   }
 }
 
+export let currentConnection: ReturnType<typeof joinVoiceChannel> | null = null;
+export let currentPlayer: ReturnType<typeof createAudioPlayer> | null = null;
+
+async function playUrl(client: Client, url: string): Promise<void> {
+  if (!DAILY_VOICE_CHANNEL_ID) return;
+  const channel = await client.channels.fetch(DAILY_VOICE_CHANNEL_ID);
+  if (!channel || !channel.isVoiceBased()) return;
+  const connection = joinVoiceChannel({
+    channelId: channel.id,
+    guildId: channel.guild.id,
+    adapterCreator:
+      channel.guild.voiceAdapterCreator as unknown as DiscordGatewayAdapterCreator
+  });
+  currentConnection = connection;
+  try {
+    const { stream, type } = await play.stream(url);
+    const resource = createAudioResource(stream, { inputType: type });
+    const player = createAudioPlayer();
+    currentPlayer = player;
+    connection.subscribe(player);
+    player.play(resource);
+    await entersState(player, AudioPlayerStatus.Idle, 30_000);
+  } finally {
+    connection.destroy();
+    currentConnection = null;
+    currentPlayer = null;
+  }
+}
+
+export async function handleStopMusic(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  if (currentPlayer) currentPlayer.stop();
+  if (currentConnection) currentConnection.destroy();
+  currentPlayer = null;
+  currentConnection = null;
+  await interaction.reply(i18n.t('music.stopped'));
+}
+
 export async function handlePlayButton(
   interaction: ButtonInteraction
 ): Promise<void> {
@@ -124,9 +167,6 @@ export async function handlePlayButton(
 
   const originalMessageId = customId.replace('play_', '');
   const channel = await interaction.client.channels.fetch(MUSIC_CHANNEL_ID);
-  const voice = DAILY_VOICE_CHANNEL_ID
-    ? await interaction.client.channels.fetch(DAILY_VOICE_CHANNEL_ID)
-    : null;
 
   if (!channel?.isTextBased()) {
     await interaction.reply({
@@ -164,11 +204,7 @@ export async function handlePlayButton(
     }
 
     await originalMsg.react('🐰');
-    if (SEND_PLAY_COMMAND) {
-      const target =
-        voice && voice.isTextBased() ? (voice as TextChannel) : (channel as TextChannel);
-      await target.send(`${PLAY_COMMAND} ${linkToPlay}`);
-    }
+    await playUrl(interaction.client, linkToPlay);
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
@@ -177,9 +213,8 @@ export async function handlePlayButton(
         .setURL(linkToPlay)
     );
 
-    const key = SEND_PLAY_COMMAND ? 'music.markedAuto' : 'music.marked';
     await interaction.reply({
-      content: i18n.t(key, { link: linkToPlay, command: PLAY_COMMAND }),
+      content: i18n.t('music.markedPlaying', { link: linkToPlay }),
       components: [row],
       flags: 1 << 6
     });

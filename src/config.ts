@@ -14,11 +14,6 @@ export let MUSIC_CHANNEL_ID =
   process.env.MUSIC_CHANNEL_ID || fileConfig?.musicChannelId || '';
 export let DAILY_VOICE_CHANNEL_ID =
   process.env.DAILY_VOICE_CHANNEL_ID || fileConfig?.dailyVoiceChannelId || '';
-export let PLAY_COMMAND =
-  process.env.PLAY_COMMAND || fileConfig?.playCommand || '/play';
-export let SEND_PLAY_COMMAND = process.env.SEND_PLAY_COMMAND
-  ? process.env.SEND_PLAY_COMMAND === 'true'
-  : (fileConfig?.sendPlayCommand ?? false);
 export const USERS_FILE = process.env.USERS_FILE
   ? path.resolve(process.env.USERS_FILE)
   : path.join(__dirname, 'users.json');
@@ -66,9 +61,6 @@ export function updateServerConfig(config: ServerConfig): void {
   if (config.holidayCountries) HOLIDAY_COUNTRIES = config.holidayCountries;
   if (config.dateFormat) DATE_FORMAT = config.dateFormat;
   if (config.admins && !envAdmins) ADMINS = config.admins;
-  if (config.sendPlayCommand !== undefined)
-    SEND_PLAY_COMMAND = config.sendPlayCommand;
-  if (config.playCommand) PLAY_COMMAND = config.playCommand;
 }
 
 export function logConfig(): void {

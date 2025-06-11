@@ -19,9 +19,9 @@ jest.mock('../i18n', () => ({
         'music.noValidMusic': '✅ No valid music found.',
         'music.marked':
           '✅ Song marked as played!\n\n🎵 To play the song in the bot, copy and send the command below:\n```\n{{command}} {{link}}\n```',
-        'music.markedAuto':
-          '✅ Song marked as played!\n\n🎵 Sent `{{command}} {{link}}` to Jockie Music.',
-        'music.reactionsCleared': '✅ Removed {{count}} 🐰 reactions made by the bot.'
+        'music.reactionsCleared': '✅ Removed {{count}} 🐰 reactions made by the bot.',
+        'music.markedPlaying': '✅ Song marked as played!\n\n🎵 Playing in the voice channel.',
+        'music.stopped': '⏹️ Music playback stopped.'
       };
 
       let text = translations[key] || key;
@@ -58,8 +58,9 @@ jest.mock('../i18n', () => ({
         'list.empty': '(none)',
         'music.noValidMusic': '✅ No valid music found.',
         'music.marked': '✅ Song marked as played!\n\n🎵 To play the song in the bot, copy and send the command below:\n```\n{{command}} {{link}}\n```',
-        'music.markedAuto': '✅ Song marked as played!\n\n🎵 Sent `{{command}} {{link}}` to Jockie Music.',
-        'music.reactionsCleared': '✅ Removed {{count}} 🐰 reactions made by the bot.'
+        'music.reactionsCleared': '✅ Removed {{count}} 🐰 reactions made by the bot.',
+        'music.markedPlaying': '✅ Song marked as played!\n\n🎵 Playing in the voice channel.',
+        'music.stopped': '⏹️ Music playback stopped.'
       };
 
       let text = translations[key] || key;

@@ -8,7 +8,7 @@ Bot do Discord que seleciona automaticamente um usuário aleatório a cada dia �
 - Comandos de barra para registrar usuários, listar participantes e gerenciar seleções
 - Seleção diária em horário e dias configuráveis (fuso horário e países de feriado podem ser definidos por variáveis de ambiente)
 - Nomes dos comandos também estão disponíveis em português (pt-br)
-- Utilidades de música para obter a próxima música não tocada de um canal
+- Utilidades de música para tocar músicas diretamente em um canal de voz (inclui comando para parar)
 - Respostas multilíngues opcionais (inglês por padrão e português-BR disponível)
 
 ## Requisitos
@@ -92,6 +92,7 @@ Esse arquivo inclui `serverConfig.json` usado pelo comando `/setup` para armazen
 - `listar` – mostra usuários registrados, pendentes e já selecionados
 - `selecionar` – seleciona manualmente um usuário aleatório
 - `proxima-musica` – mostra a próxima música não tocada do canal de pedidos
+- `parar-musica` – interrompe a reprodução atual
 
 **Admin**
 
@@ -115,7 +116,7 @@ Dois papéis estão disponíveis: **admin** e **user**. Todos os membros listado
 
 A lista inicial de administradores pode ser fornecida usando a variável de ambiente `ADMIN_IDS` ou o campo `admins` no arquivo de configuração.
 
-Somente administradores podem executar comandos privilegiados como `/registrar`, `/limpar-coelhos`, `/verificar-config`, `/configurar`, `/importar`, `/exportar`, `/pular-*` e o próprio `/role`. Usuários comuns ainda podem usar comandos básicos como `/entrar`, `/listar`, `/selecionar` e `/proxima-musica`.
+Somente administradores podem executar comandos privilegiados como `/registrar`, `/limpar-coelhos`, `/verificar-config`, `/configurar`, `/importar`, `/exportar`, `/pular-*` e o próprio `/role`. Usuários comuns ainda podem usar comandos básicos como `/entrar`, `/listar`, `/selecionar`, `/proxima-musica` e `/parar-musica`.
 
 Use o comando `/role` para conceder ou revogar acesso de administrador:
 
