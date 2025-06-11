@@ -3,14 +3,18 @@ const fakePt = JSON.stringify({
   commands: {
     list: { name: 'listar', description: '' },
     register: { name: 'registrar', description: '' }
-  }
+  },
+  'daily.announcement': 'Usuário do dia: <@{{id}}> ({{name}})',
+  'daily.holiday': 'Feriado'
 });
 
 const fakeEn = JSON.stringify({
   commands: {
     list: { name: 'list', description: '' },
     register: { name: 'register', description: '' }
-  }
+  },
+  'daily.announcement': "Today's user: <@{{id}}> ({{name}})",
+  'daily.holiday': 'Holiday'
 });
 
 describe('i18n module', () => {
@@ -52,5 +56,18 @@ describe('i18n module', () => {
       expect.stringContaining('🔍 Debug - Fallback used for key')
     );
     consoleSpy.mockRestore();
+  });
+
+  test('formats daily announcement message', () => {
+    const { i18n } = require('../i18n');
+    i18n.setLanguage('en');
+    const text = i18n.t('daily.announcement', { id: '42', name: 'Alice' });
+    expect(text).toBe("Today's user: <@42> (Alice)");
+  });
+
+  test('returns holiday message', () => {
+    const { i18n } = require('../i18n');
+    i18n.setLanguage('pt-br');
+    expect(i18n.t('daily.holiday')).toBe('Feriado');
   });
 });

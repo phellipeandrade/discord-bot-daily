@@ -13,6 +13,8 @@
   "music.allPlayed": "✅ All recent songs have been played.",
   "selection.readded": "✅ {{name}} has been readded to the selection list.",
   "selection.notSelected": "❌ {{name}} is already in the selection list.",
+  "daily.announcement": "🎉 Today's selected user is <@{{id}}> ({{name}})",
+  "daily.holiday": "🌴 Holiday detected, skipping today's selection.",
   "user.notFound": "❌ User {{name}} not found.",
   "commands": {
     "register": {
