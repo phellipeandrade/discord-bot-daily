@@ -233,8 +233,8 @@ export async function handleSkipUntil(
 
 export async function handleSetup(
   interaction: ChatInputCommandInteraction
-): Promise<void> {
-  if (!interaction.guildId) return;
+): Promise<boolean> {
+  if (!interaction.guildId) return false;
   const existing = loadServerConfig() || {
     guildId: interaction.guildId,
     channelId: CHANNEL_ID,
@@ -280,7 +280,7 @@ export async function handleSetup(
 
   if (dateFormat && !isDateFormatValid(dateFormat)) {
     await interaction.reply(i18n.t('setup.invalidDateFormat'));
-    return;
+    return false;
   }
 
   const cfg: ServerConfig = {
@@ -303,6 +303,7 @@ export async function handleSetup(
   updateServerConfig(cfg);
   scheduleDailySelection(interaction.client);
   await interaction.reply(i18n.t('setup.saved'));
+  return language !== existing.language;
 }
 
 export async function handleExport(
