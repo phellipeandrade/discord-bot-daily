@@ -13,7 +13,7 @@ jest.mock('fs', () => ({
 
 jest.mock('../i18n', () => ({
   i18n: {
-    t: jest.fn((key: string, params: Record<string, any> = {}) => {
+    t: jest.fn((key: string, params: Record<string, string> = {}) => {
       const translations: Record<string, string> = {
         'list.empty': '(none)'
       };
@@ -56,10 +56,20 @@ jest.mock('fs', () => ({
 
 // Mock do discord.js
 jest.mock('discord.js', () => {
+  interface OptionMock {
+    name: string;
+    description: string;
+    required: boolean;
+    setName(name: string): this;
+    setDescription(description: string): this;
+    setRequired(required: boolean): this;
+    addChoices(...choices: unknown[]): this;
+  }
+
   class MockSlashCommandBuilder {
     private name = '';
     private description = '';
-    private readonly options: any[] = [];
+    private readonly options: OptionMock[] = [];
 
     setName(name: string) {
       this.name = name;
@@ -71,8 +81,8 @@ jest.mock('discord.js', () => {
       return this;
     }
 
-    addStringOption(fn: (option: any) => any) {
-      const option = {
+    addStringOption(fn: (option: OptionMock) => OptionMock) {
+      const option: OptionMock = {
         name: '',
         description: '',
         required: false,
@@ -88,7 +98,7 @@ jest.mock('discord.js', () => {
           this.required = required;
           return this;
         },
-        addChoices(..._choices: any[]) {
+        addChoices(..._choices: unknown[]) {
           return this;
         }
       };
@@ -96,15 +106,15 @@ jest.mock('discord.js', () => {
       return this;
     }
 
-    addAttachmentOption(fn: (option: any) => any) {
+    addAttachmentOption(fn: (option: OptionMock) => OptionMock) {
       return this.addStringOption(fn);
     }
 
-    addChannelOption(fn: (option: any) => any) {
+    addChannelOption(fn: (option: OptionMock) => OptionMock) {
       return this.addStringOption(fn);
     }
 
-    addUserOption(fn: (option: any) => any) {
+    addUserOption(fn: (option: OptionMock) => OptionMock) {
       return this.addStringOption(fn);
     }
 
@@ -146,7 +156,7 @@ jest.mock('discord.js', () => {
 // Mock do i18n
 jest.mock('../i18n', () => ({
   i18n: {
-    t: jest.fn((key: string, params: Record<string, any> = {}) => {
+    t: jest.fn((key: string, params: Record<string, string> = {}) => {
       const translations: Record<string, string> = {
         'list.empty': '(none)'
       };
@@ -274,7 +284,7 @@ describe('Funções Utilitárias', () => {
     });
 
     it('deve manter a estrutura correta dos dados', async () => {
-      let savedData: any;
+      let savedData!: import('../index').UserData;
       (fs.promises.writeFile as jest.Mock).mockImplementation((file, data) => {
         savedData = JSON.parse(data as string);
       });

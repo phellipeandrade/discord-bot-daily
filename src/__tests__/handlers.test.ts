@@ -307,8 +307,8 @@ describe('handlers', () => {
     const updateServerConfig = jest.fn();
     const scheduleDailySelection = jest.fn();
     jest.doMock('https', () => ({
-      get: jest.fn((_url: string, cb: (res: any) => void) => {
-        const res = new EventEmitter();
+      get: jest.fn((_url: string, cb: (res: import('http').IncomingMessage) => void) => {
+        const res = new EventEmitter() as unknown as import('http').IncomingMessage;
         cb(res);
         process.nextTick(() => {
           res.emit('data', Buffer.from('{}'));
@@ -352,8 +352,8 @@ describe('handlers', () => {
     jest.resetModules();
     const EventEmitter = (await import('events')).EventEmitter;
     jest.doMock('https', () => ({
-      get: jest.fn((_url: string, cb: (res: any) => void) => {
-        const res = new EventEmitter();
+      get: jest.fn((_url: string, cb: (res: import('http').IncomingMessage) => void) => {
+        const res = new EventEmitter() as unknown as import('http').IncomingMessage;
         cb(res);
         process.nextTick(() => {
           res.emit('data', Buffer.from('{}'));
