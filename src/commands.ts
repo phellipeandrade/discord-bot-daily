@@ -185,6 +185,14 @@ export function createCommands(): RESTPostAPIApplicationCommandsJSONBody[] {
           .setName(i18n.getOptionName('setup', 'dateFormat'))
           .setDescription(i18n.getOptionDescription('setup', 'dateFormat'))
           .setRequired(false)
+      )
+      .addBooleanOption((option) =>
+        option
+          .setName(i18n.getOptionName('setup', 'sendPlayCommand'))
+          .setDescription(
+            i18n.getOptionDescription('setup', 'sendPlayCommand')
+          )
+          .setRequired(false)
       ),
     new SlashCommandBuilder()
       .setName(i18n.getCommandName('export'))

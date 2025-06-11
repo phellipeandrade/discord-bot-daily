@@ -106,6 +106,10 @@ jest.mock('discord.js', () => {
       return this;
     }
 
+    addBooleanOption(fn: (option: OptionMock) => OptionMock) {
+      return this.addStringOption(fn);
+    }
+
     addAttachmentOption(fn: (option: OptionMock) => OptionMock) {
       return this.addStringOption(fn);
     }
