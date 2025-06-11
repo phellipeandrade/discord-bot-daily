@@ -24,8 +24,6 @@ import {
   HOLIDAY_COUNTRIES,
   USERS_FILE,
   checkRequiredConfig,
-  PLAY_COMMAND,
-  SEND_PLAY_COMMAND,
   DAILY_VOICE_CHANNEL_ID
 } from './config';
 import { scheduleDailySelection } from './scheduler';
@@ -254,9 +252,7 @@ export async function handleSetup(
     dailyDays: DAILY_DAYS,
     holidayCountries: HOLIDAY_COUNTRIES,
     dateFormat: DATE_FORMAT,
-    admins: [],
-    sendPlayCommand: SEND_PLAY_COMMAND,
-    playCommand: PLAY_COMMAND
+    admins: []
   };
 
   const daily = interaction.options.getChannel(
@@ -292,12 +288,6 @@ export async function handleSetup(
   const dateFormat =
     interaction.options.getString(i18n.getOptionName('setup', 'dateFormat')) ??
     existing.dateFormat;
-  const sendPlayCommand = interaction.options.getBoolean(
-    i18n.getOptionName('setup', 'sendPlayCommand')
-  );
-  const playCommand =
-    interaction.options.getString(i18n.getOptionName('setup', 'playCommand')) ??
-    existing.playCommand;
 
   const guildId = guildIdOption ?? interaction.guildId ?? existing.guildId;
 
@@ -320,9 +310,7 @@ export async function handleSetup(
       ? holidays.split(',').map((c) => c.trim().toUpperCase())
       : existing.holidayCountries,
     dateFormat,
-    admins: existing.admins,
-    sendPlayCommand: sendPlayCommand ?? existing.sendPlayCommand,
-    playCommand
+    admins: existing.admins
   };
 
   await saveServerConfig(cfg);

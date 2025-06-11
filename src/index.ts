@@ -41,7 +41,8 @@ import {
   handleNextSong,
   findNextSong,
   handlePlayButton,
-  handleClearReactions
+  handleClearReactions,
+  handleStopMusic
 } from './music';
 import { scheduleDailySelection } from './scheduler';
 
@@ -149,6 +150,7 @@ export {
   findNextSong,
   handlePlayButton,
   handleClearReactions,
+  handleStopMusic,
   handleSkipToday,
   handleSkipUntil,
   handleSetup,

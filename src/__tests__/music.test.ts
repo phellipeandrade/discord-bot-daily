@@ -28,8 +28,9 @@ jest.mock('../i18n', () => {
     'music.noValidMusic': '✅ No valid music found.',
     'music.marked':
       '✅ Song marked as played!\n\n🎵 To play the song in the bot, copy and send the command below:\n```\n{{command}} {{link}}\n```',
-    'music.markedAuto':
-      '✅ Song marked as played!\n\n🎵 Sent `{{command}} {{link}}` to Jockie Music.',
+    'music.markedPlaying':
+      '✅ Song marked as played!\n\n🎵 Playing in the voice channel.',
+    'music.stopped': '⏹️ Music playback stopped.',
     'music.reactionsCleared':
       '✅ Removed {{count}} 🐰 reactions made by the bot.',
     'music.channelError': 'Could not access the music channel.',
@@ -62,6 +63,16 @@ jest.mock('../i18n', () => {
 });
 
 // Mock do Discord.js
+jest.mock('@discordjs/voice', () => ({
+  createAudioPlayer: jest.fn(() => ({ play: jest.fn() })),
+  createAudioResource: jest.fn(() => ({})),
+  joinVoiceChannel: jest.fn(() => ({ subscribe: jest.fn(), destroy: jest.fn() })),
+  entersState: jest.fn(() => Promise.resolve()),
+  AudioPlayerStatus: { Idle: 'Idle' }
+}));
+jest.mock('play-dl', () => ({
+  stream: jest.fn(async () => ({ stream: {}, type: undefined }))
+}));
 jest.mock('discord.js');
 
 type PartialMessage = Pick<Message, 'content' | 'embeds' | 'id' | 'url'>;
@@ -91,6 +102,8 @@ interface MockMessageManager {
 
 interface MockChannel {
   isTextBased: () => this is TextChannel;
+  isVoiceBased?: () => boolean;
+  guild?: { id: string; voiceAdapterCreator: unknown };
   messages: MockMessageManager;
   send: jest.Mock;
 }
@@ -144,7 +157,6 @@ describe('Comandos de Música', () => {
 
     const config = await import('../config');
     config.MUSIC_CHANNEL_ID = 'requests';
-    config.SEND_PLAY_COMMAND = true;
     config.DAILY_VOICE_CHANNEL_ID = 'dailyVoice';
 
     mockClientInstance = {
@@ -174,6 +186,8 @@ describe('Comandos de Música', () => {
     isTextBased: function (this: MockChannel): this is TextChannel {
       return true;
     },
+    isVoiceBased: () => true,
+    guild: { id: 'g', voiceAdapterCreator: {} },
     messages: { fetch: jest.fn() },
     send: jest.fn()
   };
@@ -327,9 +341,7 @@ describe('Comandos de Música', () => {
       );
 
       expect(mockMessageInstance.react).toHaveBeenCalledWith('🐰');
-      expect(mockVoiceChannelInstance.send).toHaveBeenCalledWith(
-        '/play https://example.com/song'
-      );
+      expect(mockVoiceChannelInstance.send).not.toHaveBeenCalled();
       expect(mockButtonInteraction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining('Song marked as played'),
         components: expect.any(Array),
@@ -387,8 +399,25 @@ describe('Comandos de Música', () => {
         components: expect.any(Array),
         flags: 1 << 6
       });
-      expect(mockVoiceChannelInstance.send).toHaveBeenCalledWith(
-        '/play https://example.com/song.mp3'
+      expect(mockVoiceChannelInstance.send).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('handleStopMusic', () => {
+    it('deve parar a reprodução e responder', async () => {
+      const music = await import('../music');
+      const player = { stop: jest.fn() } as any;
+      const connection = { destroy: jest.fn() } as any;
+      music.currentPlayer = player;
+      music.currentConnection = connection;
+      const interaction = {
+        reply: jest.fn()
+      } as unknown as ChatInputCommandInteraction;
+      await music.handleStopMusic(interaction);
+      expect(player.stop).toHaveBeenCalled();
+      expect(connection.destroy).toHaveBeenCalled();
+      expect(interaction.reply).toHaveBeenCalledWith(
+        mockTranslations['music.stopped']
       );
     });
   });

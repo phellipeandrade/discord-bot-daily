@@ -30,7 +30,8 @@ import {
 } from './handlers';
 import {
   handleNextSong,
-  handleClearReactions
+  handleClearReactions,
+  handleStopMusic
 } from './music';
 import { UserData } from './users';
 
@@ -69,6 +70,9 @@ export function createCommands(): RESTPostAPIApplicationCommandsJSONBody[] {
     new SlashCommandBuilder()
       .setName(i18n.getCommandName('next-song'))
       .setDescription(i18n.getCommandDescription('next-song')),
+    new SlashCommandBuilder()
+      .setName(i18n.getCommandName('stop-music'))
+      .setDescription(i18n.getCommandDescription('stop-music')),
     new SlashCommandBuilder()
       .setName(i18n.getCommandName('clear-bunnies'))
       .setDescription(i18n.getCommandDescription('clear-bunnies')),
@@ -191,22 +195,6 @@ export function createCommands(): RESTPostAPIApplicationCommandsJSONBody[] {
           .setName(i18n.getOptionName('setup', 'dateFormat'))
           .setDescription(i18n.getOptionDescription('setup', 'dateFormat'))
           .setRequired(false)
-      )
-      .addBooleanOption((option) =>
-        option
-          .setName(i18n.getOptionName('setup', 'sendPlayCommand'))
-          .setDescription(
-            i18n.getOptionDescription('setup', 'sendPlayCommand')
-          )
-          .setRequired(false)
-      )
-      .addStringOption((option) =>
-        option
-          .setName(i18n.getOptionName('setup', 'playCommand'))
-          .setDescription(
-            i18n.getOptionDescription('setup', 'playCommand')
-          )
-          .setRequired(false)
       ),
     new SlashCommandBuilder()
       .setName(i18n.getCommandName('export'))
@@ -283,6 +271,9 @@ export function createCommandHandlers(): Record<string, CommandHandler> {
     [i18n.getCommandName('reset')]: handleReset,
     [i18n.getCommandName('next-song')]: async (interaction) => {
       await handleNextSong(interaction);
+    },
+    [i18n.getCommandName('stop-music')]: async (interaction) => {
+      await handleStopMusic(interaction);
     },
     [i18n.getCommandName('clear-bunnies')]: async (interaction) => {
       await handleClearReactions(interaction);

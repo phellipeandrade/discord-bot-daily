@@ -9,7 +9,7 @@ Discord bot that automatically selects a random user each weekday and manages mu
 - Daily selection at a configurable time and weekdays
   (timezone and holiday countries can be set via environment variables)
 - Slash command names are also available in Portuguese (pt-br)
-- Music utilities to fetch the next unplayed song from a channel
+- Music utilities to fetch songs and play them directly in a voice channel (with a stop command)
 - Optional multilingual responses (English default, Portuguese-BR available)
 
 ## Requirements
@@ -46,7 +46,7 @@ ADMIN_IDS=1234567890,0987654321
 ```
 
 `ADMIN_IDS` should list the Discord user IDs that start with admin rights. You can also
-edit `serverConfig.json` to manage the list.
+edit `serverConfig.json` (either inside `src/` or at the repository root) to manage the list.
 
 Set `BOT_LANGUAGE` to `en` or `pt-br` to change the bot responses.
 `DAILY_TIME` uses 24h format `HH:MM` and `DAILY_DAYS` follows cron day-of-week
@@ -91,7 +91,8 @@ npm run build-zip
 ```
 
 This archive includes a `serverConfig.json` file used by the `/setup` command to
-store guild and channel information.
+store guild and channel information. The bot searches for this file in `src/`
+first and falls back to the repository root if not found.
 
 ### Commands
 
@@ -101,6 +102,7 @@ store guild and channel information.
 - `list` – display registered, pending and already selected users
 - `select` – manually select a random user
 - `next-song` – show the next unplayed song from the request channel
+- `stop-music` – stop the current music playback
 
 **Admin**
 
@@ -127,8 +129,8 @@ The initial admin list can be provided using the `ADMIN_IDS` environment variabl
 
 Only admins may run privileged commands such as `/register`, `/clear-bunnies`,
 `/check-config`, `/setup`, `/import`, `/export`, `/skip-*` and `/role` itself.
-Regular users can still use basic commands like `/join`, `/list`, `/select` and
-`/next-song`.
+Regular users can still use basic commands like `/join`, `/list`, `/select`,
+`/next-song` and `/stop-music`.
 
 Use the `/role` command to grant or revoke admin access:
 
@@ -139,6 +141,18 @@ Use the `/role` command to grant or revoke admin access:
 
 RBAC checks are handled by the [`@rbac/rbac`](https://www.npmjs.com/package/@rbac/rbac)
 library.
+
+### Music player
+
+The bot fetches songs from the text channel defined by `MUSIC_CHANNEL_ID`.
+Running `/next-song` replies with the next unplayed message containing a link,
+attachment or embed along with a **Play** button. When the button is pressed the
+bot joins the voice channel set in `DAILY_VOICE_CHANNEL_ID` and streams the
+audio. The original request message receives a 🐰 reaction so it won't be
+selected again.
+
+Use `/stop-music` to stop the current playback. Admins can remove all bunny
+reactions from the request channel with `/clear-bunnies` if needed.
 
 ## Testing
 
