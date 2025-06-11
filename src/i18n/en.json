@@ -119,5 +119,13 @@
         }
       }
     }
-  }
+  },
+  "user.registered": "✅ User {{name}} has been registered!",
+  "user.alreadyRegistered": "❌ User {{name}} is already registered.",
+  "user.selfRegistered": "✅ You have been registered!",
+  "user.alreadySelfRegistered": "❌ You are already registered.",
+  "user.removed": "✅ User {{name}} has been removed!",
+  "selection.nextUser": "➡️ Selected user: <@{{id}}> ({{name}})",
+  "selection.resetOriginal": "✅ Selection list has been reset to original state.",
+  "selection.resetAll": "✅ {{count}} users have been readded to the selection list."
 }

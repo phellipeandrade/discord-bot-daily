@@ -124,5 +124,8 @@
         }
       }
     }
-  }
+  },
+  "user.alreadyRegistered": "❌ Usuário {{name}} já está registrado.",
+  "user.alreadySelfRegistered": "❌ Você já está registrado(a).",
+  "selection.nextUser": "➡️ Próximo usuário selecionado: <@{{id}}> ({{name}})"
 }
