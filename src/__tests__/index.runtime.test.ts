@@ -1,6 +1,14 @@
 import { Client } from 'discord.js';
 
-let createdClient: any;
+interface MockClient {
+  once: jest.Mock;
+  on: jest.Mock;
+  login: jest.Mock;
+  channels: { fetch: jest.Mock };
+  user: { id: string; tag: string };
+}
+
+let createdClient: MockClient;
 jest.mock('discord.js', () => {
   const readyHandlers: Record<string, Function> = {};
   const MockClient = jest.fn().mockImplementation(() => {
@@ -24,10 +32,10 @@ jest.mock('discord.js', () => {
   class SlashCommandBuilder {
     setName() { return this; }
     setDescription() { return this; }
-    addStringOption(fn: any) { fn(new Option()); return this; }
-    addChannelOption(fn: any) { fn(new Option()); return this; }
-    addAttachmentOption(fn: any) { fn(new Option()); return this; }
-    addUserOption(fn: any) { fn(new Option()); return this; }
+    addStringOption(fn: (o: Option) => unknown) { fn(new Option()); return this; }
+    addChannelOption(fn: (o: Option) => unknown) { fn(new Option()); return this; }
+    addAttachmentOption(fn: (o: Option) => unknown) { fn(new Option()); return this; }
+    addUserOption(fn: (o: Option) => unknown) { fn(new Option()); return this; }
     toJSON() { return {}; }
   }
   return {
@@ -61,7 +69,9 @@ describe('index runtime', () => {
     expect(createdClient.login).toHaveBeenCalledWith('t');
 
     // trigger ready
-    const readyCb = createdClient.once.mock.calls.find((c: any) => c[0] === 'ready')[1];
+    const readyCb = (createdClient.once.mock.calls.find(
+      (c: [string, unknown]) => c[0] === 'ready'
+    )?.[1] as () => Promise<void>)!;
     await readyCb();
     expect(scheduleDailySelection).toHaveBeenCalledWith(createdClient);
   });

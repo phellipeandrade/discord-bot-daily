@@ -4,10 +4,10 @@ beforeEach(() => {
 
 test('checkRequiredConfig returns missing fields', async () => {
   const config = await import('../config');
-  config.TOKEN = '' as any;
-  config.GUILD_ID = '' as any;
-  config.CHANNEL_ID = '' as any;
-  config.MUSIC_CHANNEL_ID = '' as any;
+  config.TOKEN = '';
+  config.GUILD_ID = '';
+  config.CHANNEL_ID = '';
+  config.MUSIC_CHANNEL_ID = '';
   expect(config.checkRequiredConfig()).toEqual([
     'TOKEN',
     'GUILD_ID',

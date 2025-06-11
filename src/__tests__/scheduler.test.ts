@@ -14,9 +14,9 @@ describe('scheduleDailySelection', () => {
 
   test('schedules job and sends message', async () => {
     const cron = await import('node-cron');
-    const mockSchedule = jest.fn((expr, fn) => {
+    const mockSchedule = jest.fn((expr: string, fn: () => void) => {
       fn();
-      return { stop: jest.fn() } as any;
+      return { stop: jest.fn() } as unknown as import('node-cron').ScheduledTask;
     });
     (cron.schedule as jest.Mock).mockImplementation(mockSchedule);
 
@@ -42,9 +42,9 @@ describe('scheduleDailySelection', () => {
 
   test('does nothing when holiday', async () => {
     const cron = await import('node-cron');
-    const mockSchedule = jest.fn((expr, fn) => {
+    const mockSchedule = jest.fn((expr: string, fn: () => void) => {
       fn();
-      return { stop: jest.fn() } as any;
+      return { stop: jest.fn() } as unknown as import('node-cron').ScheduledTask;
     });
     (cron.schedule as jest.Mock).mockImplementation(mockSchedule);
 

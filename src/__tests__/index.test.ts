@@ -13,7 +13,7 @@ jest.mock('fs', () => ({
 
 jest.mock('../i18n', () => ({
   i18n: {
-    t: jest.fn((key: string, params: Record<string, any> = {}) => {
+    t: jest.fn((key: string, params: Record<string, string> = {}) => {
       const translations: Record<string, string> = {
         'list.empty': '(none)',
         'music.noValidMusic': '✅ No valid music found.',
@@ -51,7 +51,7 @@ jest.mock('fs', () => ({
 // Mock do i18n
 jest.mock('../i18n', () => ({
   i18n: {
-    t: jest.fn((key: string, params: Record<string, any> = {}) => {
+    t: jest.fn((key: string, params: Record<string, string> = {}) => {
       const translations: Record<string, string> = {
         'list.empty': '(none)',
         'music.noValidMusic': '✅ No valid music found.',
@@ -173,7 +173,7 @@ describe('Funções Utilitárias', () => {
     });
 
     it('deve manter a estrutura correta dos dados', async () => {
-      let savedData: any;
+      let savedData!: import('../index').UserData;
       (fs.promises.writeFile as jest.Mock).mockImplementation((file, data) => {
         savedData = JSON.parse(data as string);
       });

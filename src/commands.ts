@@ -3,7 +3,8 @@ import {
   ChatInputCommandInteraction,
   Client,
   REST,
-  Routes
+  Routes,
+  type RESTPostAPIApplicationCommandsJSONBody
 } from 'discord.js';
 import { i18n } from './i18n';
 import {
@@ -33,7 +34,7 @@ import {
 } from './music';
 import { UserData } from './users';
 
-export function createCommands(): any[] {
+export function createCommands(): RESTPostAPIApplicationCommandsJSONBody[] {
   return [
     new SlashCommandBuilder()
       .setName(i18n.getCommandName('register'))
@@ -239,7 +240,12 @@ export function createAdminCommands(): Set<string> {
   ]);
 }
 
-export function createCommandHandlers(): Record<string, (i: ChatInputCommandInteraction, d: UserData) => Promise<any>> {
+export type CommandHandler = (
+  i: ChatInputCommandInteraction,
+  d: UserData
+) => Promise<void | boolean>;
+
+export function createCommandHandlers(): Record<string, CommandHandler> {
   return {
     [i18n.getCommandName('register')]: handleRegister,
     [i18n.getCommandName('remove')]: handleRemove,
@@ -274,7 +280,10 @@ export function createCommandHandlers(): Record<string, (i: ChatInputCommandInte
   };
 }
 
-export async function registerCommands(client: Client, commands: any[]): Promise<void> {
+export async function registerCommands(
+  client: Client,
+  commands: RESTPostAPIApplicationCommandsJSONBody[]
+): Promise<void> {
   const rest = new REST({ version: '10' }).setToken(TOKEN);
   const route = GUILD_ID
     ? Routes.applicationGuildCommands(client.user!.id, GUILD_ID)
