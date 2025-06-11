@@ -169,7 +169,8 @@ describe('handlers', () => {
         dailyTime: '09:00',
         dailyDays: '1-5',
         holidayCountries: ['BR'],
-        dateFormat: 'YYYY-MM-DD'
+        dateFormat: 'YYYY-MM-DD',
+        admins: []
       })
     }));
     jest.doMock('../config', () => ({
@@ -211,7 +212,8 @@ describe('handlers', () => {
       dailyTime: '09:00',
       dailyDays: '1-5',
       holidayCountries: ['BR'],
-      dateFormat: 'YYYY-MM-DD'
+      dateFormat: 'YYYY-MM-DD',
+      admins: []
     });
     expect(updateServerConfig).toHaveBeenCalled();
     expect(scheduleDailySelection).toHaveBeenCalledWith(interaction.client);

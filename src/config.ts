@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { loadServerConfig, ServerConfig } from './serverConfig';
+import RBAC from '@rbac/rbac';
 
 dotenv.config();
 
@@ -31,6 +32,18 @@ export let HOLIDAY_COUNTRIES = (
   .filter((c) => c);
 export let DATE_FORMAT =
   process.env.DATE_FORMAT || fileConfig?.dateFormat || 'YYYY-MM-DD';
+const envAdmins = process.env.ADMIN_IDS;
+export let ADMINS: string[] = envAdmins
+  ? envAdmins
+      .split(',')
+      .map((a) => a.trim())
+      .filter((a) => a)
+  : fileConfig?.admins || [];
+
+const rbac = RBAC({ enableLogger: false })({
+  user: { can: ['basic'] },
+  admin: { can: ['basic', 'admin'], inherits: ['user'] }
+});
 
 export function updateServerConfig(config: ServerConfig): void {
   CHANNEL_ID = config.channelId;
@@ -43,6 +56,7 @@ export function updateServerConfig(config: ServerConfig): void {
   if (config.dailyDays) DAILY_DAYS = config.dailyDays;
   if (config.holidayCountries) HOLIDAY_COUNTRIES = config.holidayCountries;
   if (config.dateFormat) DATE_FORMAT = config.dateFormat;
+  if (config.admins && !envAdmins) ADMINS = config.admins;
 }
 
 export function logConfig(): void {
@@ -53,6 +67,7 @@ export function logConfig(): void {
       `LANG=${LANGUAGE}`,
       `DAILY=${DAILY_TIME} (${DAILY_DAYS})`,
       `HOLIDAYS=${HOLIDAY_COUNTRIES.join(',')}`,
+      `ADMINS=${ADMINS.length}`,
       `USERS=${USERS_FILE}`,
       `DATE_FMT=${DATE_FORMAT}`
     ].join(' | ')
@@ -70,4 +85,16 @@ export function checkRequiredConfig(): string[] {
 
 export function isConfigValid(): boolean {
   return checkRequiredConfig().length === 0;
+}
+
+export function isAdmin(id: string): boolean {
+  return ADMINS.includes(id);
+}
+
+export function getRole(id: string): 'admin' | 'user' {
+  return isAdmin(id) ? 'admin' : 'user';
+}
+
+export async function canUseAdminCommands(id: string): Promise<boolean> {
+  return rbac.can(getRole(id), 'admin');
 }

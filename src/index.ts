@@ -16,7 +16,8 @@ import {
   DATE_FORMAT,
   logConfig,
   isConfigValid,
-  checkRequiredConfig
+  checkRequiredConfig,
+  canUseAdminCommands
 } from './config';
 import {
   UserData,
@@ -39,7 +40,8 @@ import {
   handleSetup,
   handleExport,
   handleImport,
-  handleCheckConfig
+  handleCheckConfig,
+  handleRole
 } from './handlers';
 import {
   handleNextSong,
@@ -216,9 +218,40 @@ const commands = [
         .setRequired(false)
     ),
   new SlashCommandBuilder()
+    .setName(i18n.getCommandName('role'))
+    .setDescription(i18n.getCommandDescription('role'))
+    .addUserOption((option) =>
+      option
+        .setName(i18n.getOptionName('role', 'user'))
+        .setDescription(i18n.getOptionDescription('role', 'user'))
+        .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName(i18n.getOptionName('role', 'role'))
+        .setDescription(i18n.getOptionDescription('role', 'role'))
+        .addChoices(
+          { name: 'admin', value: 'admin' },
+          { name: 'user', value: 'user' }
+        )
+        .setRequired(true)
+    ),
+  new SlashCommandBuilder()
     .setName(i18n.getCommandName('check-config'))
     .setDescription(i18n.getCommandDescription('check-config'))
 ].map((cmd) => cmd.toJSON());
+
+const adminCommands = new Set([
+  i18n.getCommandName('remove'),
+  i18n.getCommandName('reset'),
+  i18n.getCommandName('readd'),
+  i18n.getCommandName('skip-today'),
+  i18n.getCommandName('skip-until'),
+  i18n.getCommandName('setup'),
+  i18n.getCommandName('export'),
+  i18n.getCommandName('import'),
+  i18n.getCommandName('role')
+]);
 
 const client = new Client({
   intents: [
@@ -258,6 +291,9 @@ if (process.env.NODE_ENV !== 'test') {
     },
     [i18n.getCommandName('import')]: async (interaction) => {
       await handleImport(interaction);
+    },
+    [i18n.getCommandName('role')]: async (interaction) => {
+      await handleRole(interaction);
     },
     [i18n.getCommandName('check-config')]: async (interaction) => {
       await handleCheckConfig(interaction);
@@ -312,6 +348,13 @@ if (process.env.NODE_ENV !== 'test') {
         );
         return;
       }
+      if (
+        adminCommands.has(interaction.commandName) &&
+        !(await canUseAdminCommands(interaction.user.id))
+      ) {
+        await interaction.reply(i18n.t('errors.unauthorized'));
+        return;
+      }
       const data = await loadUsers();
       const handler = commandHandlers[interaction.commandName];
       if (handler) await handler(interaction, data);
@@ -346,5 +389,6 @@ export {
   handleExport,
   handleImport,
   handleCheckConfig,
+  handleRole,
   scheduleDailySelection
 };

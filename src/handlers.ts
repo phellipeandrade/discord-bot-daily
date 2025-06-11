@@ -295,7 +295,8 @@ export async function handleSetup(
     holidayCountries: holidays
       ? holidays.split(',').map((c) => c.trim().toUpperCase())
       : existing.holidayCountries,
-    dateFormat
+    dateFormat,
+    admins: existing.admins
   };
 
   await saveServerConfig(cfg);
@@ -378,4 +379,38 @@ export async function handleCheckConfig(
       i18n.t('config.invalid', { fields: missing.join(', ') })
     );
   }
+}
+
+export async function handleRole(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  if (!interaction.guildId) return;
+  const user = interaction.options.getUser(
+    i18n.getOptionName('role', 'user'),
+    true
+  );
+  const role = interaction.options.getString(
+    i18n.getOptionName('role', 'role'),
+    true
+  ) as 'admin' | 'user';
+
+  const existing = loadServerConfig() || {
+    guildId: interaction.guildId,
+    channelId: CHANNEL_ID,
+    musicChannelId: MUSIC_CHANNEL_ID,
+    admins: []
+  };
+
+  existing.admins = existing.admins || [];
+  if (role === 'admin') {
+    if (!existing.admins.includes(user.id)) existing.admins.push(user.id);
+  } else {
+    existing.admins = existing.admins.filter((id) => id !== user.id);
+  }
+
+  await saveServerConfig(existing);
+  updateServerConfig(existing);
+  await interaction.reply(
+    i18n.t('role.updated', { name: user.username, role })
+  );
 }

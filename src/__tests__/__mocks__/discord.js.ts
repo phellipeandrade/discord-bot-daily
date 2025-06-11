@@ -87,6 +87,10 @@ export class MockSlashCommandBuilder {
     return this.addStringOption(fn);
   }
 
+  addUserOption(fn: (option: MockOption) => MockOption) {
+    return this.addStringOption(fn);
+  }
+
   addChannelOption(fn: (option: MockOption) => MockOption) {
     return this.addStringOption(fn);
   }
