@@ -46,7 +46,7 @@ export async function findNextSong(client: Client): Promise<{ text: string; comp
 
     const playButton = new ButtonBuilder()
       .setCustomId(`play_${msg.id}`)
-      .setLabel('▶️ Play song')
+      .setLabel('▶️ Play')
       .setStyle(ButtonStyle.Primary);
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(playButton);
 
