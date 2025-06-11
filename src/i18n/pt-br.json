@@ -155,8 +155,12 @@
           "description": "Formato da data (ex.: YYYY-MM-DD)"
         },
         "sendPlayCommand": {
-          "name": "enviarcomando",
+          "name": "habilitar-comando-play",
           "description": "Enviar comando de play para o Jockie"
+        },
+        "playCommand": {
+          "name": "comando-play",
+          "description": "Comando de play a ser enviado"
         }
       }
     },

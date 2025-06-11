@@ -229,6 +229,66 @@ describe('handlers', () => {
     expect(res).toBe(true);
   });
 
+  test('handleSetup saves custom play command', async () => {
+    jest.resetModules();
+    const saveServerConfig = jest.fn();
+    const updateServerConfig = jest.fn();
+    const scheduleDailySelection = jest.fn();
+    jest.doMock('../serverConfig', () => ({
+      saveServerConfig,
+      loadServerConfig: jest.fn().mockReturnValue({
+        guildId: 'guild',
+        channelId: 'old',
+        musicChannelId: 'music',
+        token: 'tok',
+        timezone: 'America/Sao_Paulo',
+        language: 'en',
+        dailyTime: '09:00',
+        dailyDays: '1-5',
+        holidayCountries: ['BR'],
+        dateFormat: 'YYYY-MM-DD',
+        admins: [],
+        sendPlayCommand: false,
+        playCommand: '/play'
+      })
+    }));
+    jest.doMock('../config', () => ({
+      TOKEN: 'tok',
+      CHANNEL_ID: 'old',
+      MUSIC_CHANNEL_ID: 'music',
+      TIMEZONE: 'America/Sao_Paulo',
+      LANGUAGE: 'en',
+      DAILY_TIME: '09:00',
+      DAILY_DAYS: '1-5',
+      HOLIDAY_COUNTRIES: ['BR'],
+      DATE_FORMAT: 'YYYY-MM-DD',
+      updateServerConfig,
+      SEND_PLAY_COMMAND: false,
+      PLAY_COMMAND: '/play'
+    }));
+    jest.doMock('../scheduler', () => ({ scheduleDailySelection }));
+    const { handleSetup } = await import('../handlers');
+    const interaction = {
+      guildId: 'guild',
+      options: {
+        getChannel: jest.fn().mockReturnValueOnce(null).mockReturnValueOnce(null),
+        getString: jest.fn((name: string) =>
+          name === 'playCommand' ? '!play' : null
+        ),
+        getBoolean: jest.fn()
+      },
+      reply: jest.fn(),
+      client: {} as Client
+    } as unknown as ChatInputCommandInteraction;
+    await handleSetup(interaction);
+    expect(saveServerConfig).toHaveBeenCalledWith(
+      expect.objectContaining({ playCommand: '!play' })
+    );
+    expect(updateServerConfig).toHaveBeenCalled();
+    expect(scheduleDailySelection).toHaveBeenCalledWith(interaction.client);
+    expect(interaction.reply).toHaveBeenCalled();
+  });
+
   test('handleSetup validates dateFormat', async () => {
     jest.resetModules();
     const saveServerConfig = jest.fn();

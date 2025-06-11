@@ -288,6 +288,9 @@ export async function handleSetup(
   const sendPlayCommand = interaction.options.getBoolean(
     i18n.getOptionName('setup', 'sendPlayCommand')
   );
+  const playCommand =
+    interaction.options.getString(i18n.getOptionName('setup', 'playCommand')) ??
+    existing.playCommand;
 
   const guildId = guildIdOption ?? interaction.guildId ?? existing.guildId;
 
@@ -311,7 +314,7 @@ export async function handleSetup(
     dateFormat,
     admins: existing.admins,
     sendPlayCommand: sendPlayCommand ?? existing.sendPlayCommand,
-    playCommand: existing.playCommand
+    playCommand
   };
 
   await saveServerConfig(cfg);

@@ -152,6 +152,10 @@
         "sendPlayCommand": {
           "name": "sendcommand",
           "description": "Send play command to Jockie"
+        },
+        "playCommand": {
+          "name": "playcommand",
+          "description": "Play command to send"
         }
       }
     },
