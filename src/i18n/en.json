@@ -20,6 +20,8 @@
   "selection.invalidDate": "❌ Invalid date. Expected format: {{format}}.",
   "selection.noEligibleUsers": "❌ No eligible users to select.",
   "user.notFound": "❌ User {{name}} not found.",
+  "setup.saved": "✅ Configuration saved!",
+  "setup.instructions": "Use /setup to configure channels.",
   "commands": {
     "register": {
       "name": "register",
@@ -96,6 +98,20 @@
         "date": {
           "name": "date",
           "description": "Date ({{format}})"
+        }
+      }
+    },
+    "setup": {
+      "name": "setup",
+      "description": "Configure bot channels",
+      "options": {
+        "daily": {
+          "name": "daily",
+          "description": "Channel for daily messages"
+        },
+        "music": {
+          "name": "music",
+          "description": "Channel for music requests"
         }
       }
     }

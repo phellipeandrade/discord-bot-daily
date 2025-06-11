@@ -25,6 +25,8 @@
   "user.registered": "✅ Usuário {{name}} foi registrado com sucesso!",
   "user.selfRegistered": "✅ Você foi registrado(a) com sucesso!",
   "user.removed": "✅ Usuário {{name}} foi removido com sucesso!",
+  "setup.saved": "✅ Configuração salva!",
+  "setup.instructions": "Use /configurar para definir os canais.",
   "commands": {
     "register": {
       "name": "registrar",
@@ -101,6 +103,20 @@
         "date": {
           "name": "data",
           "description": "Data ({{format}})"
+        }
+      }
+    },
+    "setup": {
+      "name": "configurar",
+      "description": "Configura os canais do bot",
+      "options": {
+        "daily": {
+          "name": "diario",
+          "description": "Canal para mensagens diárias"
+        },
+        "music": {
+          "name": "musica",
+          "description": "Canal de pedidos de música"
         }
       }
     }

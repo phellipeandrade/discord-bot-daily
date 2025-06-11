@@ -40,7 +40,8 @@ import {
   handleReset,
   handleReadd,
   handleSkipToday,
-  handleSkipUntil
+  handleSkipUntil,
+  handleSetup
 } from './handlers';
 import {
   handleNextSong,
@@ -158,6 +159,21 @@ const commands = [
           })
         )
         .setRequired(true)
+    ),
+  new SlashCommandBuilder()
+    .setName(i18n.getCommandName('setup'))
+    .setDescription(i18n.getCommandDescription('setup'))
+    .addChannelOption(option =>
+      option
+        .setName(i18n.getOptionName('setup', 'daily'))
+        .setDescription(i18n.getOptionDescription('setup', 'daily'))
+        .setRequired(true)
+    )
+    .addChannelOption(option =>
+      option
+        .setName(i18n.getOptionName('setup', 'music'))
+        .setDescription(i18n.getOptionDescription('setup', 'music'))
+        .setRequired(true)
     )
 ].map(cmd => cmd.toJSON());
 
@@ -187,7 +203,10 @@ if (process.env.NODE_ENV !== 'test') {
     },
     [i18n.getCommandName('readd')]: handleReadd,
     [i18n.getCommandName('skip-today')]: handleSkipToday,
-    [i18n.getCommandName('skip-until')]: handleSkipUntil
+    [i18n.getCommandName('skip-until')]: handleSkipUntil,
+    [i18n.getCommandName('setup')]: async interaction => {
+      await handleSetup(interaction);
+    }
   };
 
   client.once('ready', async () => {
@@ -203,13 +222,22 @@ if (process.env.NODE_ENV !== 'test') {
     );
 
     const rest = new REST({ version: '10' }).setToken(TOKEN);
-    await rest.put(Routes.applicationGuildCommands(client.user.id, GUILD_ID), {
-      body: commands
-    });
+    const route = GUILD_ID
+      ? Routes.applicationGuildCommands(client.user.id, GUILD_ID)
+      : Routes.applicationCommands(client.user.id);
+    await rest.put(route, { body: commands });
 
     console.log('✅ Commands registered');
 
     scheduleDailySelection(client);
+  });
+
+  client.on('guildCreate', guild => {
+    const channel =
+      guild.systemChannel || guild.channels.cache.find(c => c.isTextBased());
+    if (channel && channel.isTextBased()) {
+      (channel as TextChannel).send(i18n.t('setup.instructions'));
+    }
   });
 
   client.on('interactionCreate', async interaction => {
@@ -246,5 +274,6 @@ export {
   handlePlayButton,
   handleClearReactions,
   handleSkipToday,
-  handleSkipUntil
+  handleSkipUntil,
+  handleSetup
 };

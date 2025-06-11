@@ -39,4 +39,5 @@ coverage/
 .eslintcache 
 
 src/users.original.json
+src/serverConfig.json
 bot.zip
