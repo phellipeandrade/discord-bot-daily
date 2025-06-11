@@ -9,9 +9,9 @@ Antes de realizar commits, sempre execute:
 ```bash
 npm run lint
 npm test
+npm run build-zip
 ```
-
-Esses comandos verificam formatação, regras de lint e executam a suíte de testes do Jest. Só faça commit quando todas as verificações passarem.
+Esses comandos verificam formatação, regras de lint, executam a suíte de testes do Jest e geram o pacote de produção. Só faça commit quando todas as verificações passarem e o build for concluído com sucesso.
 
 ## Mensagens de commit
 
