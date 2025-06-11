@@ -120,6 +120,10 @@
           "name": "token",
           "description": "Bot token (optional)"
         },
+        "guild": {
+          "name": "guild",
+          "description": "Target guild ID"
+        },
         "timezone": {
           "name": "timezone",
           "description": "Timezone"

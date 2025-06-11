@@ -111,7 +111,7 @@ store guild and channel information.
 - `readd <name>` – re-add a previously selected user back into the pool
 - `skip-today <name>` – skip today's draw for the specified user
 - `skip-until <name> <date>` – skip selection of a user until the given date (format defined by `DATE_FORMAT`, default `YYYY-MM-DD`)
-- `setup` – configure channels, time and other settings. Provide only the parameters you want to update.
+- `setup` – configure channels, guild ID and other settings. Provide only the parameters you want to update.
 - `export` – export data files
 - `import` – import runtime data files
 - `role <user> <role>` – set a user's role (`admin` or `user`)

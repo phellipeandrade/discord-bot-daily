@@ -234,9 +234,13 @@ export async function handleSkipUntil(
 export async function handleSetup(
   interaction: ChatInputCommandInteraction
 ): Promise<boolean> {
-  if (!interaction.guildId) return false;
+  const guildIdOption = interaction.options.getString(
+    i18n.getOptionName('setup', 'guild'),
+    false
+  );
+  if (!interaction.guildId && !guildIdOption) return false;
   const existing = loadServerConfig() || {
-    guildId: interaction.guildId,
+    guildId: guildIdOption ?? interaction.guildId!,
     channelId: CHANNEL_ID,
     musicChannelId: MUSIC_CHANNEL_ID,
     token: TOKEN,
@@ -278,13 +282,15 @@ export async function handleSetup(
     i18n.getOptionName('setup', 'dateFormat')
   ) ?? existing.dateFormat;
 
+  const guildId = guildIdOption ?? interaction.guildId ?? existing.guildId;
+
   if (dateFormat && !isDateFormatValid(dateFormat)) {
     await interaction.reply(i18n.t('setup.invalidDateFormat'));
     return false;
   }
 
   const cfg: ServerConfig = {
-    guildId: interaction.guildId,
+    guildId,
     channelId: daily?.id ?? existing.channelId,
     musicChannelId: music?.id ?? existing.musicChannelId,
     token,
@@ -303,7 +309,7 @@ export async function handleSetup(
   updateServerConfig(cfg);
   scheduleDailySelection(interaction.client);
   await interaction.reply(i18n.t('setup.saved'));
-  return language !== existing.language;
+  return language !== existing.language || guildId !== existing.guildId;
 }
 
 export async function handleExport(

@@ -195,15 +195,19 @@ describe('handlers', () => {
           .mockReturnValueOnce({ id: 'newDaily' })
           .mockReturnValueOnce(null),
         getString: jest.fn((name: string) =>
-          name === 'timezone' ? 'UTC' : null
+          name === 'timezone'
+            ? 'UTC'
+            : name === 'guild'
+            ? 'newGuild'
+            : null
         )
       },
       reply: jest.fn(),
       client: {} as Client
     } as unknown as ChatInputCommandInteraction;
-    await handleSetup(interaction);
+    const res = await handleSetup(interaction);
     expect(saveServerConfig).toHaveBeenCalledWith({
-      guildId: 'guild',
+      guildId: 'newGuild',
       channelId: 'newDaily',
       musicChannelId: 'music',
       token: 'tok',
@@ -218,6 +222,7 @@ describe('handlers', () => {
     expect(updateServerConfig).toHaveBeenCalled();
     expect(scheduleDailySelection).toHaveBeenCalledWith(interaction.client);
     expect(interaction.reply).toHaveBeenCalled();
+    expect(res).toBe(true);
   });
 
   test('handleSetup validates dateFormat', async () => {
