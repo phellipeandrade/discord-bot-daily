@@ -145,6 +145,13 @@ library.
 npm test
 ```
 
+## Development
+
+This project uses [Husky](https://typicode.github.io/husky) to run checks before
+each commit. The pre-commit hook runs `npm run lint`, which verifies ESLint,
+Prettier formatting and TypeScript types. Commit messages are validated using
+Commitlint.
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).

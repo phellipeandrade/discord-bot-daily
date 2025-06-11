@@ -104,6 +104,13 @@ Os comandos marcados com **(admin)** só podem ser executados por administradore
 npm test
 ```
 
+## Desenvolvimento
+
+O projeto utiliza o [Husky](https://typicode.github.io/husky) para executar
+verificações antes de cada commit. O *hook* `pre-commit` roda `npm run lint`,
+que valida o ESLint, o formato do Prettier e os erros de TypeScript. As mensagens
+de commit são verificadas pelo Commitlint.
+
 ## Licença
 
 Este projeto está licenciado sob a [Licença MIT](LICENSE).
