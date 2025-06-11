@@ -378,7 +378,7 @@ describe('handlers', () => {
     jest.resetModules();
     jest.dontMock('../config');
     const interaction = createInteraction();
-    const config = require('../config');
+    const config = await import('../config');
     config.updateServerConfig({
       guildId: 'g',
       channelId: 'c',
@@ -391,7 +391,7 @@ describe('handlers', () => {
       holidayCountries: ['BR'],
       dateFormat: 'YYYY-MM-DD'
     });
-    const { handleCheckConfig } = require('../handlers');
+    const { handleCheckConfig } = await import('../handlers');
     await handleCheckConfig(interaction);
     expect(interaction.reply).toHaveBeenCalledWith('config.valid');
   });
@@ -400,7 +400,7 @@ describe('handlers', () => {
     jest.resetModules();
     jest.dontMock('../config');
     const interaction = createInteraction();
-    const config = require('../config');
+    const config = await import('../config');
     config.updateServerConfig({
       guildId: '',
       channelId: '',
@@ -408,7 +408,7 @@ describe('handlers', () => {
       token: '',
       dateFormat: 'YYYY-MM-DD'
     });
-    const { handleCheckConfig } = require('../handlers');
+    const { handleCheckConfig } = await import('../handlers');
     await handleCheckConfig(interaction);
     expect(interaction.reply).toHaveBeenCalledWith('config.invalid');
   });

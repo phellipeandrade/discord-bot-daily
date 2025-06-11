@@ -1,0 +1,68 @@
+import { Client } from 'discord.js';
+
+let createdClient: any;
+jest.mock('discord.js', () => {
+  const readyHandlers: Record<string, Function> = {};
+  const MockClient = jest.fn().mockImplementation(() => {
+    createdClient = {
+      once: jest.fn((event: string, cb: Function) => {
+        readyHandlers[event] = cb;
+      }),
+      on: jest.fn(),
+      login: jest.fn(),
+      channels: { fetch: jest.fn() },
+      user: { id: '1', tag: 'bot#0001' }
+    };
+    return createdClient;
+  });
+  class Option {
+    setName() { return this; }
+    setDescription() { return this; }
+    setRequired() { return this; }
+    addChoices() { return this; }
+  }
+  class SlashCommandBuilder {
+    setName() { return this; }
+    setDescription() { return this; }
+    addStringOption(fn: any) { fn(new Option()); return this; }
+    addChannelOption(fn: any) { fn(new Option()); return this; }
+    addAttachmentOption(fn: any) { fn(new Option()); return this; }
+    addUserOption(fn: any) { fn(new Option()); return this; }
+    toJSON() { return {}; }
+  }
+  return {
+    __esModule: true,
+    Client: MockClient,
+    REST: class { setToken() { return this; } put = jest.fn(); },
+    Routes: { applicationGuildCommands: jest.fn(() => 'route'), applicationCommands: jest.fn(() => 'route') },
+    GatewayIntentBits: {},
+    Partials: {},
+    TextChannel: class {},
+    SlashCommandBuilder
+  };
+});
+
+jest.mock('../scheduler', () => ({ scheduleDailySelection: jest.fn() }));
+
+describe('index runtime', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    jest.unmock('fs');
+    process.env.NODE_ENV = 'development';
+    process.env.DISCORD_TOKEN = 't';
+    process.env.GUILD_ID = 'g';
+    process.env.CHANNEL_ID = 'c';
+    process.env.MUSIC_CHANNEL_ID = 'm';
+  });
+
+  test('initializes client and schedules daily selection', async () => {
+    const { scheduleDailySelection } = await import('../scheduler');
+    await import('../index');
+    expect(createdClient.login).toHaveBeenCalledWith('t');
+
+    // trigger ready
+    const readyCb = createdClient.once.mock.calls.find((c: any) => c[0] === 'ready')[1];
+    await readyCb();
+    expect(scheduleDailySelection).toHaveBeenCalledWith(createdClient);
+  });
+});

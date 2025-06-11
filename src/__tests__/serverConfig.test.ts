@@ -5,17 +5,17 @@ describe('serverConfig module', () => {
     jest.resetModules();
   });
 
-  test('loadServerConfig returns null when file missing', () => {
+  test('loadServerConfig returns null when file missing', async () => {
     jest.doMock('fs', () => ({
       existsSync: jest.fn().mockReturnValue(false),
       readFileSync: jest.fn(),
       promises: { writeFile: jest.fn() }
     }));
-    const { loadServerConfig } = require('../serverConfig');
+    const { loadServerConfig } = await import('../serverConfig');
     expect(loadServerConfig()).toBeNull();
   });
 
-  test('loadServerConfig parses existing file', () => {
+  test('loadServerConfig parses existing file', async () => {
     const data = {
       guildId: '1',
       channelId: '2',
@@ -34,11 +34,11 @@ describe('serverConfig module', () => {
       readFileSync: jest.fn().mockReturnValue(JSON.stringify(data)),
       promises: { writeFile: jest.fn() }
     }));
-    const { loadServerConfig } = require('../serverConfig');
+    const { loadServerConfig } = await import('../serverConfig');
     expect(loadServerConfig()).toEqual(data);
   });
 
-  test('loadServerConfig handles read error', () => {
+  test('loadServerConfig handles read error', async () => {
     jest.doMock('fs', () => ({
       existsSync: jest.fn().mockReturnValue(true),
       readFileSync: jest.fn(() => {
@@ -46,7 +46,7 @@ describe('serverConfig module', () => {
       }),
       promises: { writeFile: jest.fn() }
     }));
-    const { loadServerConfig } = require('../serverConfig');
+    const { loadServerConfig } = await import('../serverConfig');
     expect(loadServerConfig()).toBeNull();
   });
 
@@ -57,7 +57,7 @@ describe('serverConfig module', () => {
       readFileSync: jest.fn(),
       promises: { writeFile }
     }));
-    const { saveServerConfig } = require('../serverConfig');
+    const { saveServerConfig } = await import('../serverConfig');
     const cfg = {
       guildId: '1',
       channelId: '2',
@@ -83,13 +83,13 @@ describe('serverConfig module', () => {
     );
   });
 
-  test('updateServerConfig sets exported variables', () => {
+  test('updateServerConfig sets exported variables', async () => {
     jest.doMock('fs', () => ({
       existsSync: jest.fn(),
       readFileSync: jest.fn(),
       promises: { writeFile: jest.fn() }
     }));
-    const config = require('../config');
+    const config = await import('../config');
     config.updateServerConfig({
       guildId: 'g',
       channelId: 'c',

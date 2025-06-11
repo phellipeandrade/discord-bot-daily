@@ -1,5 +1,5 @@
-const path = require('path');
-const fs = require('fs');
+import path from 'path';
+import fs from 'fs';
 
 // Configurar variáveis de ambiente para teste
 process.env.USERS_FILE = path.join(__dirname, 'users.test.json');
@@ -9,22 +9,22 @@ process.env.DATE_FORMAT = 'YYYY-MM-DD';
 if (!fs.existsSync(process.env.USERS_FILE)) {
   const testData = {
     all: [
-      { name: "User1", id: "1" },
-      { name: "User2", id: "2" },
-      { name: "User3", id: "3" },
-      { name: "User4", id: "4" },
-      { name: "User5", id: "5" },
-      { name: "User6", id: "6" },
-      { name: "User7", id: "7" }
+      { name: 'User1', id: '1' },
+      { name: 'User2', id: '2' },
+      { name: 'User3', id: '3' },
+      { name: 'User4', id: '4' },
+      { name: 'User5', id: '5' },
+      { name: 'User6', id: '6' },
+      { name: 'User7', id: '7' }
     ],
     remaining: [
-      { name: "User1", id: "1" },
-      { name: "User2", id: "2" },
-      { name: "User3", id: "3" },
-      { name: "User4", id: "4" },
-      { name: "User5", id: "5" },
-      { name: "User6", id: "6" },
-      { name: "User7", id: "7" }
+      { name: 'User1', id: '1' },
+      { name: 'User2', id: '2' },
+      { name: 'User3', id: '3' },
+      { name: 'User4', id: '4' },
+      { name: 'User5', id: '5' },
+      { name: 'User6', id: '6' },
+      { name: 'User7', id: '7' }
     ],
     lastSelected: null
   };
