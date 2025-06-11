@@ -7,8 +7,14 @@ import { parseDateString, todayISO } from './date';
 import { DATE_FORMAT, updateServerConfig, TOKEN } from './config';
 import { saveServerConfig, ServerConfig } from './serverConfig';
 
-export async function handleRegister(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
-  const userName = interaction.options.getString('name', true);
+export async function handleRegister(
+  interaction: ChatInputCommandInteraction,
+  data: UserData
+): Promise<void> {
+  const userName = interaction.options.getString(
+    i18n.getOptionName('register', 'name'),
+    true
+  );
   const userId = interaction.user.id;
 
   if (!data.all.some(u => u.id === userId)) {
@@ -38,7 +44,10 @@ export async function handleJoin(interaction: ChatInputCommandInteraction, data:
 }
 
 export async function handleRemove(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
-  const userName = interaction.options.getString('name', true);
+  const userName = interaction.options.getString(
+    i18n.getOptionName('remove', 'name'),
+    true
+  );
   data.all = data.all.filter(u => u.name !== userName);
   data.remaining = data.remaining.filter(u => u.name !== userName);
   await saveUsers(data);
@@ -73,7 +82,10 @@ export async function handleReset(interaction: ChatInputCommandInteraction, data
 }
 
 export async function handleReadd(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
-  const userName = interaction.options.getString('name', true);
+  const userName = interaction.options.getString(
+    i18n.getOptionName('readd', 'name'),
+    true
+  );
   const user = data.all.find(u => u.name === userName);
 
   if (user && !data.remaining.some(u => u.id === user.id)) {
@@ -91,7 +103,10 @@ export async function handleSkipToday(
   interaction: ChatInputCommandInteraction,
   data: UserData
 ): Promise<void> {
-  const userName = interaction.options.getString('name', true);
+  const userName = interaction.options.getString(
+    i18n.getOptionName('skip-today', 'name'),
+    true
+  );
   const user = data.all.find(u => u.name === userName);
 
   if (!user) {
@@ -110,8 +125,14 @@ export async function handleSkipUntil(
   interaction: ChatInputCommandInteraction,
   data: UserData
 ): Promise<void> {
-  const userName = interaction.options.getString('name', true);
-  const dateStr = interaction.options.getString('date', true);
+  const userName = interaction.options.getString(
+    i18n.getOptionName('skip-until', 'name'),
+    true
+  );
+  const dateStr = interaction.options.getString(
+    i18n.getOptionName('skip-until', 'date'),
+    true
+  );
   const user = data.all.find(u => u.name === userName);
 
   if (!user) {
@@ -134,9 +155,16 @@ export async function handleSkipUntil(
 
 export async function handleSetup(interaction: ChatInputCommandInteraction): Promise<void> {
   if (!interaction.guildId) return;
-  const daily = interaction.options.getChannel('daily', true);
-  const music = interaction.options.getChannel('music', true);
-  const token = interaction.options.getString('token') || TOKEN;
+  const daily = interaction.options.getChannel(
+    i18n.getOptionName('setup', 'daily'),
+    true
+  );
+  const music = interaction.options.getChannel(
+    i18n.getOptionName('setup', 'music'),
+    true
+  );
+  const token =
+    interaction.options.getString(i18n.getOptionName('setup', 'token')) || TOKEN;
   const cfg: ServerConfig = {
     guildId: interaction.guildId,
     channelId: daily.id,
