@@ -25,6 +25,7 @@ As mensagens devem seguir o padrão Conventional Commits. Exemplos:
 
 - Utilize tipagem forte e mantenha o código limpo e claro.
 - Adicione testes para todo novo recurso ou correção de bug.
+- O código deve seguir sempre os padrões e ser escrito em Inglês
 
 ## Escopo
 
