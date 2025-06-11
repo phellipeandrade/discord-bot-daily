@@ -1,5 +1,6 @@
 {
   "guildId": "",
   "channelId": "",
-  "musicChannelId": ""
+  "musicChannelId": "",
+  "token": ""
 }

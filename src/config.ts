@@ -4,9 +4,8 @@ import { loadServerConfig, ServerConfig } from './serverConfig';
 
 dotenv.config();
 
-export const TOKEN = process.env.DISCORD_TOKEN!;
-
 const fileConfig = loadServerConfig();
+export let TOKEN = process.env.DISCORD_TOKEN || fileConfig?.token || '';
 
 export let CHANNEL_ID = process.env.CHANNEL_ID || fileConfig?.channelId || '';
 export let GUILD_ID = process.env.GUILD_ID || fileConfig?.guildId || '';
@@ -21,14 +20,15 @@ export const DAILY_TIME = process.env.DAILY_TIME ?? '09:00';
 export const DAILY_DAYS = process.env.DAILY_DAYS ?? '1-5';
 export const HOLIDAY_COUNTRIES = (process.env.HOLIDAY_COUNTRIES ?? 'BR')
   .split(',')
-  .map(c => c.trim().toUpperCase())
-  .filter(c => c);
+  .map((c) => c.trim().toUpperCase())
+  .filter((c) => c);
 export const DATE_FORMAT = process.env.DATE_FORMAT ?? 'YYYY-MM-DD';
 
 export function updateServerConfig(config: ServerConfig): void {
   CHANNEL_ID = config.channelId;
   GUILD_ID = config.guildId;
   MUSIC_CHANNEL_ID = config.musicChannelId;
+  if (config.token) TOKEN = config.token;
 }
 
 export function logConfig(): void {
