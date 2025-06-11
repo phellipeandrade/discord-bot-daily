@@ -149,8 +149,24 @@
     "export": {
       "name": "exportar",
       "description": "Exporta os arquivos de dados"
+    },
+    "import": {
+      "name": "importar",
+      "description": "Importa os arquivos de dados",
+      "options": {
+        "users": {
+          "name": "usuarios",
+          "description": "Arquivo JSON de usuários"
+        },
+        "config": {
+          "name": "config",
+          "description": "Arquivo JSON de configuração"
+        }
+      }
     }
   },
+  "import.success": "✅ Dados importados com sucesso.",
+  "import.invalid": "❌ Arquivos inválidos ou ausentes.",
   "user.alreadyRegistered": "❌ Usuário {{name}} já está registrado.",
   "user.alreadySelfRegistered": "❌ Você já está registrado(a).",
   "selection.nextUser": "➡️ Próximo usuário selecionado: <@{{id}}> ({{name}})"

@@ -6,7 +6,8 @@ import {
   handleSelect,
   handleReset,
   handleReadd,
-  handleExport
+  handleExport,
+  handleImport
 } from '../handlers';
 import type { UserData } from '../users';
 import * as fs from 'fs';
@@ -244,5 +245,80 @@ describe('handlers', () => {
     const interaction = createInteraction();
     await handleExport(interaction);
     expect(interaction.reply).toHaveBeenCalledWith(expect.any(String));
+  });
+
+  test('handleImport saves data and updates config', async () => {
+    jest.resetModules();
+    const EventEmitter = (await import('events')).EventEmitter;
+    const writeFile = jest.fn();
+    const saveServerConfig = jest.fn();
+    const updateServerConfig = jest.fn();
+    const scheduleDailySelection = jest.fn();
+    jest.doMock('https', () => ({
+      get: jest.fn((_url: string, cb: (res: any) => void) => {
+        const res = new EventEmitter();
+        cb(res);
+        process.nextTick(() => {
+          res.emit('data', Buffer.from('{}'));
+          res.emit('end');
+        });
+        return { on: jest.fn() };
+      })
+    }));
+    jest.doMock('fs', () => ({
+      promises: { writeFile },
+      existsSync: jest.fn(),
+      readFileSync: jest.fn()
+    }));
+    jest.doMock('../serverConfig', () => ({
+      saveServerConfig,
+      loadServerConfig: jest.fn(),
+      ServerConfig: {}
+    }));
+    jest.doMock('../config', () => ({ USERS_FILE: 'users.json', updateServerConfig }));
+    jest.doMock('../scheduler', () => ({ scheduleDailySelection }));
+    const { handleImport } = await import('../handlers');
+    const interaction = {
+      options: {
+        getAttachment: jest
+          .fn()
+          .mockReturnValueOnce({ name: 'users.json', url: 'u' })
+          .mockReturnValueOnce({ name: 'serverConfig.json', url: 'c' })
+      },
+      reply: jest.fn(),
+      client: {} as Client
+    } as unknown as ChatInputCommandInteraction;
+    await handleImport(interaction);
+    expect(writeFile).toHaveBeenCalled();
+    expect(saveServerConfig).toHaveBeenCalled();
+    expect(updateServerConfig).toHaveBeenCalled();
+    expect(scheduleDailySelection).toHaveBeenCalledWith(interaction.client);
+    expect(interaction.reply).toHaveBeenCalled();
+  });
+
+  test('handleImport validates file type', async () => {
+    jest.resetModules();
+    const EventEmitter = (await import('events')).EventEmitter;
+    jest.doMock('https', () => ({
+      get: jest.fn((_url: string, cb: (res: any) => void) => {
+        const res = new EventEmitter();
+        cb(res);
+        process.nextTick(() => {
+          res.emit('data', Buffer.from('{}'));
+          res.emit('end');
+        });
+        return { on: jest.fn() };
+      })
+    }));
+    const { handleImport } = await import('../handlers');
+    const interaction = {
+      options: {
+        getAttachment: jest.fn().mockReturnValueOnce({ name: 'bad.txt', url: 'u' }).mockReturnValueOnce(null)
+      },
+      reply: jest.fn(),
+      client: {} as Client
+    } as unknown as ChatInputCommandInteraction;
+    await handleImport(interaction);
+    expect(interaction.reply).toHaveBeenCalled();
   });
 });
