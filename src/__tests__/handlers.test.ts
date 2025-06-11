@@ -23,7 +23,7 @@ jest.mock('../i18n', () => ({
     }),
     getCommandName: jest.fn((c: string) => c),
     getCommandDescription: jest.fn(() => ''),
-    getOptionName: jest.fn(() => ''),
+    getOptionName: jest.fn((_cmd: string, opt: string) => opt),
     getOptionDescription: jest.fn(() => '')
   }
 }));
