@@ -41,7 +41,8 @@ import {
   handleReadd,
   handleSkipToday,
   handleSkipUntil,
-  handleSetup
+  handleSetup,
+  handleExport
 } from './handlers';
 import {
   handleNextSong,
@@ -224,7 +225,10 @@ const commands = [
           { name: 'BR,US', value: 'BR,US' }
         )
         .setRequired(false)
-    )
+    ),
+  new SlashCommandBuilder()
+    .setName(i18n.getCommandName('export'))
+    .setDescription(i18n.getCommandDescription('export'))
 ].map((cmd) => cmd.toJSON());
 
 const client = new Client({
@@ -259,6 +263,9 @@ if (process.env.NODE_ENV !== 'test') {
     [i18n.getCommandName('skip-until')]: handleSkipUntil,
     [i18n.getCommandName('setup')]: async (interaction) => {
       await handleSetup(interaction);
+    },
+    [i18n.getCommandName('export')]: async (interaction) => {
+      await handleExport(interaction);
     }
   };
 
@@ -328,5 +335,6 @@ export {
   handleClearReactions,
   handleSkipToday,
   handleSkipUntil,
-  handleSetup
+  handleSetup,
+  handleExport
 };

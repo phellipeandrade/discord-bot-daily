@@ -22,6 +22,8 @@
   "user.notFound": "❌ User {{name}} not found.",
   "setup.saved": "✅ Configuration saved!",
   "setup.instructions": "Use /setup to configure channels and token.",
+  "export.success": "✅ Attached data files.",
+  "export.noFiles": "❌ No data files found.",
   "commands": {
     "register": {
       "name": "register",
@@ -138,6 +140,10 @@
           "description": "Holiday countries"
         }
       }
+    },
+    "export": {
+      "name": "export",
+      "description": "Export runtime data files"
     }
   },
   "user.registered": "✅ User {{name}} has been registered!",
