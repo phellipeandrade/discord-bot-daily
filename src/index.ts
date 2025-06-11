@@ -1,14 +1,12 @@
 import {
   Client,
   GatewayIntentBits,
-  ChatInputCommandInteraction,
   Partials,
   TextChannel
 } from 'discord.js';
 import { i18n } from './i18n';
 import {
   TOKEN,
-  GUILD_ID,
   LANGUAGE,
   logConfig,
   isConfigValid,
@@ -30,7 +28,6 @@ import {
   handleList,
   handleSelect,
   handleReset,
-  handleReadd,
   handleSkipToday,
   handleSkipUntil,
   handleSetup,

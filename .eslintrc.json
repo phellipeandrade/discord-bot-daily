@@ -6,9 +6,15 @@
     "node": true,
     "jest": true
   },
-  "ignorePatterns": ["dist", "build", "node_modules"],
+  "ignorePatterns": ["dist", "build", "node_modules", "src/__tests__"],
   "parserOptions": {
     "ecmaVersion": 2020,
     "sourceType": "module"
+  },
+  "rules": {
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+    ]
   }
 }
