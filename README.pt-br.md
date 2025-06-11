@@ -93,7 +93,7 @@ Esse arquivo inclui `serverConfig.json` usado pelo comando `/setup` para armazen
 - `readicionar <nome>` – readiciona um usuário previamente selecionado
 - `pular-hoje <nome>` – pula o sorteio de hoje para o usuário informado
 - `pular-ate <nome> <data>` – pula a seleção de um usuário até a data especificada (formato definido por `DATE_FORMAT`, padrão `YYYY-MM-DD`)
-- `configurar` – configura canais, horário e outras definições. Informe apenas os parâmetros que deseja atualizar.
+- `configurar` – configura canais, ID da guild e outras definições. Informe apenas os parâmetros que deseja atualizar.
 - `verificar-config` – verifica se a configuração do bot está completa **(admin)**
 
 Os comandos marcados com **(admin)** só podem ser executados por administradores.

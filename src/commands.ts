@@ -132,6 +132,12 @@ export function createCommands(): RESTPostAPIApplicationCommandsJSONBody[] {
       )
       .addStringOption((option) =>
         option
+          .setName(i18n.getOptionName('setup', 'guild'))
+          .setDescription(i18n.getOptionDescription('setup', 'guild'))
+          .setRequired(false)
+      )
+      .addStringOption((option) =>
+        option
           .setName(i18n.getOptionName('setup', 'timezone'))
           .setDescription(i18n.getOptionDescription('setup', 'timezone'))
           .addChoices(

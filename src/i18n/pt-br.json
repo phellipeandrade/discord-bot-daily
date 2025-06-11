@@ -125,6 +125,10 @@
           "name": "token",
           "description": "Token do bot (opcional)"
         },
+        "guild": {
+          "name": "guild",
+          "description": "ID da guild"
+        },
         "timezone": {
           "name": "timezone",
           "description": "Fuso horário"
