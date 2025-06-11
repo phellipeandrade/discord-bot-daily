@@ -219,7 +219,7 @@ describe('Funções Utilitárias', () => {
 
       const resultado = await loadUsers();
       
-      expect(resultado).toEqual({ all: [], remaining: [] });
+      expect(resultado).toEqual({ all: [], remaining: [], skips: {} });
       expect(fs.promises.writeFile).toHaveBeenCalled();
     });
 
@@ -229,7 +229,7 @@ describe('Funções Utilitárias', () => {
 
       const resultado = await loadUsers();
       
-      expect(resultado).toEqual(mockData);
+      expect(resultado).toEqual({ ...mockData, skips: {} });
     });
   });
 

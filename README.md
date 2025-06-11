@@ -75,6 +75,8 @@ npm run build-zip
 - `next-song` – show the next unplayed song from the request channel
 - `clear-bunnies` – remove bunny reactions added by the bot
 - `readd <name>` – re-add a previously selected user back into the pool
+- `skip-today <name>` – skip today's draw for the specified user
+- `skip-until <name> <date>` – skip selection of a user until the given date (YYYY-MM-DD)
 
 ## Testing
 

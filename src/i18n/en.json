@@ -15,6 +15,10 @@
   "selection.notSelected": "❌ {{name}} is already in the selection list.",
   "daily.announcement": "🎉 Today's selected user is <@{{id}}> ({{name}})",
   "daily.holiday": "🌴 Holiday detected, skipping today's selection.",
+  "selection.skipToday": "✅ {{name}} will be skipped today.",
+  "selection.skipUntil": "✅ {{name}} will be skipped until {{date}}.",
+  "selection.invalidDate": "❌ Invalid date.",
+  "selection.noEligibleUsers": "❌ No eligible users to select.",
   "user.notFound": "❌ User {{name}} not found.",
   "commands": {
     "register": {
@@ -70,6 +74,30 @@
           "description": "User name"
         }
       }
+    },
+    "skip-today": {
+      "name": "skip-today",
+      "description": "Skip today's selection for a user",
+      "options": {
+        "name": {
+          "name": "name",
+          "description": "User name"
+        }
+      }
+    },
+    "skip-until": {
+      "name": "skip-until",
+      "description": "Skip a user until a date",
+      "options": {
+        "name": {
+          "name": "name",
+          "description": "User name"
+        },
+        "date": {
+          "name": "date",
+          "description": "Date (YYYY-MM-DD)"
+        }
+      }
     }
   }
-} 
+}

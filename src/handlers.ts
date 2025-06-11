@@ -83,3 +83,49 @@ export async function handleReadd(interaction: ChatInputCommandInteraction, data
     await interaction.reply(i18n.t('user.notFound', { name: userName }));
   }
 }
+
+export async function handleSkipToday(
+  interaction: ChatInputCommandInteraction,
+  data: UserData
+): Promise<void> {
+  const userName = interaction.options.getString('name', true);
+  const user = data.all.find(u => u.name === userName);
+
+  if (!user) {
+    await interaction.reply(i18n.t('user.notFound', { name: userName }));
+    return;
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  data.skips = data.skips || {};
+  data.skips[user.id] = today;
+  await saveUsers(data);
+  await interaction.reply(i18n.t('selection.skipToday', { name: userName }));
+}
+
+export async function handleSkipUntil(
+  interaction: ChatInputCommandInteraction,
+  data: UserData
+): Promise<void> {
+  const userName = interaction.options.getString('name', true);
+  const dateStr = interaction.options.getString('date', true);
+  const user = data.all.find(u => u.name === userName);
+
+  if (!user) {
+    await interaction.reply(i18n.t('user.notFound', { name: userName }));
+    return;
+  }
+
+  if (isNaN(Date.parse(dateStr))) {
+    await interaction.reply(i18n.t('selection.invalidDate'));
+    return;
+  }
+
+  const iso = new Date(dateStr).toISOString().split('T')[0];
+  data.skips = data.skips || {};
+  data.skips[user.id] = iso;
+  await saveUsers(data);
+  await interaction.reply(
+    i18n.t('selection.skipUntil', { name: userName, date: iso })
+  );
+}
