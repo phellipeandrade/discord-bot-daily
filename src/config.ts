@@ -40,7 +40,7 @@ export let ADMINS: string[] = envAdmins
       .filter((a) => a)
   : fileConfig?.admins || [];
 
-const rbac = RBAC({ enableLogger: false })({
+const rbac = RBAC({ enableLogger: true })({
   user: { can: ['basic'] },
   admin: { can: ['admin'], inherits: ['user'] }
 });
