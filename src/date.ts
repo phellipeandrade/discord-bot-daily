@@ -4,6 +4,28 @@ function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+export function isDateFormatValid(format: string): boolean {
+  if (!format.includes('YYYY') || !format.includes('MM') || !format.includes('DD')) {
+    return false;
+  }
+  const pattern =
+    '^' +
+    escapeRegex(format)
+      .replace('YYYY', '(?<year>\\d{4})')
+      .replace('MM', '(?<month>\\d{2})')
+      .replace('DD', '(?<day>\\d{2})') +
+    '$';
+  const sample = format
+    .replace('YYYY', '2024')
+    .replace('MM', '12')
+    .replace('DD', '31');
+  const match = new RegExp(pattern).exec(sample);
+  if (!match || !match.groups) return false;
+  const { year, month, day } = match.groups as Record<string, string>;
+  const iso = `${year}-${month}-${day}`;
+  return !isNaN(Date.parse(iso));
+}
+
 export function parseDateString(input: string): string | null {
   const format = DATE_FORMAT;
   const pattern = '^' +
