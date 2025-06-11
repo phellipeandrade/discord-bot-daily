@@ -105,6 +105,26 @@ store guild and channel information.
 - `role <user> <role>` – set a user's role (`admin` or `user`)
 - `check-config` – verify if the bot configuration is complete.
 
+### Access control
+
+Two roles are available: **admin** and **user**. All members listed in
+`users.json` start as **user**. Admin IDs are stored in `serverConfig.json` and a
+Discord user does not need to be registered to become an admin.
+
+Only admins may run configuration commands such as `/setup`, `/import`,
+`/export`, `/skip-*` and `/role` itself. Regular users can still use the basic
+commands like `/register`, `/join`, `/list` and `/select`.
+
+Use the `/role` command to grant or revoke admin access:
+
+```bash
+/role @username admin    # grant admin rights
+/role @username user     # remove admin rights
+```
+
+RBAC checks are handled by the [`@rbac/rbac`](https://www.npmjs.com/package/@rbac/rbac)
+library.
+
 ## Testing
 
 ```bash
