@@ -9,5 +9,7 @@
   "dailyDays": "1-5",
   "holidayCountries": ["BR"],
   "dateFormat": "YYYY-MM-DD",
+  "sendPlayCommand": false,
+  "playCommand": "/play",
   "admins": []
 }

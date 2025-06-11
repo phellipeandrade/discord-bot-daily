@@ -57,7 +57,8 @@ interface MockInteractionOptions {
 function createInteraction(options: MockInteractionOptions = {}) {
   return {
     options: {
-      getString: jest.fn().mockImplementation((n: string) => options[n])
+      getString: jest.fn().mockImplementation((n: string) => options[n]),
+      getBoolean: jest.fn().mockImplementation((n: string) => options[n])
     },
     user: { id: '10', username: 'tester' },
     reply: jest.fn()
@@ -170,7 +171,9 @@ describe('handlers', () => {
         dailyDays: '1-5',
         holidayCountries: ['BR'],
         dateFormat: 'YYYY-MM-DD',
-        admins: []
+        admins: [],
+        sendPlayCommand: false,
+        playCommand: '/play'
       })
     }));
     jest.doMock('../config', () => ({
@@ -183,7 +186,9 @@ describe('handlers', () => {
       DAILY_DAYS: '1-5',
       HOLIDAY_COUNTRIES: ['BR'],
       DATE_FORMAT: 'YYYY-MM-DD',
-      updateServerConfig
+      updateServerConfig,
+      SEND_PLAY_COMMAND: false,
+      PLAY_COMMAND: '/play'
     }));
     jest.doMock('../scheduler', () => ({ scheduleDailySelection }));
     const { handleSetup } = await import('../handlers');
@@ -195,12 +200,9 @@ describe('handlers', () => {
           .mockReturnValueOnce({ id: 'newDaily' })
           .mockReturnValueOnce(null),
         getString: jest.fn((name: string) =>
-          name === 'timezone'
-            ? 'UTC'
-            : name === 'guild'
-            ? 'newGuild'
-            : null
-        )
+          name === 'timezone' ? 'UTC' : name === 'guild' ? 'newGuild' : null
+        ),
+        getBoolean: jest.fn()
       },
       reply: jest.fn(),
       client: {} as Client
@@ -217,7 +219,9 @@ describe('handlers', () => {
       dailyDays: '1-5',
       holidayCountries: ['BR'],
       dateFormat: 'YYYY-MM-DD',
-      admins: []
+      admins: [],
+      sendPlayCommand: false,
+      playCommand: '/play'
     });
     expect(updateServerConfig).toHaveBeenCalled();
     expect(scheduleDailySelection).toHaveBeenCalledWith(interaction.client);
@@ -240,7 +244,9 @@ describe('handlers', () => {
         dailyTime: '09:00',
         dailyDays: '1-5',
         holidayCountries: ['BR'],
-        dateFormat: 'YYYY-MM-DD'
+        dateFormat: 'YYYY-MM-DD',
+        sendPlayCommand: false,
+        playCommand: '/play'
       })
     }));
     const updateServerConfig = jest.fn();
@@ -254,7 +260,9 @@ describe('handlers', () => {
       DAILY_DAYS: '1-5',
       HOLIDAY_COUNTRIES: ['BR'],
       DATE_FORMAT: 'YYYY-MM-DD',
-      updateServerConfig
+      updateServerConfig,
+      PLAY_COMMAND: '/play',
+      SEND_PLAY_COMMAND: false
     }));
     jest.doMock('../scheduler', () => ({ scheduleDailySelection: jest.fn() }));
     const { handleSetup } = await import('../handlers');
@@ -262,7 +270,8 @@ describe('handlers', () => {
       guildId: 'g',
       options: {
         getChannel: jest.fn(),
-        getString: jest.fn((n: string) => (n === 'dateFormat' ? 'bad' : null))
+        getString: jest.fn((n: string) => (n === 'dateFormat' ? 'bad' : null)),
+        getBoolean: jest.fn()
       },
       reply: jest.fn(),
       client: {} as Client
@@ -312,15 +321,18 @@ describe('handlers', () => {
     const updateServerConfig = jest.fn();
     const scheduleDailySelection = jest.fn();
     jest.doMock('https', () => ({
-      get: jest.fn((_url: string, cb: (res: import('http').IncomingMessage) => void) => {
-        const res = new EventEmitter() as unknown as import('http').IncomingMessage;
-        cb(res);
-        process.nextTick(() => {
-          res.emit('data', Buffer.from('{}'));
-          res.emit('end');
-        });
-        return { on: jest.fn() };
-      })
+      get: jest.fn(
+        (_url: string, cb: (res: import('http').IncomingMessage) => void) => {
+          const res =
+            new EventEmitter() as unknown as import('http').IncomingMessage;
+          cb(res);
+          process.nextTick(() => {
+            res.emit('data', Buffer.from('{}'));
+            res.emit('end');
+          });
+          return { on: jest.fn() };
+        }
+      )
     }));
     jest.doMock('fs', () => ({
       promises: { writeFile },
@@ -332,7 +344,12 @@ describe('handlers', () => {
       loadServerConfig: jest.fn(),
       ServerConfig: {}
     }));
-    jest.doMock('../config', () => ({ USERS_FILE: 'users.json', updateServerConfig }));
+    jest.doMock('../config', () => ({
+      USERS_FILE: 'users.json',
+      updateServerConfig,
+      PLAY_COMMAND: '/play',
+      SEND_PLAY_COMMAND: false
+    }));
     jest.doMock('../scheduler', () => ({ scheduleDailySelection }));
     const { handleImport } = await import('../handlers');
     const interaction = {
@@ -357,20 +374,26 @@ describe('handlers', () => {
     jest.resetModules();
     const EventEmitter = (await import('events')).EventEmitter;
     jest.doMock('https', () => ({
-      get: jest.fn((_url: string, cb: (res: import('http').IncomingMessage) => void) => {
-        const res = new EventEmitter() as unknown as import('http').IncomingMessage;
-        cb(res);
-        process.nextTick(() => {
-          res.emit('data', Buffer.from('{}'));
-          res.emit('end');
-        });
-        return { on: jest.fn() };
-      })
+      get: jest.fn(
+        (_url: string, cb: (res: import('http').IncomingMessage) => void) => {
+          const res =
+            new EventEmitter() as unknown as import('http').IncomingMessage;
+          cb(res);
+          process.nextTick(() => {
+            res.emit('data', Buffer.from('{}'));
+            res.emit('end');
+          });
+          return { on: jest.fn() };
+        }
+      )
     }));
     const { handleImport } = await import('../handlers');
     const interaction = {
       options: {
-        getAttachment: jest.fn().mockReturnValueOnce({ name: 'bad.txt', url: 'u' }).mockReturnValueOnce(null)
+        getAttachment: jest
+          .fn()
+          .mockReturnValueOnce({ name: 'bad.txt', url: 'u' })
+          .mockReturnValueOnce(null)
       },
       reply: jest.fn(),
       client: {} as Client

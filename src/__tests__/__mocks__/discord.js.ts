@@ -134,7 +134,8 @@ export const mockChannel = {
   isTextBased: () => true,
   messages: {
     fetch: jest.fn()
-  }
+  },
+  send: jest.fn()
 };
 
 export const GatewayIntentBits = {

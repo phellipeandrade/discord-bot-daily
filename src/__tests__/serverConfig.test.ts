@@ -27,7 +27,9 @@ describe('serverConfig module', () => {
       dailyDays: '1-5',
       holidayCountries: ['BR'],
       dateFormat: 'YYYY-MM-DD',
-      admins: ['a']
+      admins: ['a'],
+      sendPlayCommand: false,
+      playCommand: '/play'
     };
     jest.doMock('fs', () => ({
       existsSync: jest.fn().mockReturnValue(true),
@@ -69,7 +71,9 @@ describe('serverConfig module', () => {
       dailyDays: '1-5',
       holidayCountries: ['BR'],
       dateFormat: 'YYYY-MM-DD',
-      admins: []
+      admins: [],
+      sendPlayCommand: false,
+      playCommand: '/play'
     };
     await saveServerConfig(cfg);
     const expectedPath = path.join(
@@ -101,7 +105,9 @@ describe('serverConfig module', () => {
       dailyDays: '1-5',
       holidayCountries: ['BR', 'US'],
       dateFormat: 'YYYY-MM-DD',
-      admins: ['x']
+      admins: ['x'],
+      sendPlayCommand: false,
+      playCommand: '/play'
     });
     expect(config.GUILD_ID).toBe('g');
     expect(config.CHANNEL_ID).toBe('c');
@@ -114,5 +120,7 @@ describe('serverConfig module', () => {
     expect(config.HOLIDAY_COUNTRIES).toEqual(['BR', 'US']);
     expect(config.DATE_FORMAT).toBe('YYYY-MM-DD');
     expect(config.ADMINS).toEqual(['x']);
+    expect(config.SEND_PLAY_COMMAND).toBe(false);
+    expect(config.PLAY_COMMAND).toBe('/play');
   });
 });
