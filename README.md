@@ -41,7 +41,11 @@ DAILY_DAYS=1-5
 HOLIDAY_COUNTRIES=BR
 USERS_FILE=./src/users.json
 DATE_FORMAT=YYYY-MM-DD
+ADMIN_IDS=1234567890,0987654321
 ```
+
+`ADMIN_IDS` should list the Discord user IDs that start with admin rights. You can also
+edit `serverConfig.json` to manage the list.
 
 Set `BOT_LANGUAGE` to `en` or `pt-br` to change the bot responses.
 `DAILY_TIME` uses 24h format `HH:MM` and `DAILY_DAYS` follows cron day-of-week
@@ -90,26 +94,35 @@ store guild and channel information.
 
 ### Commands
 
+**User**
+
 - `register <name>` – register a user by name
 - `join` – self-register using your Discord name
-- `remove <name>` – remove a user
 - `list` – display registered, pending and already selected users
 - `select` – manually select a random user
-- `reset` – reset selection list (or restore original list)
 - `next-song` – show the next unplayed song from the request channel
 - `clear-bunnies` – remove bunny reactions added by the bot
+- `check-config` – verify if the bot configuration is complete.
+
+**Admin**
+
+- `remove <name>` – remove a user
+- `reset` – reset selection list (or restore original list)
 - `readd <name>` – re-add a previously selected user back into the pool
 - `skip-today <name>` – skip today's draw for the specified user
 - `skip-until <name> <date>` – skip selection of a user until the given date (format defined by `DATE_FORMAT`, default `YYYY-MM-DD`)
 - `setup` – configure channels, time and other settings. Provide only the parameters you want to update.
+- `export` – export data files
+- `import` – import runtime data files
 - `role <user> <role>` – set a user's role (`admin` or `user`)
-- `check-config` – verify if the bot configuration is complete.
 
 ### Access control
 
 Two roles are available: **admin** and **user**. All members listed in
 `users.json` start as **user**. Admin IDs are stored in `serverConfig.json` and a
 Discord user does not need to be registered to become an admin.
+
+The initial admin list can be provided using the `ADMIN_IDS` environment variable or the `admins` field in the config file.
 
 Only admins may run configuration commands such as `/setup`, `/import`,
 `/export`, `/skip-*` and `/role` itself. Regular users can still use the basic

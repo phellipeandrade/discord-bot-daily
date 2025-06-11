@@ -32,7 +32,13 @@ export let HOLIDAY_COUNTRIES = (
   .filter((c) => c);
 export let DATE_FORMAT =
   process.env.DATE_FORMAT || fileConfig?.dateFormat || 'YYYY-MM-DD';
-export let ADMINS: string[] = fileConfig?.admins || [];
+const envAdmins = process.env.ADMIN_IDS;
+export let ADMINS: string[] = envAdmins
+  ? envAdmins
+      .split(',')
+      .map((a) => a.trim())
+      .filter((a) => a)
+  : fileConfig?.admins || [];
 
 const rbac = RBAC({ enableLogger: false })({
   user: { can: ['basic'] },
@@ -50,7 +56,7 @@ export function updateServerConfig(config: ServerConfig): void {
   if (config.dailyDays) DAILY_DAYS = config.dailyDays;
   if (config.holidayCountries) HOLIDAY_COUNTRIES = config.holidayCountries;
   if (config.dateFormat) DATE_FORMAT = config.dateFormat;
-  if (config.admins) ADMINS = config.admins;
+  if (config.admins && !envAdmins) ADMINS = config.admins;
 }
 
 export function logConfig(): void {

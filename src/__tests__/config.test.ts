@@ -38,3 +38,11 @@ test('canUseAdminCommands respects roles', async () => {
   await expect(config.canUseAdminCommands('1')).resolves.toBe(true);
   await expect(config.canUseAdminCommands('2')).resolves.toBe(false);
 });
+
+test('ADMINS loaded from environment variable', () => {
+  process.env.ADMIN_IDS = 'a,b';
+  jest.resetModules();
+  const cfg = require('../config');
+  expect(cfg.ADMINS).toEqual(['a', 'b']);
+  delete process.env.ADMIN_IDS;
+});
