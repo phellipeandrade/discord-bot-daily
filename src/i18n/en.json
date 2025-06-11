@@ -158,10 +158,16 @@
           "description": "Server config JSON file"
         }
       }
+    },
+    "check-config": {
+      "name": "check-config",
+      "description": "Verify bot configuration"
     }
   },
   "import.success": "✅ Data imported successfully.",
   "import.invalid": "❌ Invalid or missing files.",
+  "config.valid": "✅ Configuration looks good.",
+  "config.invalid": "❌ Missing configuration values: {{fields}}.",
   "user.registered": "✅ User {{name}} has been registered!",
   "user.alreadyRegistered": "❌ User {{name}} is already registered.",
   "user.selfRegistered": "✅ You have been registered!",

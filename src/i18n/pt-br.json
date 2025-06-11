@@ -163,10 +163,16 @@
           "description": "Arquivo JSON de configuração"
         }
       }
+    },
+    "check-config": {
+      "name": "verificar-config",
+      "description": "Verifica a configuração do bot"
     }
   },
   "import.success": "✅ Dados importados com sucesso.",
   "import.invalid": "❌ Arquivos inválidos ou ausentes.",
+  "config.valid": "✅ Configuração correta.",
+  "config.invalid": "❌ Faltam valores de configuração: {{fields}}.",
   "user.alreadyRegistered": "❌ Usuário {{name}} já está registrado.",
   "user.alreadySelfRegistered": "❌ Você já está registrado(a).",
   "selection.nextUser": "➡️ Próximo usuário selecionado: <@{{id}}> ({{name}})"

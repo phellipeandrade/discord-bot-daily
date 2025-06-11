@@ -14,7 +14,9 @@ import {
   GUILD_ID,
   LANGUAGE,
   DATE_FORMAT,
-  logConfig
+  logConfig,
+  isConfigValid,
+  checkRequiredConfig
 } from './config';
 import {
   UserData,
@@ -36,7 +38,8 @@ import {
   handleSkipUntil,
   handleSetup,
   handleExport,
-  handleImport
+  handleImport,
+  handleCheckConfig
 } from './handlers';
 import {
   handleNextSong,
@@ -205,7 +208,10 @@ const commands = [
         .setName(i18n.getOptionName('import', 'config'))
         .setDescription(i18n.getOptionDescription('import', 'config'))
         .setRequired(false)
-    )
+    ),
+  new SlashCommandBuilder()
+    .setName(i18n.getCommandName('check-config'))
+    .setDescription(i18n.getCommandDescription('check-config'))
 ].map((cmd) => cmd.toJSON());
 
 const client = new Client({
@@ -246,6 +252,9 @@ if (process.env.NODE_ENV !== 'test') {
     },
     [i18n.getCommandName('import')]: async (interaction) => {
       await handleImport(interaction);
+    },
+    [i18n.getCommandName('check-config')]: async (interaction) => {
+      await handleCheckConfig(interaction);
     }
   };
 
@@ -285,6 +294,18 @@ if (process.env.NODE_ENV !== 'test') {
       console.log(
         `➡️ Command received: /${interaction.commandName} from ${interaction.user.tag}`
       );
+      if (
+        !isConfigValid() &&
+        interaction.commandName !== i18n.getCommandName('setup') &&
+        interaction.commandName !== i18n.getCommandName('check-config')
+      ) {
+        await interaction.reply(
+          i18n.t('config.invalid', {
+            fields: checkRequiredConfig().join(', ')
+          })
+        );
+        return;
+      }
       const data = await loadUsers();
       const handler = commandHandlers[interaction.commandName];
       if (handler) await handler(interaction, data);
@@ -318,5 +339,6 @@ export {
   handleSetup,
   handleExport,
   handleImport,
+  handleCheckConfig,
   scheduleDailySelection
 };
