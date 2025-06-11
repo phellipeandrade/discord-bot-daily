@@ -2,7 +2,7 @@ import { MockCollection } from './MockCollection';
 
 export class MockActionRowBuilder {
   private readonly components: unknown[] = [];
-  
+
   addComponents(...components: unknown[]) {
     this.components.push(...components);
     return this;
@@ -11,7 +11,7 @@ export class MockActionRowBuilder {
 
 export class MockButtonBuilder {
   private readonly data: Record<string, unknown> = {};
-  
+
   setCustomId(customId: string) {
     this.data.customId = customId;
     return this;
@@ -21,12 +21,12 @@ export class MockButtonBuilder {
     this.data.label = label;
     return this;
   }
-  
+
   setStyle(style: number) {
     this.data.style = style;
     return this;
   }
-  
+
   setURL(url: string) {
     this.data.url = url;
     return this;
@@ -40,6 +40,7 @@ interface MockOption {
   setName(name: string): this;
   setDescription(description: string): this;
   setRequired(required: boolean): this;
+  addChoices?(...choices: Array<{ name: string; value: string }>): this;
 }
 
 export class MockSlashCommandBuilder {
@@ -73,6 +74,9 @@ export class MockSlashCommandBuilder {
       setRequired(required: boolean) {
         this.required = required;
         return this;
+      },
+      addChoices(..._choices: Array<{ name: string; value: string }>) {
+        return this;
       }
     };
     this.options.push(fn(option));
@@ -92,9 +96,10 @@ export class MockSlashCommandBuilder {
   }
 }
 
-export const mockReactionCache = new MockCollection<string, { emoji: { name: string }, count: number }>([
-  ['🐰', { emoji: { name: '🐰' }, count: 0 }]
-]);
+export const mockReactionCache = new MockCollection<
+  string,
+  { emoji: { name: string }; count: number }
+>([['🐰', { emoji: { name: '🐰' }, count: 0 }]]);
 
 export const mockMessageTemplate = {
   id: '123',
@@ -169,4 +174,4 @@ export const MessageReaction = jest.fn();
 export const Collection = MockCollection;
 export const ActionRowBuilder = MockActionRowBuilder;
 export const ButtonBuilder = MockButtonBuilder;
-export const SlashCommandBuilder = MockSlashCommandBuilder; 
+export const SlashCommandBuilder = MockSlashCommandBuilder;

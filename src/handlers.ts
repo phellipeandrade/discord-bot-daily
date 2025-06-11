@@ -2,10 +2,31 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ChatInputCommandInteraction } from 'discord.js';
 import { i18n } from './i18n';
-import { UserEntry, UserData, saveUsers, selectUser, formatUsers } from './users';
+import {
+  UserEntry,
+  UserData,
+  saveUsers,
+  selectUser,
+  formatUsers
+} from './users';
 import { parseDateString, todayISO } from './date';
-import { DATE_FORMAT, updateServerConfig, TOKEN } from './config';
-import { saveServerConfig, ServerConfig } from './serverConfig';
+import {
+  DATE_FORMAT,
+  updateServerConfig,
+  TOKEN,
+  CHANNEL_ID,
+  MUSIC_CHANNEL_ID,
+  TIMEZONE,
+  LANGUAGE,
+  DAILY_TIME,
+  DAILY_DAYS,
+  HOLIDAY_COUNTRIES
+} from './config';
+import {
+  saveServerConfig,
+  loadServerConfig,
+  ServerConfig
+} from './serverConfig';
 
 export async function handleRegister(
   interaction: ChatInputCommandInteraction,
@@ -17,83 +38,122 @@ export async function handleRegister(
   );
   const userId = interaction.user.id;
 
-  if (!data.all.some(u => u.id === userId)) {
+  if (!data.all.some((u) => u.id === userId)) {
     const newUser: UserEntry = { name: userName, id: userId };
     data.all.push(newUser);
     data.remaining.push(newUser);
     await saveUsers(data);
     await interaction.reply(i18n.t('user.registered', { name: userName }));
   } else {
-    await interaction.reply(i18n.t('user.alreadyRegistered', { name: userName }));
+    await interaction.reply(
+      i18n.t('user.alreadyRegistered', { name: userName })
+    );
   }
 }
 
-export async function handleJoin(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
+export async function handleJoin(
+  interaction: ChatInputCommandInteraction,
+  data: UserData
+): Promise<void> {
   const displayName = interaction.user.username;
   const userId = interaction.user.id;
 
-  if (!data.all.some(u => u.id === userId)) {
+  if (!data.all.some((u) => u.id === userId)) {
     const newUser: UserEntry = { name: displayName, id: userId };
     data.all.push(newUser);
     data.remaining.push(newUser);
     await saveUsers(data);
-    await interaction.reply(i18n.t('user.selfRegistered', { name: displayName }));
+    await interaction.reply(
+      i18n.t('user.selfRegistered', { name: displayName })
+    );
   } else {
-    await interaction.reply(i18n.t('user.alreadySelfRegistered', { name: displayName }));
+    await interaction.reply(
+      i18n.t('user.alreadySelfRegistered', { name: displayName })
+    );
   }
 }
 
-export async function handleRemove(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
+export async function handleRemove(
+  interaction: ChatInputCommandInteraction,
+  data: UserData
+): Promise<void> {
   const userName = interaction.options.getString(
     i18n.getOptionName('remove', 'name'),
     true
   );
-  data.all = data.all.filter(u => u.name !== userName);
-  data.remaining = data.remaining.filter(u => u.name !== userName);
+  data.all = data.all.filter((u) => u.name !== userName);
+  data.remaining = data.remaining.filter((u) => u.name !== userName);
   await saveUsers(data);
   await interaction.reply(i18n.t('user.removed', { name: userName }));
 }
 
-export async function handleList(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
+export async function handleList(
+  interaction: ChatInputCommandInteraction,
+  data: UserData
+): Promise<void> {
   const all = formatUsers(data.all);
   const pending = formatUsers(data.remaining);
-  const selected = formatUsers(data.all.filter(u => !data.remaining.some(r => r.id === u.id)));
+  const selected = formatUsers(
+    data.all.filter((u) => !data.remaining.some((r) => r.id === u.id))
+  );
   await interaction.reply({
     content: `${i18n.t('list.registered', { users: all })}\n\n${i18n.t('list.pending', { users: pending })}\n\n${i18n.t('list.selected', { users: selected })}`,
     flags: 1 << 6
   });
 }
 
-export async function handleSelect(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
+export async function handleSelect(
+  interaction: ChatInputCommandInteraction,
+  data: UserData
+): Promise<void> {
   const selected = await selectUser(data);
-  await interaction.reply(i18n.t('selection.nextUser', { id: selected.id, name: selected.name }));
+  await interaction.reply(
+    i18n.t('selection.nextUser', { id: selected.id, name: selected.name })
+  );
 }
 
-export async function handleReset(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
+export async function handleReset(
+  interaction: ChatInputCommandInteraction,
+  data: UserData
+): Promise<void> {
   try {
-    const originalData = JSON.parse(await fs.promises.readFile(path.join(__dirname, 'users.original.json'), 'utf-8'));
+    const originalData = JSON.parse(
+      await fs.promises.readFile(
+        path.join(__dirname, 'users.original.json'),
+        'utf-8'
+      )
+    );
     await saveUsers(originalData);
-    await interaction.reply(i18n.t('selection.resetOriginal', { count: originalData.all.length }));
+    await interaction.reply(
+      i18n.t('selection.resetOriginal', { count: originalData.all.length })
+    );
   } catch {
     data.remaining = [...data.all];
     await saveUsers(data);
-    await interaction.reply(i18n.t('selection.resetAll', { count: data.all.length }));
+    await interaction.reply(
+      i18n.t('selection.resetAll', { count: data.all.length })
+    );
   }
 }
 
-export async function handleReadd(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
+export async function handleReadd(
+  interaction: ChatInputCommandInteraction,
+  data: UserData
+): Promise<void> {
   const userName = interaction.options.getString(
     i18n.getOptionName('readd', 'name'),
     true
   );
-  const user = data.all.find(u => u.name === userName);
+  const user = data.all.find((u) => u.name === userName);
 
-  if (user && !data.remaining.some(u => u.id === user.id)) {
+  if (user && !data.remaining.some((u) => u.id === user.id)) {
     data.remaining.push(user);
     await saveUsers(data);
     await interaction.reply(i18n.t('selection.readded', { name: userName }));
   } else if (user) {
-    await interaction.reply(i18n.t('selection.notSelected', { name: userName }));
+    await interaction.reply(
+      i18n.t('selection.notSelected', { name: userName })
+    );
   } else {
     await interaction.reply(i18n.t('user.notFound', { name: userName }));
   }
@@ -107,7 +167,7 @@ export async function handleSkipToday(
     i18n.getOptionName('skip-today', 'name'),
     true
   );
-  const user = data.all.find(u => u.name === userName);
+  const user = data.all.find((u) => u.name === userName);
 
   if (!user) {
     await interaction.reply(i18n.t('user.notFound', { name: userName }));
@@ -133,7 +193,7 @@ export async function handleSkipUntil(
     i18n.getOptionName('skip-until', 'date'),
     true
   );
-  const user = data.all.find(u => u.name === userName);
+  const user = data.all.find((u) => u.name === userName);
 
   if (!user) {
     await interaction.reply(i18n.t('user.notFound', { name: userName }));
@@ -142,7 +202,9 @@ export async function handleSkipUntil(
 
   const iso = parseDateString(dateStr);
   if (!iso) {
-    await interaction.reply(i18n.t('selection.invalidDate', { format: DATE_FORMAT }));
+    await interaction.reply(
+      i18n.t('selection.invalidDate', { format: DATE_FORMAT })
+    );
     return;
   }
   data.skips = data.skips || {};
@@ -153,24 +215,63 @@ export async function handleSkipUntil(
   );
 }
 
-export async function handleSetup(interaction: ChatInputCommandInteraction): Promise<void> {
+export async function handleSetup(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
   if (!interaction.guildId) return;
+  const existing = loadServerConfig() || {
+    guildId: interaction.guildId,
+    channelId: CHANNEL_ID,
+    musicChannelId: MUSIC_CHANNEL_ID,
+    token: TOKEN,
+    timezone: TIMEZONE,
+    language: LANGUAGE,
+    dailyTime: DAILY_TIME,
+    dailyDays: DAILY_DAYS,
+    holidayCountries: HOLIDAY_COUNTRIES
+  };
+
   const daily = interaction.options.getChannel(
     i18n.getOptionName('setup', 'daily'),
-    true
+    false
   );
   const music = interaction.options.getChannel(
     i18n.getOptionName('setup', 'music'),
-    true
+    false
   );
   const token =
-    interaction.options.getString(i18n.getOptionName('setup', 'token')) || TOKEN;
+    interaction.options.getString(i18n.getOptionName('setup', 'token')) ??
+    existing.token;
+  const timezone =
+    interaction.options.getString(i18n.getOptionName('setup', 'timezone')) ??
+    existing.timezone;
+  const language =
+    interaction.options.getString(i18n.getOptionName('setup', 'language')) ??
+    existing.language;
+  const dailyTime =
+    interaction.options.getString(i18n.getOptionName('setup', 'dailyTime')) ??
+    existing.dailyTime;
+  const dailyDays =
+    interaction.options.getString(i18n.getOptionName('setup', 'dailyDays')) ??
+    existing.dailyDays;
+  const holidays = interaction.options.getString(
+    i18n.getOptionName('setup', 'holidayCountries')
+  );
+
   const cfg: ServerConfig = {
     guildId: interaction.guildId,
-    channelId: daily.id,
-    musicChannelId: music.id,
-    token
+    channelId: daily?.id ?? existing.channelId,
+    musicChannelId: music?.id ?? existing.musicChannelId,
+    token,
+    timezone,
+    language,
+    dailyTime,
+    dailyDays,
+    holidayCountries: holidays
+      ? holidays.split(',').map((c) => c.trim().toUpperCase())
+      : existing.holidayCountries
   };
+
   await saveServerConfig(cfg);
   updateServerConfig(cfg);
   await interaction.reply(i18n.t('setup.saved'));

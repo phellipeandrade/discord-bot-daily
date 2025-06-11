@@ -2,5 +2,10 @@
   "guildId": "",
   "channelId": "",
   "musicChannelId": "",
-  "token": ""
+  "token": "",
+  "timezone": "America/Sao_Paulo",
+  "language": "pt-br",
+  "dailyTime": "09:00",
+  "dailyDays": "1-5",
+  "holidayCountries": ["BR"]
 }
