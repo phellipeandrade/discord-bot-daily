@@ -111,15 +111,15 @@
       "description": "Configura os canais do bot",
       "options": {
         "daily": {
-          "name": "Canal daily:",
-          "description": "Canal para mensagens diárias"
+          "name": "daily",
+          "description": "para mensagens diárias"
         },
         "music": {
-          "name": "Canal músicas:",
+          "name": "musicas",
           "description": "Canal de pedidos de música"
         },
         "token": {
-          "name": "Discord Token:",
+          "name": "token",
           "description": "Token do bot (opcional)"
         }
       }
