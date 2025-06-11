@@ -27,7 +27,7 @@ Create an `.env` file with the following variables:
 
 ```
 DISCORD_TOKEN=your-bot-token
-# The variables below are optional. If omitted, run /setup in your server to configure
+# The variables below are optional. If omitted, run `/setup` in your server to configure
 # the guild and channel ids.
 GUILD_ID=your-guild-id
 CHANNEL_ID=id-of-channel-for-daily-messages
@@ -66,6 +66,8 @@ To create a production zip with translations and data:
 ```bash
 npm run build-zip
 ```
+This archive includes a `serverConfig.json` file used by the `/setup` command to
+store guild and channel information.
 
 ### Commands
 
@@ -80,6 +82,7 @@ npm run build-zip
 - `readd <name>` – re-add a previously selected user back into the pool
 - `skip-today <name>` – skip today's draw for the specified user
 - `skip-until <name> <date>` – skip selection of a user until the given date (format defined by `DATE_FORMAT`, default `YYYY-MM-DD`)
+- `setup <daily> <music>` – configure the channels if they weren't provided in the `.env`
 
 ## Testing
 
