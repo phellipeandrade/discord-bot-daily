@@ -54,6 +54,20 @@ Run locally in development mode:
 npm run dev
 ```
 
+### Tests and coverage
+
+Run the test suite:
+
+```bash
+npm test
+```
+
+Generate a coverage report and badge:
+
+```bash
+npm run test:coverage
+```
+
 Build and start:
 
 ```bash

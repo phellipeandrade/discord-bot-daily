@@ -31,6 +31,18 @@ describe('serverConfig module', () => {
     expect(loadServerConfig()).toEqual(data);
   });
 
+  test('loadServerConfig handles read error', () => {
+    jest.doMock('fs', () => ({
+      existsSync: jest.fn().mockReturnValue(true),
+      readFileSync: jest.fn(() => {
+        throw new Error('fail');
+      }),
+      promises: { writeFile: jest.fn() }
+    }));
+    const { loadServerConfig } = require('../serverConfig');
+    expect(loadServerConfig()).toBeNull();
+  });
+
   test('saveServerConfig writes config to file', async () => {
     const writeFile = jest.fn();
     jest.doMock('fs', () => ({
