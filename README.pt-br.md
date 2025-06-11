@@ -7,6 +7,7 @@ Bot do Discord que seleciona automaticamente um usuário aleatório a cada dia �
 
 - Comandos de barra para registrar usuários, listar participantes e gerenciar seleções
 - Seleção diária em horário e dias configuráveis (fuso horário e países de feriado podem ser definidos por variáveis de ambiente)
+- Nomes dos comandos também estão disponíveis em português (pt-br)
 - Utilidades de música para obter a próxima música não tocada de um canal
 - Respostas multilíngues opcionais (inglês por padrão e português-BR disponível)
 
@@ -38,8 +39,10 @@ DAILY_TIME=09:00
 DAILY_DAYS=1-5
 HOLIDAY_COUNTRIES=BR
 USERS_FILE=./src/users.json
+ADMIN_IDS=1234567890,0987654321
 DATE_FORMAT=YYYY-MM-DD
 ```
+`ADMIN_IDS` deve listar os IDs dos usuários do Discord que iniciam com direitos de administrador. Você também pode editar `serverConfig.json` para gerenciar a lista.
 
 Defina `BOT_LANGUAGE` como `en` ou `pt-br` para alterar as respostas do bot. `DAILY_TIME` usa o formato 24h `HH:MM` e `DAILY_DAYS` segue a sintaxe de dia da semana do cron (ex.: `1-5` para segunda a sexta). `HOLIDAY_COUNTRIES` é uma lista separada por vírgulas de códigos de país (`BR` e `US` são suportados). `DATE_FORMAT` controla o padrão de data usado pelo comando `/skip-until` e também pode ser alterado via `/setup`.
 
@@ -82,21 +85,47 @@ Esse arquivo inclui `serverConfig.json` usado pelo comando `/setup` para armazen
 
 ### Comandos
 
-- `registrar <nome>` – registra um usuário pelo nome **(admin)**
+**Usuário**
+
 - `entrar` – auto-registro usando seu nome do Discord
-- `remover <nome>` – remove um usuário
 - `listar` – mostra usuários registrados, pendentes e já selecionados
 - `selecionar` – seleciona manualmente um usuário aleatório
-- `resetar` – reseta a lista de seleção (ou restaura a lista original)
 - `proxima-musica` – mostra a próxima música não tocada do canal de pedidos
-- `limpar-coelhos` – remove reações de coelhinho adicionadas pelo bot **(admin)**
+
+**Admin**
+
+- `registrar <nome>` – registra um usuário pelo nome
+- `limpar-coelhos` – remove reações de coelhinho adicionadas pelo bot
+- `verificar-config` – verifica se a configuração do bot está completa.
+- `remover <nome>` – remove um usuário
+- `resetar` – reseta a lista de seleção (ou restaura a lista original)
 - `readicionar <nome>` – readiciona um usuário previamente selecionado
 - `pular-hoje <nome>` – pula o sorteio de hoje para o usuário informado
 - `pular-ate <nome> <data>` – pula a seleção de um usuário até a data especificada (formato definido por `DATE_FORMAT`, padrão `YYYY-MM-DD`)
 - `configurar` – configura canais, ID da guild e outras definições. Informe apenas os parâmetros que deseja atualizar.
-- `verificar-config` – verifica se a configuração do bot está completa **(admin)**
+- `exportar` – exporta arquivos de dados
+- `importar` – importa arquivos de dados
+- `role <usuario> <role>` – define o papel de um usuário (`admin` ou `user`)
 
-Os comandos marcados com **(admin)** só podem ser executados por administradores.
+
+### Controle de acesso
+
+Dois papéis estão disponíveis: **admin** e **user**. Todos os membros listados em `users.json` começam como **user**. Os IDs de administradores são armazenados em `serverConfig.json` e um usuário do Discord não precisa estar registrado para se tornar administrador.
+
+A lista inicial de administradores pode ser fornecida usando a variável de ambiente `ADMIN_IDS` ou o campo `admins` no arquivo de configuração.
+
+Somente administradores podem executar comandos privilegiados como `/registrar`, `/limpar-coelhos`, `/verificar-config`, `/configurar`, `/importar`, `/exportar`, `/pular-*` e o próprio `/role`. Usuários comuns ainda podem usar comandos básicos como `/entrar`, `/listar`, `/selecionar` e `/proxima-musica`.
+
+Use o comando `/role` para conceder ou revogar acesso de administrador:
+
+```bash
+/role @usuario admin    # concede direitos de admin
+/role @usuario user     # remove direitos de admin
+```
+
+O controle de permissões é feito pela [`@rbac/rbac`](https://www.npmjs.com/package/@rbac/rbac) biblioteca.
+
+
 
 ## Testes
 
