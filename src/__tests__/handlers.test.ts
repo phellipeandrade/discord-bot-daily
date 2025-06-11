@@ -169,7 +169,7 @@ describe('handlers', () => {
         dailyTime: '09:00',
         dailyDays: '1-5',
         holidayCountries: ['BR'],
-        dateFormat: 'YYYY-MM-DD'
+        dateFormat: 'YYYY-MM-DD',
         admins: []
       })
     }));
@@ -212,7 +212,7 @@ describe('handlers', () => {
       dailyTime: '09:00',
       dailyDays: '1-5',
       holidayCountries: ['BR'],
-      dateFormat: 'YYYY-MM-DD'
+      dateFormat: 'YYYY-MM-DD',
       admins: []
     });
     expect(updateServerConfig).toHaveBeenCalled();
