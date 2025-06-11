@@ -4,7 +4,7 @@ import { ChatInputCommandInteraction } from 'discord.js';
 import { i18n } from './i18n';
 import { UserEntry, UserData, saveUsers, selectUser, formatUsers } from './users';
 import { parseDateString, todayISO } from './date';
-import { DATE_FORMAT, updateServerConfig } from './config';
+import { DATE_FORMAT, updateServerConfig, TOKEN } from './config';
 import { saveServerConfig, ServerConfig } from './serverConfig';
 
 export async function handleRegister(interaction: ChatInputCommandInteraction, data: UserData): Promise<void> {
@@ -136,10 +136,12 @@ export async function handleSetup(interaction: ChatInputCommandInteraction): Pro
   if (!interaction.guildId) return;
   const daily = interaction.options.getChannel('daily', true);
   const music = interaction.options.getChannel('music', true);
+  const token = interaction.options.getString('token') || TOKEN;
   const cfg: ServerConfig = {
     guildId: interaction.guildId,
     channelId: daily.id,
-    musicChannelId: music.id
+    musicChannelId: music.id,
+    token
   };
   await saveServerConfig(cfg);
   updateServerConfig(cfg);

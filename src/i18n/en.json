@@ -21,7 +21,7 @@
   "selection.noEligibleUsers": "❌ No eligible users to select.",
   "user.notFound": "❌ User {{name}} not found.",
   "setup.saved": "✅ Configuration saved!",
-  "setup.instructions": "Use /setup to configure channels.",
+  "setup.instructions": "Use /setup to configure channels and token.",
   "commands": {
     "register": {
       "name": "register",
@@ -112,6 +112,10 @@
         "music": {
           "name": "music",
           "description": "Channel for music requests"
+        },
+        "token": {
+          "name": "token",
+          "description": "Bot token (optional)"
         }
       }
     }

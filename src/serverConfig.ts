@@ -5,6 +5,7 @@ export interface ServerConfig {
   guildId: string;
   channelId: string;
   musicChannelId: string;
+  token?: string;
 }
 
 const CONFIG_PATH = path.join(__dirname, 'serverConfig.json');
@@ -20,5 +21,9 @@ export function loadServerConfig(): ServerConfig | null {
 }
 
 export async function saveServerConfig(config: ServerConfig): Promise<void> {
-  await fs.promises.writeFile(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');
+  await fs.promises.writeFile(
+    CONFIG_PATH,
+    JSON.stringify(config, null, 2),
+    'utf-8'
+  );
 }

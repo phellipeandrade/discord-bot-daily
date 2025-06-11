@@ -27,8 +27,7 @@ Create an `.env` file with the following variables:
 
 ```
 DISCORD_TOKEN=your-bot-token
-# The variables below are optional. If omitted, run `/setup` in your server to configure
-# the guild and channel ids.
+# If omitted, run `/setup` in your server to set the token, guild and channel ids.
 GUILD_ID=your-guild-id
 CHANNEL_ID=id-of-channel-for-daily-messages
 MUSIC_CHANNEL_ID=id-of-channel-with-song-requests
@@ -41,6 +40,7 @@ HOLIDAY_COUNTRIES=BR
 USERS_FILE=./src/users.json
 DATE_FORMAT=YYYY-MM-DD
 ```
+
 Set `BOT_LANGUAGE` to `en` or `pt-br` to change the bot responses.
 `DAILY_TIME` uses 24h format `HH:MM` and `DAILY_DAYS` follows cron day-of-week
 syntax (e.g. `1-5` for Monday–Friday). `HOLIDAY_COUNTRIES` is a comma-separated
@@ -66,6 +66,7 @@ To create a production zip with translations and data:
 ```bash
 npm run build-zip
 ```
+
 This archive includes a `serverConfig.json` file used by the `/setup` command to
 store guild and channel information.
 
@@ -82,7 +83,7 @@ store guild and channel information.
 - `readd <name>` – re-add a previously selected user back into the pool
 - `skip-today <name>` – skip today's draw for the specified user
 - `skip-until <name> <date>` – skip selection of a user until the given date (format defined by `DATE_FORMAT`, default `YYYY-MM-DD`)
-- `setup <daily> <music>` – configure the channels if they weren't provided in the `.env`
+- `setup <daily> <music> [token]` – configure the channels and optionally the token if not provided in the `.env`
 
 ## Testing
 

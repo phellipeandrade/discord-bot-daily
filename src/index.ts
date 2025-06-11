@@ -54,7 +54,7 @@ i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
 logConfig();
 
 function scheduleDailySelection(client: Client): void {
-  const [hour, minute] = DAILY_TIME.split(':').map(n => parseInt(n, 10));
+  const [hour, minute] = DAILY_TIME.split(':').map((n) => parseInt(n, 10));
   const cronExpr = `${minute} ${hour} * * ${DAILY_DAYS}`;
   console.log(
     `📅 Daily job scheduled at ${DAILY_TIME} (${DAILY_DAYS}) [TZ ${TIMEZONE}]`
@@ -90,7 +90,7 @@ const commands = [
   new SlashCommandBuilder()
     .setName(i18n.getCommandName('register'))
     .setDescription(i18n.getCommandDescription('register'))
-    .addStringOption(option =>
+    .addStringOption((option) =>
       option
         .setName(i18n.getOptionName('register', 'name'))
         .setDescription(i18n.getOptionDescription('register', 'name'))
@@ -102,7 +102,7 @@ const commands = [
   new SlashCommandBuilder()
     .setName(i18n.getCommandName('remove'))
     .setDescription(i18n.getCommandDescription('remove'))
-    .addStringOption(option =>
+    .addStringOption((option) =>
       option
         .setName(i18n.getOptionName('remove', 'name'))
         .setDescription(i18n.getOptionDescription('remove', 'name'))
@@ -126,7 +126,7 @@ const commands = [
   new SlashCommandBuilder()
     .setName(i18n.getCommandName('readd'))
     .setDescription(i18n.getCommandDescription('readd'))
-    .addStringOption(option =>
+    .addStringOption((option) =>
       option
         .setName(i18n.getOptionName('readd', 'name'))
         .setDescription(i18n.getOptionDescription('readd', 'name'))
@@ -135,7 +135,7 @@ const commands = [
   new SlashCommandBuilder()
     .setName(i18n.getCommandName('skip-today'))
     .setDescription(i18n.getCommandDescription('skip-today'))
-    .addStringOption(option =>
+    .addStringOption((option) =>
       option
         .setName(i18n.getOptionName('skip-today', 'name'))
         .setDescription(i18n.getOptionDescription('skip-today', 'name'))
@@ -144,13 +144,13 @@ const commands = [
   new SlashCommandBuilder()
     .setName(i18n.getCommandName('skip-until'))
     .setDescription(i18n.getCommandDescription('skip-until'))
-    .addStringOption(option =>
+    .addStringOption((option) =>
       option
         .setName(i18n.getOptionName('skip-until', 'name'))
         .setDescription(i18n.getOptionDescription('skip-until', 'name'))
         .setRequired(true)
     )
-    .addStringOption(option =>
+    .addStringOption((option) =>
       option
         .setName(i18n.getOptionName('skip-until', 'date'))
         .setDescription(
@@ -163,19 +163,25 @@ const commands = [
   new SlashCommandBuilder()
     .setName(i18n.getCommandName('setup'))
     .setDescription(i18n.getCommandDescription('setup'))
-    .addChannelOption(option =>
+    .addChannelOption((option) =>
       option
         .setName(i18n.getOptionName('setup', 'daily'))
         .setDescription(i18n.getOptionDescription('setup', 'daily'))
         .setRequired(true)
     )
-    .addChannelOption(option =>
+    .addChannelOption((option) =>
       option
         .setName(i18n.getOptionName('setup', 'music'))
         .setDescription(i18n.getOptionDescription('setup', 'music'))
         .setRequired(true)
     )
-].map(cmd => cmd.toJSON());
+    .addStringOption((option) =>
+      option
+        .setName(i18n.getOptionName('setup', 'token'))
+        .setDescription(i18n.getOptionDescription('setup', 'token'))
+        .setRequired(false)
+    )
+].map((cmd) => cmd.toJSON());
 
 const client = new Client({
   intents: [
@@ -188,23 +194,26 @@ const client = new Client({
 });
 
 if (process.env.NODE_ENV !== 'test') {
-  const commandHandlers: Record<string, (i: ChatInputCommandInteraction, d: UserData) => Promise<void>> = {
+  const commandHandlers: Record<
+    string,
+    (i: ChatInputCommandInteraction, d: UserData) => Promise<void>
+  > = {
     [i18n.getCommandName('register')]: handleRegister,
     [i18n.getCommandName('remove')]: handleRemove,
     [i18n.getCommandName('list')]: handleList,
     [i18n.getCommandName('select')]: handleSelect,
     [i18n.getCommandName('join')]: handleJoin,
     [i18n.getCommandName('reset')]: handleReset,
-    [i18n.getCommandName('next-song')]: async interaction => {
+    [i18n.getCommandName('next-song')]: async (interaction) => {
       await handleNextSong(interaction);
     },
-    [i18n.getCommandName('clear-bunnies')]: async interaction => {
+    [i18n.getCommandName('clear-bunnies')]: async (interaction) => {
       await handleClearReactions(interaction);
     },
     [i18n.getCommandName('readd')]: handleReadd,
     [i18n.getCommandName('skip-today')]: handleSkipToday,
     [i18n.getCommandName('skip-until')]: handleSkipUntil,
-    [i18n.getCommandName('setup')]: async interaction => {
+    [i18n.getCommandName('setup')]: async (interaction) => {
       await handleSetup(interaction);
     }
   };
@@ -216,9 +225,9 @@ if (process.env.NODE_ENV !== 'test') {
 
     const users = await loadUsers();
     console.log(
-      `👥 Users loaded (${users.all.length}): ${users.all
-        .map(u => u.name)
-        .join(', ') || '(none)'}`
+      `👥 Users loaded (${users.all.length}): ${
+        users.all.map((u) => u.name).join(', ') || '(none)'
+      }`
     );
 
     const rest = new REST({ version: '10' }).setToken(TOKEN);
@@ -232,15 +241,15 @@ if (process.env.NODE_ENV !== 'test') {
     scheduleDailySelection(client);
   });
 
-  client.on('guildCreate', guild => {
+  client.on('guildCreate', (guild) => {
     const channel =
-      guild.systemChannel || guild.channels.cache.find(c => c.isTextBased());
+      guild.systemChannel || guild.channels.cache.find((c) => c.isTextBased());
     if (channel && channel.isTextBased()) {
       (channel as TextChannel).send(i18n.t('setup.instructions'));
     }
   });
 
-  client.on('interactionCreate', async interaction => {
+  client.on('interactionCreate', async (interaction) => {
     if (interaction.isChatInputCommand()) {
       console.log(
         `➡️ Command received: /${interaction.commandName} from ${interaction.user.tag}`
