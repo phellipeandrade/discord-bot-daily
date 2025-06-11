@@ -11,6 +11,10 @@ import { i18n } from './i18n';
 import { MUSIC_CHANNEL_ID } from './config';
 
 export async function findNextSong(client: Client): Promise<{ text: string; components?: ActionRowBuilder<ButtonBuilder>[] }> {
+  if (!MUSIC_CHANNEL_ID) {
+    return { text: i18n.t('music.channelError') };
+  }
+
   const requestsChannel = await client.channels.fetch(MUSIC_CHANNEL_ID);
   if (!requestsChannel?.isTextBased()) {
     return { text: i18n.t('music.channelError') };
