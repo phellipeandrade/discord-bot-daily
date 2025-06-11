@@ -25,7 +25,8 @@ import {
   USERS_FILE,
   checkRequiredConfig,
   PLAY_COMMAND,
-  SEND_PLAY_COMMAND
+  SEND_PLAY_COMMAND,
+  DAILY_VOICE_CHANNEL_ID
 } from './config';
 import { scheduleDailySelection } from './scheduler';
 import {
@@ -245,6 +246,7 @@ export async function handleSetup(
     guildId: guildIdOption ?? interaction.guildId!,
     channelId: CHANNEL_ID,
     musicChannelId: MUSIC_CHANNEL_ID,
+    dailyVoiceChannelId: DAILY_VOICE_CHANNEL_ID,
     token: TOKEN,
     timezone: TIMEZONE,
     language: LANGUAGE,
@@ -252,6 +254,7 @@ export async function handleSetup(
     dailyDays: DAILY_DAYS,
     holidayCountries: HOLIDAY_COUNTRIES,
     dateFormat: DATE_FORMAT,
+    admins: [],
     sendPlayCommand: SEND_PLAY_COMMAND,
     playCommand: PLAY_COMMAND
   };
@@ -262,6 +265,10 @@ export async function handleSetup(
   );
   const music = interaction.options.getChannel(
     i18n.getOptionName('setup', 'music'),
+    false
+  );
+  const voice = interaction.options.getChannel(
+    i18n.getOptionName('setup', 'voice'),
     false
   );
   const token =
@@ -303,6 +310,7 @@ export async function handleSetup(
     guildId,
     channelId: daily?.id ?? existing.channelId,
     musicChannelId: music?.id ?? existing.musicChannelId,
+    dailyVoiceChannelId: voice?.id ?? existing.dailyVoiceChannelId,
     token,
     timezone,
     language,

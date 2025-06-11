@@ -164,6 +164,7 @@ describe('handlers', () => {
         guildId: 'guild',
         channelId: 'old',
         musicChannelId: 'music',
+        dailyVoiceChannelId: 'voice',
         token: 'tok',
         timezone: 'America/Sao_Paulo',
         language: 'en',
@@ -180,6 +181,7 @@ describe('handlers', () => {
       TOKEN: 'tok',
       CHANNEL_ID: 'old',
       MUSIC_CHANNEL_ID: 'music',
+      DAILY_VOICE_CHANNEL_ID: 'voice',
       TIMEZONE: 'America/Sao_Paulo',
       LANGUAGE: 'en',
       DAILY_TIME: '09:00',
@@ -198,6 +200,7 @@ describe('handlers', () => {
         getChannel: jest
           .fn()
           .mockReturnValueOnce({ id: 'newDaily' })
+          .mockReturnValueOnce(null)
           .mockReturnValueOnce(null),
         getString: jest.fn((name: string) =>
           name === 'timezone' ? 'UTC' : name === 'guild' ? 'newGuild' : null
@@ -212,6 +215,7 @@ describe('handlers', () => {
       guildId: 'newGuild',
       channelId: 'newDaily',
       musicChannelId: 'music',
+      dailyVoiceChannelId: 'voice',
       token: 'tok',
       timezone: 'UTC',
       language: 'en',
@@ -240,6 +244,7 @@ describe('handlers', () => {
         guildId: 'guild',
         channelId: 'old',
         musicChannelId: 'music',
+        dailyVoiceChannelId: 'voice',
         token: 'tok',
         timezone: 'America/Sao_Paulo',
         language: 'en',
@@ -256,6 +261,7 @@ describe('handlers', () => {
       TOKEN: 'tok',
       CHANNEL_ID: 'old',
       MUSIC_CHANNEL_ID: 'music',
+      DAILY_VOICE_CHANNEL_ID: 'voice',
       TIMEZONE: 'America/Sao_Paulo',
       LANGUAGE: 'en',
       DAILY_TIME: '09:00',
@@ -271,7 +277,11 @@ describe('handlers', () => {
     const interaction = {
       guildId: 'guild',
       options: {
-        getChannel: jest.fn().mockReturnValueOnce(null).mockReturnValueOnce(null),
+        getChannel: jest
+          .fn()
+          .mockReturnValueOnce(null)
+          .mockReturnValueOnce(null)
+          .mockReturnValueOnce(null),
         getString: jest.fn((name: string) =>
           name === 'playCommand' ? '!play' : null
         ),
@@ -298,6 +308,7 @@ describe('handlers', () => {
         guildId: 'g',
         channelId: 'c',
         musicChannelId: 'm',
+        dailyVoiceChannelId: 'v',
         token: 'tok',
         timezone: 'UTC',
         language: 'en',
@@ -314,6 +325,7 @@ describe('handlers', () => {
       TOKEN: 'tok',
       CHANNEL_ID: 'c',
       MUSIC_CHANNEL_ID: 'm',
+      DAILY_VOICE_CHANNEL_ID: 'v',
       TIMEZONE: 'UTC',
       LANGUAGE: 'en',
       DAILY_TIME: '09:00',
@@ -471,6 +483,7 @@ describe('handlers', () => {
       guildId: 'g',
       channelId: 'c',
       musicChannelId: 'm',
+      dailyVoiceChannelId: 'v',
       token: 't',
       timezone: 'UTC',
       language: 'en',
@@ -493,6 +506,7 @@ describe('handlers', () => {
       guildId: '',
       channelId: '',
       musicChannelId: '',
+      dailyVoiceChannelId: '',
       token: '',
       dateFormat: 'YYYY-MM-DD'
     });

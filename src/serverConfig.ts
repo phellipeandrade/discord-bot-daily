@@ -5,6 +5,7 @@ export interface ServerConfig {
   guildId: string;
   channelId: string;
   musicChannelId: string;
+  dailyVoiceChannelId?: string;
   token?: string;
   timezone?: string;
   language?: string;

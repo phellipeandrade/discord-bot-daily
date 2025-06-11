@@ -2,6 +2,7 @@
   "guildId": "",
   "channelId": "",
   "musicChannelId": "",
+  "dailyVoiceChannelId": "",
   "token": "",
   "timezone": "America/Sao_Paulo",
   "language": "pt-br",

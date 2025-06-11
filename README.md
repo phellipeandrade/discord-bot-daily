@@ -33,6 +33,7 @@ DISCORD_TOKEN=your-bot-token
 GUILD_ID=your-guild-id
 CHANNEL_ID=id-of-channel-for-daily-messages
 MUSIC_CHANNEL_ID=id-of-channel-with-song-requests
+DAILY_VOICE_CHANNEL_ID=id-of-voice-channel-to-play-songs
 # Optional
 TIMEZONE=America/Sao_Paulo
 BOT_LANGUAGE=en

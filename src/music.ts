@@ -8,7 +8,12 @@ import {
   TextChannel
 } from 'discord.js';
 import { i18n } from './i18n';
-import { MUSIC_CHANNEL_ID, PLAY_COMMAND, SEND_PLAY_COMMAND } from './config';
+import {
+  MUSIC_CHANNEL_ID,
+  DAILY_VOICE_CHANNEL_ID,
+  PLAY_COMMAND,
+  SEND_PLAY_COMMAND
+} from './config';
 
 export async function findNextSong(
   client: Client
@@ -119,6 +124,9 @@ export async function handlePlayButton(
 
   const originalMessageId = customId.replace('play_', '');
   const channel = await interaction.client.channels.fetch(MUSIC_CHANNEL_ID);
+  const voice = DAILY_VOICE_CHANNEL_ID
+    ? await interaction.client.channels.fetch(DAILY_VOICE_CHANNEL_ID)
+    : null;
 
   if (!channel?.isTextBased()) {
     await interaction.reply({
@@ -157,7 +165,9 @@ export async function handlePlayButton(
 
     await originalMsg.react('🐰');
     if (SEND_PLAY_COMMAND) {
-      await (channel as TextChannel).send(`${PLAY_COMMAND} ${linkToPlay}`);
+      const target =
+        voice && voice.isTextBased() ? (voice as TextChannel) : (channel as TextChannel);
+      await target.send(`${PLAY_COMMAND} ${linkToPlay}`);
     }
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
