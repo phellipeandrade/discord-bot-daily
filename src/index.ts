@@ -256,7 +256,7 @@ if (process.env.NODE_ENV !== 'test') {
   client.on('guildCreate', (guild) => {
     const channel =
       guild.systemChannel || guild.channels.cache.find((c) => c.isTextBased());
-    if (channel && channel.isTextBased()) {
+    if (channel?.isTextBased()) {
       (channel as TextChannel).send(i18n.t('setup.instructions'));
     }
   });
