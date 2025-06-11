@@ -23,6 +23,7 @@ import {
   HOLIDAY_COUNTRIES,
   USERS_FILE
 } from './config';
+import { scheduleDailySelection } from './scheduler';
 import {
   saveServerConfig,
   loadServerConfig,
@@ -275,6 +276,7 @@ export async function handleSetup(
 
   await saveServerConfig(cfg);
   updateServerConfig(cfg);
+  scheduleDailySelection(interaction.client);
   await interaction.reply(i18n.t('setup.saved'));
 }
 

@@ -10,7 +10,7 @@ import {
 } from '../handlers';
 import type { UserData } from '../users';
 import * as fs from 'fs';
-import { ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, Client } from 'discord.js';
 
 // Mock do i18n
 jest.mock('../i18n', () => ({
@@ -155,6 +155,7 @@ describe('handlers', () => {
     jest.resetModules();
     const saveServerConfig = jest.fn();
     const updateServerConfig = jest.fn();
+    const scheduleDailySelection = jest.fn();
     jest.doMock('../serverConfig', () => ({
       saveServerConfig,
       loadServerConfig: jest.fn().mockReturnValue({
@@ -180,6 +181,7 @@ describe('handlers', () => {
       HOLIDAY_COUNTRIES: ['BR'],
       updateServerConfig
     }));
+    jest.doMock('../scheduler', () => ({ scheduleDailySelection }));
     const { handleSetup } = await import('../handlers');
     const interaction = {
       guildId: 'guild',
@@ -192,7 +194,8 @@ describe('handlers', () => {
           name === 'timezone' ? 'UTC' : null
         )
       },
-      reply: jest.fn()
+      reply: jest.fn(),
+      client: {} as Client
     } as unknown as ChatInputCommandInteraction;
     await handleSetup(interaction);
     expect(saveServerConfig).toHaveBeenCalledWith({
@@ -207,6 +210,7 @@ describe('handlers', () => {
       holidayCountries: ['BR']
     });
     expect(updateServerConfig).toHaveBeenCalled();
+    expect(scheduleDailySelection).toHaveBeenCalledWith(interaction.client);
     expect(interaction.reply).toHaveBeenCalled();
   });
 
