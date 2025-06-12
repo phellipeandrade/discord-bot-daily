@@ -60,8 +60,10 @@ HOLIDAY_COUNTRIES=BR
 USERS_FILE=./src/users.json
 ADMIN_IDS=1234567890,0987654321
 DATE_FORMAT=YYYY-MM-DD
+YOUTUBE_COOKIE=seu-cookie-do-youtube
 ```
 `ADMIN_IDS` deve listar os IDs dos usuários do Discord que iniciam com direitos de administrador. Você também pode editar `serverConfig.json` para gerenciar a lista.
+`YOUTUBE_COOKIE` pode ser necessário para vídeos que exibem "Sign in to confirm you're not a bot". Caso a reprodução falhe, o bot tenta usar `ytdl-core` automaticamente.
 
 Defina `BOT_LANGUAGE` como `en` ou `pt-br` para alterar as respostas do bot. `DAILY_TIME` usa o formato 24h `HH:MM` e `DAILY_DAYS` segue a sintaxe de dia da semana do cron (ex.: `1-5` para segunda a sexta). `HOLIDAY_COUNTRIES` é uma lista separada por vírgulas de códigos de país (`BR` e `US` são suportados). `DATE_FORMAT` controla o padrão de data usado pelo comando `/skip-until` e também pode ser alterado via `/setup`.
 

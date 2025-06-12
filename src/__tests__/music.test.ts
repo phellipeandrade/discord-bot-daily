@@ -68,10 +68,16 @@ jest.mock('@discordjs/voice', () => ({
   createAudioResource: jest.fn(() => ({})),
   joinVoiceChannel: jest.fn(() => ({ subscribe: jest.fn(), destroy: jest.fn() })),
   entersState: jest.fn(() => Promise.resolve()),
-  AudioPlayerStatus: { Idle: 'Idle' }
+  AudioPlayerStatus: { Idle: 'Idle' },
+  StreamType: { Arbitrary: 'Arbitrary' }
 }));
 jest.mock('play-dl', () => ({
-  stream: jest.fn(async () => ({ stream: {}, type: undefined }))
+  stream: jest.fn(async () => ({ stream: {}, type: undefined })),
+  setToken: jest.fn()
+}));
+jest.mock('ytdl-core', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({}))
 }));
 jest.mock('discord.js');
 
@@ -347,6 +353,29 @@ describe('Comandos de Música', () => {
         content: expect.stringContaining('Song marked as played'),
         components: expect.any(Array),
         flags: 1 << 6
+      });
+    });
+
+    it('deve usar ytdl-core como fallback', async () => {
+      const play = await import('play-dl');
+      (play.stream as jest.Mock).mockRejectedValueOnce(new Error('fail'));
+      const ytdl = (await import('ytdl-core')).default as unknown as jest.Mock;
+
+      (
+        mockClientInstance.channels as unknown as MockChannelManager
+      ).fetch.mockImplementation((id: string) => {
+        if (id === 'requests') return Promise.resolve(mockChannelInstance);
+        if (id === 'dailyVoice') return Promise.resolve(mockVoiceChannelInstance);
+        return Promise.resolve(null);
+      });
+      mockChannelInstance.messages.fetch.mockResolvedValue(mockMessageInstance);
+
+      await handlePlayButton(
+        mockButtonInteraction as unknown as ButtonInteraction
+      );
+
+      expect(ytdl).toHaveBeenCalledWith('https://example.com/song', {
+        filter: 'audioonly'
       });
     });
 
