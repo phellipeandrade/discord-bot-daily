@@ -290,9 +290,18 @@ export async function handleSetup(
   const dateFormat =
     interaction.options.getString(i18n.getOptionName('setup', 'dateFormat')) ??
     existing.dateFormat;
-  const youtubeCookie =
-    interaction.options.getString(i18n.getOptionName('setup', 'cookie')) ??
-    existing.youtubeCookie;
+  let youtubeCookie = existing.youtubeCookie;
+  const cookieFile = interaction.options.getAttachment(
+    i18n.getOptionName('setup', 'cookie'),
+    false
+  );
+  if (cookieFile) {
+    if (!cookieFile.name.endsWith('.txt')) {
+      await interaction.reply(i18n.t('setup.invalidCookie'));
+      return false;
+    }
+    youtubeCookie = (await fetchText(cookieFile.url)).trim();
+  }
 
   const guildId = guildIdOption ?? interaction.guildId ?? existing.guildId;
 

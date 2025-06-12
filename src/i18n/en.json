@@ -25,6 +25,7 @@
   "setup.saved": "✅ Configuration saved!",
   "setup.instructions": "Use /setup to configure channels, token and cookie.",
   "setup.invalidDateFormat": "❌ Invalid date format. Use placeholders YYYY, MM and DD.",
+  "setup.invalidCookie": "❌ Cookie file must be a .txt.",
   "export.success": "✅ Attached data files.",
   "export.noFiles": "❌ No data files found.",
   "commands": {
@@ -160,7 +161,7 @@
         },
         "cookie": {
           "name": "cookie",
-          "description": "YouTube cookie"
+          "description": "YouTube cookie (.txt file)"
         }
       }
     },
