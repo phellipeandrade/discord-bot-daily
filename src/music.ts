@@ -8,28 +8,13 @@ import {
   TextChannel
 } from 'discord.js';
 import {
-  AudioPlayerStatus,
-  createAudioPlayer,
-  createAudioResource,
-  entersState,
-  joinVoiceChannel,
-  DiscordGatewayAdapterCreator,
-  StreamType
+  AudioPlayer,
+  VoiceConnection
 } from '@discordjs/voice';
-import play from 'play-dl';
-import { Readable } from 'stream';
-import ytdl from 'ytdl-core';
+import { Player } from 'discord-player';
 import ffmpegPath from 'ffmpeg-static';
 import { i18n } from './i18n';
-import {
-  MUSIC_CHANNEL_ID,
-  DAILY_VOICE_CHANNEL_ID,
-  YOUTUBE_COOKIE
-} from './config';
-
-if (YOUTUBE_COOKIE) {
-  play.setToken({ youtube: { cookie: YOUTUBE_COOKIE } });
-}
+import { MUSIC_CHANNEL_ID, DAILY_VOICE_CHANNEL_ID } from './config';
 
 if (ffmpegPath) {
   process.env.FFMPEG_PATH = ffmpegPath;
@@ -137,9 +122,18 @@ export async function handleClearReactions(
 }
 
 export const musicState = {
-  currentConnection: null as ReturnType<typeof joinVoiceChannel> | null,
-  currentPlayer: null as ReturnType<typeof createAudioPlayer> | null
+  currentConnection: null as VoiceConnection | null,
+  currentPlayer: null as AudioPlayer | null
 };
+
+let playerInstance: Player | null = null;
+
+function getPlayer(client: Client): Player {
+  if (!playerInstance) {
+    playerInstance = new Player(client);
+  }
+  return playerInstance;
+}
 
 async function playUrl(client: Client, url: string): Promise<void> {
   console.log('🔊 Entrando em playUrl com URL:', url);
@@ -153,53 +147,23 @@ async function playUrl(client: Client, url: string): Promise<void> {
     console.warn('⚠️ Canal não é de voz ou não encontrado');
     return;
   }
-  const connection = joinVoiceChannel({
-    channelId: channel.id,
-    guildId: channel.guild.id,
-    adapterCreator:
-      channel.guild.voiceAdapterCreator as unknown as DiscordGatewayAdapterCreator
-  });
-  console.log('🔗 Conexão criada:', !!connection);
-  musicState.currentConnection = connection;
-  let stream: Readable;
-  let type: StreamType | undefined;
+  const player = getPlayer(client);
   try {
-    const res = await play.stream(url, { discordPlayerCompatibility: true });
-    stream = res.stream;
-    type = res.type;
+    const { queue } = await player.play(channel, url);
+    musicState.currentConnection =
+      queue.dispatcher!.voiceConnection as unknown as VoiceConnection;
+    musicState.currentPlayer = queue.dispatcher!.audioPlayer as unknown as AudioPlayer;
   } catch (err) {
-    console.warn('⚠️ play-dl failed, trying ytdl-core', err);
-    stream = ytdl(url, {
-      filter: 'audioonly',
-      quality: 'highestaudio',
-      requestOptions: {
-        headers: {
-          cookie: YOUTUBE_COOKIE,
-          'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0'
-        }
-      }
-    });
-    type = StreamType.WebmOpus;
+    console.error('❌ Failed to play with discord-player:', err);
   }
-  const resource = createAudioResource(stream, { inputType: type });
-  const player = createAudioPlayer();
-  musicState.currentPlayer = player;
-  connection.subscribe(player);
-  player.on('error', (err) => console.error('🔈 Player error', err));
-  player.once(AudioPlayerStatus.Idle, () => {
-    connection.destroy();
-    musicState.currentConnection = null;
-    musicState.currentPlayer = null;
-    console.log('📴 Conexão finalizada');
-  });
-  player.play(resource);
-  await entersState(player, AudioPlayerStatus.Playing, 5_000);
 }
 
 export async function handleStopMusic(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
+  const player = getPlayer(interaction.client);
+  const queue = player.nodes.get(interaction.guildId!);
+  if (queue) queue.delete();
   if (musicState.currentPlayer) musicState.currentPlayer.stop();
   if (musicState.currentConnection) musicState.currentConnection.destroy();
   musicState.currentPlayer = null;

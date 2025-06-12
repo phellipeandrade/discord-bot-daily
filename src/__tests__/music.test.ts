@@ -63,22 +63,16 @@ jest.mock('../i18n', () => {
 });
 
 // Mock do Discord.js
-jest.mock('@discordjs/voice', () => ({
-  createAudioPlayer: jest.fn(() => ({ play: jest.fn() })),
-  createAudioResource: jest.fn(() => ({})),
-  joinVoiceChannel: jest.fn(() => ({ subscribe: jest.fn(), destroy: jest.fn() })),
-  entersState: jest.fn(() => Promise.resolve()),
-  AudioPlayerStatus: { Idle: 'Idle' },
-  StreamType: { Arbitrary: 'Arbitrary' }
+jest.mock('@discordjs/voice');
+const mockPlay = jest.fn(async () => ({ queue: { dispatcher: { voiceConnection: {}, audioPlayer: {} } } }));
+jest.mock('discord-player', () => ({
+  Player: jest.fn().mockImplementation(() => ({
+    play: mockPlay,
+    nodes: { get: jest.fn(() => null) }
+  }))
 }));
-jest.mock('play-dl', () => ({
-  stream: jest.fn(async () => ({ stream: {}, type: undefined })),
-  setToken: jest.fn()
-}));
-jest.mock('ytdl-core', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({}))
-}));
+jest.mock('play-dl');
+jest.mock('ytdl-core');
 jest.mock('discord.js');
 
 type PartialMessage = Pick<Message, 'content' | 'embeds' | 'id' | 'url'>;
@@ -356,11 +350,7 @@ describe('Comandos de Música', () => {
       });
     });
 
-    it('deve usar ytdl-core como fallback', async () => {
-      const play = await import('play-dl');
-      (play.stream as jest.Mock).mockRejectedValueOnce(new Error('fail'));
-      const ytdl = (await import('ytdl-core')).default as unknown as jest.Mock;
-
+    it('deve utilizar discord-player para tocar', async () => {
       (
         mockClientInstance.channels as unknown as MockChannelManager
       ).fetch.mockImplementation((id: string) => {
@@ -374,16 +364,10 @@ describe('Comandos de Música', () => {
         mockButtonInteraction as unknown as ButtonInteraction
       );
 
-      expect(ytdl).toHaveBeenCalledWith('https://example.com/song', {
-        filter: 'audioonly',
-        quality: 'highestaudio',
-        requestOptions: {
-          headers: expect.objectContaining({
-            cookie: expect.any(String),
-            'User-Agent': expect.stringContaining('Mozilla/')
-          })
-        }
-      });
+      expect(mockPlay).toHaveBeenCalledWith(
+        mockVoiceChannelInstance,
+        'https://example.com/song'
+      );
     });
 
     it('deve lidar com erro ao processar a música', async () => {

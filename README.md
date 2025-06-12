@@ -172,8 +172,8 @@ The bot fetches songs from the text channel defined by `MUSIC_CHANNEL_ID`.
 Running `/next-song` replies with the next unplayed message containing a link,
 attachment or embed along with a **Play** button. When the button is pressed the
 bot joins the voice channel set in `DAILY_VOICE_CHANNEL_ID` and streams the
-audio. The original request message receives a 🐰 reaction so it won't be
-selected again.
+audio using the [`discord-player`](https://discord-player.js.org) library. The
+original request message receives a 🐰 reaction so it won't be selected again.
 
 Use `/stop-music` to stop the current playback. Admins can remove all bunny
 reactions from the request channel with `/clear-bunnies` if needed.
