@@ -41,7 +41,7 @@
       "options": {
         "name": {
           "name": "nome",
-          "description": "Nome do usuário"
+          "description": "Usuário (menção, id ou nome)"
         }
       }
     },
@@ -55,7 +55,7 @@
       "options": {
         "name": {
           "name": "nome",
-          "description": "Nome do usuário"
+          "description": "Usuário (menção, id ou nome)"
         }
       }
     },
@@ -99,20 +99,20 @@
       "options": {
         "name": {
           "name": "nome",
-          "description": "Nome do usuário"
-        }
+          "description": "Usuário (menção, id ou nome)"
       }
-    },
-    "skip-until": {
-      "name": "pular-ate",
-      "description": "Suspende o sorteio de um usuário até a data",
-      "options": {
-        "name": {
-          "name": "nome",
-          "description": "Nome do usuário"
-        },
-        "date": {
-          "name": "data",
+    }
+  },
+  "skip-until": {
+    "name": "pular-ate",
+    "description": "Suspende o sorteio de um usuário até a data",
+    "options": {
+      "name": {
+        "name": "nome",
+        "description": "Usuário (menção, id ou nome)"
+      },
+      "date": {
+        "name": "data",
           "description": "Data ({{format}})"
         }
       }

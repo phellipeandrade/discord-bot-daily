@@ -64,3 +64,17 @@ export function formatUsers(users: UserEntry[]): string {
   if (users.length === 0) return i18n.t('list.empty');
   return users.map(u => `• ${u.name}`).join('\n');
 }
+
+export function findUser(data: UserData, input: string): UserEntry | undefined {
+  const mention = /^<@!?(\d+)>$/.exec(input);
+  let id: string | null = null;
+  if (mention) {
+    id = mention[1];
+  } else if (/^\d+$/.test(input)) {
+    id = input;
+  }
+  if (id) {
+    return data.all.find(u => u.id === id);
+  }
+  return data.all.find(u => u.name === input);
+}

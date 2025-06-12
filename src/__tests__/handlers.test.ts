@@ -39,12 +39,16 @@ const mockFormatUsers = jest.fn(
     '(none)'
 );
 
-jest.mock('../users', () => ({
-  saveUsers: (data: UserData) => mockSaveUsers(data),
-  selectUser: (data: UserData) => mockSelectUser(data),
-  formatUsers: (users: Array<{ name: string; id: string }>) =>
-    mockFormatUsers(users)
-}));
+jest.mock('../users', () => {
+  const actual = jest.requireActual('../users');
+  return {
+    ...actual,
+    saveUsers: (data: UserData) => mockSaveUsers(data),
+    selectUser: (data: UserData) => mockSelectUser(data),
+    formatUsers: (users: Array<{ name: string; id: string }>) =>
+      mockFormatUsers(users)
+  };
+});
 
 jest.mock('fs');
 
@@ -143,6 +147,16 @@ describe('handlers', () => {
     expect(mockSaveUsers).toHaveBeenCalled();
   });
 
+  test('handleSkipToday accepts id and mention', async () => {
+    data.all.push({ name: 'A', id: '1' });
+    const today = new Date().toISOString().split('T')[0];
+    const { handleSkipToday } = await import('../handlers');
+    await handleSkipToday(createInteraction({ name: '1' }), data);
+    expect(data.skips?.['1']).toBe(today);
+    await handleSkipToday(createInteraction({ name: '<@1>' }), data);
+    expect(data.skips?.['1']).toBe(today);
+  });
+
   test('handleSkipUntil sets future skip', async () => {
     data.all.push({ name: 'A', id: '1' });
     const future = '2099-01-01';
@@ -151,6 +165,16 @@ describe('handlers', () => {
     await handleSkipUntil(interaction, data);
     expect(data.skips?.['1']).toBe(future);
     expect(mockSaveUsers).toHaveBeenCalled();
+  });
+
+  test('handleSkipUntil accepts id and mention', async () => {
+    data.all.push({ name: 'A', id: '1' });
+    const future = '2099-01-01';
+    const { handleSkipUntil } = await import('../handlers');
+    await handleSkipUntil(createInteraction({ name: '1', date: future }), data);
+    expect(data.skips?.['1']).toBe(future);
+    await handleSkipUntil(createInteraction({ name: '<@1>', date: future }), data);
+    expect(data.skips?.['1']).toBe(future);
   });
 
   test('handleSetup writes configuration', async () => {

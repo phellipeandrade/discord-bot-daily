@@ -136,8 +136,8 @@ by jsdom is also packaged to avoid runtime errors.
 - `remove <name>` – remove a user
 - `reset` – reset selection list (or restore original list)
 - `readd <name>` – re-add a previously selected user back into the pool
-- `skip-today <name>` – skip today's draw for the specified user
-- `skip-until <name> <date>` – skip selection of a user until the given date (format defined by `DATE_FORMAT`, default `YYYY-MM-DD`)
+- `skip-today <user>` – skip today's draw for the specified user (mention, id or name)
+- `skip-until <user> <date>` – skip selection of a user until the given date (format defined by `DATE_FORMAT`, default `YYYY-MM-DD`; user can be mention, id or name)
 - `setup` – configure channels, guild ID and other settings. Provide only the parameters you want to update.
 - `export` – export data files
 - `import` – import runtime data files
