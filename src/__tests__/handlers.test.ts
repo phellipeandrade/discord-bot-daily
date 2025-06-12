@@ -155,9 +155,24 @@ describe('handlers', () => {
 
   test('handleSetup writes configuration', async () => {
     jest.resetModules();
+    const EventEmitter = (await import('events')).EventEmitter;
     const saveServerConfig = jest.fn();
     const updateServerConfig = jest.fn();
     const scheduleDailySelection = jest.fn();
+    jest.doMock('https', () => ({
+      get: jest.fn(
+        (_url: string, cb: (res: import('http').IncomingMessage) => void) => {
+          const res =
+            new EventEmitter() as unknown as import('http').IncomingMessage;
+          cb(res);
+          process.nextTick(() => {
+            res.emit('data', Buffer.from('cookieVal'));
+            res.emit('end');
+          });
+          return { on: jest.fn() };
+        }
+      )
+    }));
     jest.doMock('../serverConfig', () => ({
       saveServerConfig,
       loadServerConfig: jest.fn().mockReturnValue({
@@ -203,9 +218,11 @@ describe('handlers', () => {
         getString: jest.fn((name: string) => {
           if (name === 'timezone') return 'UTC';
           if (name === 'guild') return 'newGuild';
-          if (name === 'cookie') return 'newCookie';
           return null;
         }),
+        getAttachment: jest
+          .fn()
+          .mockReturnValueOnce({ name: 'cookie.txt', url: 'c' }),
         getBoolean: jest.fn()
       },
       reply: jest.fn(),
@@ -217,7 +234,7 @@ describe('handlers', () => {
       channelId: 'newDaily',
       musicChannelId: 'music',
       dailyVoiceChannelId: 'voice',
-      youtubeCookie: 'newCookie',
+      youtubeCookie: 'cookieVal',
       token: 'tok',
       timezone: 'UTC',
       language: 'en',
@@ -276,6 +293,7 @@ describe('handlers', () => {
       options: {
         getChannel: jest.fn(),
         getString: jest.fn((n: string) => (n === 'dateFormat' ? 'bad' : null)),
+        getAttachment: jest.fn(() => null),
         getBoolean: jest.fn()
       },
       reply: jest.fn(),
@@ -293,7 +311,7 @@ describe('handlers', () => {
     const { handleSetup } = await import('../handlers');
     const interaction = {
       guildId: undefined,
-      options: { getChannel: jest.fn(), getString: jest.fn() },
+      options: { getChannel: jest.fn(), getString: jest.fn(), getAttachment: jest.fn() },
       reply: jest.fn()
     } as unknown as ChatInputCommandInteraction;
     await handleSetup(interaction);
