@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import { USERS_FILE } from './config';
 import { i18n } from './i18n';
+import { todayISO } from './date';
 
 export interface UserEntry {
   name: string;
@@ -11,6 +12,8 @@ export interface UserData {
   all: UserEntry[];
   remaining: UserEntry[];
   lastSelected?: UserEntry;
+  /** ISO date string of the last selection */
+  lastSelectionDate?: string;
   skips?: Record<string, string>;
 }
 
@@ -56,6 +59,7 @@ export async function selectUser(data: UserData): Promise<UserEntry> {
   const selected = eligible[index];
   data.remaining = data.remaining.filter(u => u.id !== selected.id);
   data.lastSelected = selected;
+  data.lastSelectionDate = todayISO();
   await saveUsers(data);
   return selected;
 }

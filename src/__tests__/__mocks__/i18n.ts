@@ -16,6 +16,7 @@ export const i18n = {
       'user.registered': '✅ User {{name}} has been registered!',
       'user.selfRegistered': '✅ You have been registered!',
       'user.removed': '✅ User {{name}} has been removed!',
+      'daily.announcement': 'announce <@{{id}}> ({{name}})',
       'selection.resetOriginal': '✅ Selection list has been reset to original state.',
       'selection.resetAll': '✅ {{count}} users have been readded to the selection list.',
       'selection.readded': '✅ {{name}} has been readded to the selection list.'
