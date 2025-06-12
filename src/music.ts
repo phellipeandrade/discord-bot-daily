@@ -6,10 +6,10 @@ import {
   ChatInputCommandInteraction,
   Client,
   TextChannel,
+  Message,
   ChannelType
 } from 'discord.js';
 import { Player } from 'discord-player';
-import { DefaultExtractors } from '@discord-player/extractor';
 import { YoutubeiExtractor } from 'discord-player-youtubei';
 import ffmpegPath from 'ffmpeg-static';
 import { i18n } from './i18n';
@@ -24,6 +24,10 @@ export const musicPlayer = { instance: null as Player | null };
 
 function getPlayer(client: Client): Player {
   if (!musicPlayer.instance) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { DefaultExtractors } = require('@discord-player/extractor') as {
+      DefaultExtractors: typeof import('@discord-player/extractor')['DefaultExtractors'];
+    };
     const player = new Player(client);
     // carrega todos extractors padrão (Spotify, SoundCloud, etc)
     player.extractors.loadMulti(DefaultExtractors);
@@ -75,7 +79,8 @@ export async function findNextSong(
     if (bunnyReaction && bunnyReaction.count > 0) continue;
 
     if (linkRegex.test(msg.content) || msg.embeds.length > 0 || msg.attachments.size > 0) {
-      const extractedLink = msg.attachments.first()?.url
+      const attachment = msg.attachments.size > 0 ? Array.from(msg.attachments.values())[0] : undefined;
+      const extractedLink = attachment?.url
         || linkRegex.exec(msg.content)![0]
         || msg.embeds[0].url
         || '';
@@ -131,10 +136,17 @@ export async function handlePlayButton(interaction: ButtonInteraction): Promise<
     return;
   }
 
-  const originalMsg = await (channel as TextChannel).messages.fetch(originalMessageId);
+  let originalMsg: Message;
+  try {
+    originalMsg = await (channel as TextChannel).messages.fetch(originalMessageId);
+  } catch (err) {
+    await interaction.reply({ content: i18n.t('music.processError'), flags: 1 << 6 });
+    return;
+  }
   const linkRegex = /https?:\/\/\S+/i;
+  const attachment = originalMsg.attachments.size > 0 ? Array.from(originalMsg.attachments.values())[0] : undefined;
   const linkToPlay =
-    originalMsg.attachments.first()?.url
+    attachment?.url
     || linkRegex.exec(originalMsg.content)?.[0]
     || originalMsg.embeds[0]?.url
     || '';
