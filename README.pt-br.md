@@ -106,6 +106,7 @@ npm run build-zip
 
 Esse arquivo inclui `serverConfig.json` usado pelo comando `/setup` para armazenar informações de guild e canal.
 Se houver um `cookies.txt` na pasta raiz, ele também será incluído no pacote.
+O arquivo `xhr-sync-worker.js` necessário pelo jsdom também é incluído para evitar erros em tempo de execução.
 
 ### Comandos
 

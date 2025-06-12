@@ -116,7 +116,8 @@ npm run build-zip
 This archive includes a `serverConfig.json` file used by the `/setup` command to
 store guild and channel information. The bot searches for this file in `src/`
 first and falls back to the repository root if not found. If a `cookies.txt`
-file is present it will also be bundled.
+file is present it will also be bundled. The `xhr-sync-worker.js` file required
+by jsdom is also packaged to avoid runtime errors.
 
 ### Commands
 
