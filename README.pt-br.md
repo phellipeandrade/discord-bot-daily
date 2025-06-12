@@ -51,6 +51,7 @@ GUILD_ID=id-da-sua-guild
 CHANNEL_ID=id-do-canal-de-mensagens-diarias
 MUSIC_CHANNEL_ID=id-do-canal-de-pedidos-de-musica
 DAILY_VOICE_CHANNEL_ID=id-do-canal-de-voz-para-tocar-musicas
+PLAYER_FORWARD_COMMAND=m!play
 # Opcional
 TIMEZONE=America/Sao_Paulo
 BOT_LANGUAGE=en
@@ -154,8 +155,11 @@ O controle de permissões é feito pela [`@rbac/rbac`](https://www.npmjs.com/pac
 O bot busca músicas no canal definido por `MUSIC_CHANNEL_ID`. O comando `/proxima-musica`
 responde com a próxima mensagem que contenha um link, anexo ou embed e que ainda
 não possua a reação 🐰, acompanhada de um botão **Play**. Ao pressionar o botão o
-bot entra no canal especificado em `DAILY_VOICE_CHANNEL_ID` e toca o áudio. A
-mensagem original recebe a reação 🐰 para que não seja reproduzida novamente.
+bot entra no canal especificado em `DAILY_VOICE_CHANNEL_ID` e toca o áudio. Se
+`PLAYER_FORWARD_COMMAND` estiver configurado, em vez de tocar diretamente, o bot
+enviará esse comando com o link no canal de voz, permitindo que outro bot faça a
+reprodução. A mensagem original recebe a reação 🐰 para que não seja reproduzida
+novamente.
 
 Use `/parar-musica` para interromper a reprodução atual. Administradores podem
 remover todas as reações de coelho com `/limpar-coelhos` se necessário.

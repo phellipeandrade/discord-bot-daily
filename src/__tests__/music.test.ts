@@ -30,6 +30,8 @@ jest.mock('../i18n', () => {
       '✅ Song marked as played!\n\n🎵 To play the song in the bot, copy and send the command below:\n```\n{{command}} {{link}}\n```',
     'music.markedPlaying':
       '✅ Song marked as played!\n\n🎵 Playing in the voice channel.',
+    'music.forwarded':
+      '✅ Song marked as played!\n\n🎵 Playback requested from another bot.',
     'music.stopped': '⏹️ Music playback stopped.',
     'music.reactionsCleared':
       '✅ Removed {{count}} 🐰 reactions made by the bot.',
@@ -157,6 +159,7 @@ describe('Comandos de Música', () => {
     const config = await import('../config');
     config.MUSIC_CHANNEL_ID = 'requests';
     config.DAILY_VOICE_CHANNEL_ID = 'dailyVoice';
+    config.PLAYER_FORWARD_COMMAND = '';
 
     mockClientInstance = {
       intents: [
@@ -342,6 +345,33 @@ describe('Comandos de Música', () => {
       expect(mockMessageInstance.react).toHaveBeenCalledWith('🐰');
       expect(mockButtonInteraction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining('Song marked as played'),
+        components: expect.any(Array),
+        flags: 1 << 6
+      });
+    });
+
+    it('deve redirecionar a reprodução para outro bot quando configurado', async () => {
+      const config = await import('../config');
+      config.PLAYER_FORWARD_COMMAND = '/play';
+
+      (
+        mockClientInstance.channels as unknown as MockChannelManager
+      ).fetch.mockImplementation((id: string) => {
+        if (id === 'requests') return Promise.resolve(mockChannelInstance);
+        if (id === 'dailyVoice') return Promise.resolve(mockVoiceChannelInstance);
+        return Promise.resolve(null);
+      });
+      mockChannelInstance.messages.fetch.mockResolvedValue(mockMessageInstance);
+
+      await handlePlayButton(
+        mockButtonInteraction as unknown as ButtonInteraction
+      );
+
+      expect(mockVoiceChannelInstance.send).toHaveBeenCalledWith(
+        '/play https://example.com/song'
+      );
+      expect(mockButtonInteraction.reply).toHaveBeenCalledWith({
+        content: mockTranslations['music.forwarded'],
         components: expect.any(Array),
         flags: 1 << 6
       });

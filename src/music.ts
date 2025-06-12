@@ -13,7 +13,11 @@ import { Player } from 'discord-player';
 import { YoutubeiExtractor } from 'discord-player-youtubei';
 import ffmpegPath from 'ffmpeg-static';
 import { i18n } from './i18n';
-import { MUSIC_CHANNEL_ID, DAILY_VOICE_CHANNEL_ID } from './config';
+import {
+  MUSIC_CHANNEL_ID,
+  DAILY_VOICE_CHANNEL_ID,
+  PLAYER_FORWARD_COMMAND
+} from './config';
 
 if (ffmpegPath) {
   process.env.FFMPEG_PATH = ffmpegPath;
@@ -165,20 +169,47 @@ export async function handlePlayButton(interaction: ButtonInteraction): Promise<
   }
 
   await originalMsg.react('🐰');
-  try {
-    await playUrl(interaction.client, linkToPlay);
-    console.log('✅ playUrl finalizado com sucesso');
-  } catch (err) {
-    console.error('❌ erro em playUrl:', err);
+  if (PLAYER_FORWARD_COMMAND) {
+    if (DAILY_VOICE_CHANNEL_ID) {
+      const voiceChannel = await interaction.client.channels.fetch(
+        DAILY_VOICE_CHANNEL_ID
+      );
+      if (voiceChannel?.isTextBased()) {
+        await (voiceChannel as TextChannel).send(
+          `${PLAYER_FORWARD_COMMAND} ${linkToPlay}`
+        );
+      }
+    }
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel('🔗 Open song link')
+        .setStyle(ButtonStyle.Link)
+        .setURL(linkToPlay)
+    );
+    await interaction.reply({
+      content: i18n.t('music.forwarded', { link: linkToPlay }),
+      components: [row],
+      flags: 1 << 6
+    });
+  } else {
+    try {
+      await playUrl(interaction.client, linkToPlay);
+      console.log('✅ playUrl finalizado com sucesso');
+    } catch (err) {
+      console.error('❌ erro em playUrl:', err);
+    }
+
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel('🔗 Open song link')
+        .setStyle(ButtonStyle.Link)
+        .setURL(linkToPlay)
+    );
+
+    await interaction.reply({
+      content: i18n.t('music.markedPlaying', { link: linkToPlay }),
+      components: [row],
+      flags: 1 << 6
+    });
   }
-
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setLabel('🔗 Open song link').setStyle(ButtonStyle.Link).setURL(linkToPlay)
-  );
-
-  await interaction.reply({
-    content: i18n.t('music.markedPlaying', { link: linkToPlay }),
-    components: [row],
-    flags: 1 << 6
-  });
 }

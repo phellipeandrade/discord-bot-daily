@@ -26,6 +26,7 @@ const {
   USERS_FILE,
   checkRequiredConfig,
   DAILY_VOICE_CHANNEL_ID,
+  PLAYER_FORWARD_COMMAND,
 
 } = config;
 import { scheduleDailySelection } from './scheduler';
@@ -247,6 +248,7 @@ export async function handleSetup(
     channelId: CHANNEL_ID,
     musicChannelId: MUSIC_CHANNEL_ID,
     dailyVoiceChannelId: DAILY_VOICE_CHANNEL_ID,
+    playerForwardCommand: PLAYER_FORWARD_COMMAND,
     token: TOKEN,
     timezone: TIMEZONE,
     language: LANGUAGE,
@@ -269,6 +271,9 @@ export async function handleSetup(
     i18n.getOptionName('setup', 'voice'),
     false
   );
+  const playerCmd =
+    interaction.options.getString(i18n.getOptionName('setup', 'player')) ??
+    existing.playerForwardCommand;
   const token =
     interaction.options.getString(i18n.getOptionName('setup', 'token')) ??
     existing.token;
@@ -304,6 +309,7 @@ export async function handleSetup(
     channelId: daily?.id ?? existing.channelId,
     musicChannelId: music?.id ?? existing.musicChannelId,
     dailyVoiceChannelId: voice?.id ?? existing.dailyVoiceChannelId,
+    playerForwardCommand: playerCmd,
     token,
     timezone,
     language,
