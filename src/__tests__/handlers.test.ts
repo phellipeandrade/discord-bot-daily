@@ -200,9 +200,12 @@ describe('handlers', () => {
           .mockReturnValueOnce({ id: 'newDaily' })
           .mockReturnValueOnce(null)
           .mockReturnValueOnce(null),
-        getString: jest.fn((name: string) =>
-          name === 'timezone' ? 'UTC' : name === 'guild' ? 'newGuild' : null
-        ),
+        getString: jest.fn((name: string) => {
+          if (name === 'timezone') return 'UTC';
+          if (name === 'guild') return 'newGuild';
+          if (name === 'cookie') return 'newCookie';
+          return null;
+        }),
         getBoolean: jest.fn()
       },
       reply: jest.fn(),
@@ -214,7 +217,7 @@ describe('handlers', () => {
       channelId: 'newDaily',
       musicChannelId: 'music',
       dailyVoiceChannelId: 'voice',
-      youtubeCookie: 'cookie',
+      youtubeCookie: 'newCookie',
       token: 'tok',
       timezone: 'UTC',
       language: 'en',

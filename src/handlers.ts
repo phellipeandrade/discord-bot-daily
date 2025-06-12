@@ -290,6 +290,9 @@ export async function handleSetup(
   const dateFormat =
     interaction.options.getString(i18n.getOptionName('setup', 'dateFormat')) ??
     existing.dateFormat;
+  const youtubeCookie =
+    interaction.options.getString(i18n.getOptionName('setup', 'cookie')) ??
+    existing.youtubeCookie;
 
   const guildId = guildIdOption ?? interaction.guildId ?? existing.guildId;
 
@@ -313,7 +316,7 @@ export async function handleSetup(
       : existing.holidayCountries,
     dateFormat,
     admins: existing.admins,
-    youtubeCookie: existing.youtubeCookie
+    youtubeCookie
   };
 
   await saveServerConfig(cfg);
