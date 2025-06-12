@@ -10,6 +10,23 @@ dotenv.config();
 const fileConfig = loadServerConfig();
 const COOKIES_PATH = path.join(__dirname, 'cookies.txt');
 const ROOT_COOKIES_PATH = path.resolve(__dirname, '..', 'cookies.txt');
+
+export function parseCookieFile(content: string): string {
+  return content
+    .split('\n')
+    .filter((line) => line && !line.startsWith('#'))
+    .map((line) => {
+      const parts = line.split('\t');
+      const name = parts[5];
+      const value = parts[6];
+      return `${name}=${value}`;
+    })
+    .join('; ');
+}
+
+export function setYoutubeCookie(value: string): void {
+  YOUTUBE_COOKIE = value;
+}
 export let TOKEN = process.env.DISCORD_TOKEN || fileConfig?.token || '';
 
 export let CHANNEL_ID = process.env.CHANNEL_ID || fileConfig?.channelId || '';
@@ -18,8 +35,7 @@ export let MUSIC_CHANNEL_ID =
   process.env.MUSIC_CHANNEL_ID || fileConfig?.musicChannelId || '';
 export let DAILY_VOICE_CHANNEL_ID =
   process.env.DAILY_VOICE_CHANNEL_ID || fileConfig?.dailyVoiceChannelId || '';
-export let YOUTUBE_COOKIE =
-  process.env.YOUTUBE_COOKIE || fileConfig?.youtubeCookie || '';
+export let YOUTUBE_COOKIE = process.env.YOUTUBE_COOKIE || '';
 if (!YOUTUBE_COOKIE) {
   const pathToUse = fs.existsSync(COOKIES_PATH)
     ? COOKIES_PATH
@@ -28,7 +44,8 @@ if (!YOUTUBE_COOKIE) {
     : null;
   if (pathToUse) {
     try {
-      YOUTUBE_COOKIE = fs.readFileSync(pathToUse, 'utf-8').trim();
+      const raw = fs.readFileSync(pathToUse, 'utf-8');
+      YOUTUBE_COOKIE = parseCookieFile(raw);
     } catch {
       // ignore read errors
     }
@@ -74,7 +91,6 @@ export function updateServerConfig(config: ServerConfig): void {
   if (config.dailyVoiceChannelId)
     DAILY_VOICE_CHANNEL_ID = config.dailyVoiceChannelId;
   if (config.token) TOKEN = config.token;
-  if (config.youtubeCookie) YOUTUBE_COOKIE = config.youtubeCookie;
   if (config.timezone) TIMEZONE = config.timezone;
   if (config.language) LANGUAGE = config.language;
   if (config.dailyTime) DAILY_TIME = config.dailyTime;

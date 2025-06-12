@@ -7,7 +7,6 @@ export interface ServerConfig {
   musicChannelId: string;
   dailyVoiceChannelId?: string;
   token?: string;
-  youtubeCookie?: string;
   timezone?: string;
   language?: string;
   dailyTime?: string;

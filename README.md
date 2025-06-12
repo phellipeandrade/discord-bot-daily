@@ -69,6 +69,7 @@ YOUTUBE_COOKIE=your-youtube-cookie
 edit `serverConfig.json` (either inside `src/` or at the repository root) to manage the list.
 `YOUTUBE_COOKIE` may be required for videos that ask you to sign in to confirm you're not a bot. If playback fails, the bot automatically falls back to `ytdl-core`. You can set this value in the `.env` file or later using `/setup` with the `cookie` option.
 If a `cookies.txt` file exists in the project root, its contents are also used as the YouTube cookie when `YOUTUBE_COOKIE` is not set.
+The `/setup` command always saves the provided cookie file to `cookies.txt` so it can be reused on the next start.
 
 Set `BOT_LANGUAGE` to `en` or `pt-br` to change the bot responses.
 `DAILY_TIME` uses 24h format `HH:MM` and `DAILY_DAYS` follows cron day-of-week

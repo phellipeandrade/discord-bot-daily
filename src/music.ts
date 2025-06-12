@@ -17,9 +17,8 @@ import {
   StreamType
 } from '@discordjs/voice';
 import play from 'play-dl';
-import ffmpegPath from 'ffmpeg-static';
-import ytdl from 'ytdl-core';
 import { Readable } from 'stream';
+import ytdl from 'ytdl-core';
 import { i18n } from './i18n';
 import {
   MUSIC_CHANNEL_ID,
@@ -29,13 +28,6 @@ import {
 
 if (YOUTUBE_COOKIE) {
   play.setToken({ youtube: { cookie: YOUTUBE_COOKIE } });
-}
-// Explicitly configure the bundled ffmpeg path when available
-const playAny = play as unknown as { setFFmpegPath?: (path: string) => void };
-if (typeof playAny.setFFmpegPath === 'function') {
-  playAny.setFFmpegPath(ffmpegPath!);
-} else {
-  process.env.FFMPEG_PATH = ffmpegPath || '';
 }
 
 export async function findNextSong(
@@ -167,7 +159,7 @@ async function playUrl(client: Client, url: string): Promise<void> {
   let stream: Readable;
   let type: StreamType | undefined;
   try {
-    const res = await play.stream(url);
+    const res = await play.stream(url, { discordPlayerCompatibility: true });
     stream = res.stream;
     type = res.type;
   } catch (err) {
