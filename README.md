@@ -62,10 +62,12 @@ HOLIDAY_COUNTRIES=BR
 USERS_FILE=./src/users.json
 DATE_FORMAT=YYYY-MM-DD
 ADMIN_IDS=1234567890,0987654321
+YOUTUBE_COOKIE=your-youtube-cookie
 ```
 
 `ADMIN_IDS` should list the Discord user IDs that start with admin rights. You can also
 edit `serverConfig.json` (either inside `src/` or at the repository root) to manage the list.
+`YOUTUBE_COOKIE` may be required for videos that ask you to sign in to confirm you're not a bot. If playback fails, the bot automatically falls back to `ytdl-core`.
 
 Set `BOT_LANGUAGE` to `en` or `pt-br` to change the bot responses.
 `DAILY_TIME` uses 24h format `HH:MM` and `DAILY_DAYS` follows cron day-of-week

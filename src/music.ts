@@ -13,11 +13,22 @@ import {
   createAudioResource,
   entersState,
   joinVoiceChannel,
-  DiscordGatewayAdapterCreator
+  DiscordGatewayAdapterCreator,
+  StreamType
 } from '@discordjs/voice';
 import play from 'play-dl';
+import ytdl from 'ytdl-core';
+import { Readable } from 'stream';
 import { i18n } from './i18n';
-import { MUSIC_CHANNEL_ID, DAILY_VOICE_CHANNEL_ID } from './config';
+import {
+  MUSIC_CHANNEL_ID,
+  DAILY_VOICE_CHANNEL_ID,
+  YOUTUBE_COOKIE
+} from './config';
+
+if (YOUTUBE_COOKIE) {
+  play.setToken({ youtube: { cookie: YOUTUBE_COOKIE } });
+}
 
 export async function findNextSong(
   client: Client
@@ -145,7 +156,17 @@ async function playUrl(client: Client, url: string): Promise<void> {
   });
   console.log('🔗 Conexão criada:', !!connection);
   musicState.currentConnection = connection;
-  const { stream, type } = await play.stream(url);
+  let stream: Readable;
+  let type: StreamType | undefined;
+  try {
+    const res = await play.stream(url);
+    stream = res.stream;
+    type = res.type;
+  } catch (err) {
+    console.warn('⚠️ play-dl failed, trying ytdl-core', err);
+    stream = ytdl(url, { filter: 'audioonly' });
+    type = StreamType.Arbitrary;
+  }
   const resource = createAudioResource(stream, { inputType: type });
   const player = createAudioPlayer();
   musicState.currentPlayer = player;

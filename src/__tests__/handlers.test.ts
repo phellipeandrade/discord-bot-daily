@@ -165,6 +165,7 @@ describe('handlers', () => {
         channelId: 'old',
         musicChannelId: 'music',
         dailyVoiceChannelId: 'voice',
+        youtubeCookie: 'cookie',
         token: 'tok',
         timezone: 'America/Sao_Paulo',
         language: 'en',
@@ -175,11 +176,12 @@ describe('handlers', () => {
         admins: []
       })
     }));
-    jest.doMock('../config', () => ({
+  jest.doMock('../config', () => ({
       TOKEN: 'tok',
       CHANNEL_ID: 'old',
       MUSIC_CHANNEL_ID: 'music',
       DAILY_VOICE_CHANNEL_ID: 'voice',
+      YOUTUBE_COOKIE: 'cookie',
       TIMEZONE: 'America/Sao_Paulo',
       LANGUAGE: 'en',
       DAILY_TIME: '09:00',
@@ -212,6 +214,7 @@ describe('handlers', () => {
       channelId: 'newDaily',
       musicChannelId: 'music',
       dailyVoiceChannelId: 'voice',
+      youtubeCookie: 'cookie',
       token: 'tok',
       timezone: 'UTC',
       language: 'en',
@@ -238,6 +241,7 @@ describe('handlers', () => {
         channelId: 'c',
         musicChannelId: 'm',
         dailyVoiceChannelId: 'v',
+        youtubeCookie: 'cookie',
         token: 'tok',
         timezone: 'UTC',
         language: 'en',
@@ -253,6 +257,7 @@ describe('handlers', () => {
       CHANNEL_ID: 'c',
       MUSIC_CHANNEL_ID: 'm',
       DAILY_VOICE_CHANNEL_ID: 'v',
+      YOUTUBE_COOKIE: 'cookie',
       TIMEZONE: 'UTC',
       LANGUAGE: 'en',
       DAILY_TIME: '09:00',
@@ -402,11 +407,12 @@ describe('handlers', () => {
     jest.dontMock('../config');
     const interaction = createInteraction();
     const config = await import('../config');
-    config.updateServerConfig({
+  config.updateServerConfig({
       guildId: 'g',
       channelId: 'c',
       musicChannelId: 'm',
       dailyVoiceChannelId: 'v',
+      youtubeCookie: 'cookie',
       token: 't',
       timezone: 'UTC',
       language: 'en',
@@ -425,11 +431,12 @@ describe('handlers', () => {
     jest.dontMock('../config');
     const interaction = createInteraction();
     const config = await import('../config');
-    config.updateServerConfig({
+  config.updateServerConfig({
       guildId: '',
       channelId: '',
       musicChannelId: '',
       dailyVoiceChannelId: '',
+      youtubeCookie: '',
       token: '',
       dateFormat: 'YYYY-MM-DD'
     });

@@ -15,6 +15,8 @@ export let MUSIC_CHANNEL_ID =
   process.env.MUSIC_CHANNEL_ID || fileConfig?.musicChannelId || '';
 export let DAILY_VOICE_CHANNEL_ID =
   process.env.DAILY_VOICE_CHANNEL_ID || fileConfig?.dailyVoiceChannelId || '';
+export let YOUTUBE_COOKIE =
+  process.env.YOUTUBE_COOKIE || fileConfig?.youtubeCookie || '';
 export const USERS_FILE = process.env.USERS_FILE
   ? path.resolve(process.env.USERS_FILE)
   : path.join(__dirname, 'users.json');
@@ -55,6 +57,7 @@ export function updateServerConfig(config: ServerConfig): void {
   if (config.dailyVoiceChannelId)
     DAILY_VOICE_CHANNEL_ID = config.dailyVoiceChannelId;
   if (config.token) TOKEN = config.token;
+  if (config.youtubeCookie) YOUTUBE_COOKIE = config.youtubeCookie;
   if (config.timezone) TIMEZONE = config.timezone;
   if (config.language) LANGUAGE = config.language;
   if (config.dailyTime) DAILY_TIME = config.dailyTime;
@@ -73,6 +76,7 @@ export function logConfig(): void {
       `DAILY=${DAILY_TIME} (${DAILY_DAYS})`,
       `HOLIDAYS=${HOLIDAY_COUNTRIES.join(',')}`,
       `VOICE=${DAILY_VOICE_CHANNEL_ID || 'N/A'}`,
+      `YTC=${YOUTUBE_COOKIE ? 'yes' : 'N/A'}`,
       `ADMINS=${ADMINS.length}`,
       `USERS=${USERS_FILE}`,
       `DATE_FMT=${DATE_FORMAT}`

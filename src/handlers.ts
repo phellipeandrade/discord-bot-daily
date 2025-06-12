@@ -25,6 +25,7 @@ import {
   USERS_FILE,
   checkRequiredConfig,
   DAILY_VOICE_CHANNEL_ID
+  , YOUTUBE_COOKIE
 } from './config';
 import { scheduleDailySelection } from './scheduler';
 import {
@@ -252,7 +253,8 @@ export async function handleSetup(
     dailyDays: DAILY_DAYS,
     holidayCountries: HOLIDAY_COUNTRIES,
     dateFormat: DATE_FORMAT,
-    admins: []
+    admins: [],
+    youtubeCookie: YOUTUBE_COOKIE
   };
 
   const daily = interaction.options.getChannel(
@@ -310,7 +312,8 @@ export async function handleSetup(
       ? holidays.split(',').map((c) => c.trim().toUpperCase())
       : existing.holidayCountries,
     dateFormat,
-    admins: existing.admins
+    admins: existing.admins,
+    youtubeCookie: existing.youtubeCookie
   };
 
   await saveServerConfig(cfg);
