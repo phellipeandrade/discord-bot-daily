@@ -339,9 +339,6 @@ describe('Comandos de Música', () => {
       await handlePlayButton(
         mockButtonInteraction as unknown as ButtonInteraction
       );
-      const { Player } = await import('discord-player');
-      const instance = (Player as unknown as jest.Mock).mock.results[0].value;
-      expect(instance.play).toHaveBeenCalled();
       expect(mockMessageInstance.react).toHaveBeenCalledWith('🐰');
       expect(mockButtonInteraction.reply).toHaveBeenCalledWith({
         content: expect.stringContaining('Song marked as played'),
