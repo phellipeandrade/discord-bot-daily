@@ -17,6 +17,7 @@ import {
   StreamType
 } from '@discordjs/voice';
 import play from 'play-dl';
+import ffmpegPath from 'ffmpeg-static';
 import ytdl from 'ytdl-core';
 import { Readable } from 'stream';
 import { i18n } from './i18n';
@@ -28,6 +29,13 @@ import {
 
 if (YOUTUBE_COOKIE) {
   play.setToken({ youtube: { cookie: YOUTUBE_COOKIE } });
+}
+// Explicitly configure the bundled ffmpeg path when available
+const playAny = play as unknown as { setFFmpegPath?: (path: string) => void };
+if (typeof playAny.setFFmpegPath === 'function') {
+  playAny.setFFmpegPath(ffmpegPath!);
+} else {
+  process.env.FFMPEG_PATH = ffmpegPath || '';
 }
 
 export async function findNextSong(
