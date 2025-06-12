@@ -90,12 +90,20 @@ export async function findNextSong(
     const bunnyReaction = msg.reactions.cache.find((r) => r.emoji.name === bunny);
     if (bunnyReaction && bunnyReaction.count > 0) continue;
 
-    if (linkRegex.test(msg.content) || msg.embeds.length > 0 || msg.attachments.size > 0) {
-      const attachment = msg.attachments.size > 0 ? Array.from(msg.attachments.values())[0] : undefined;
-      const extractedLink = attachment?.url
-        || linkRegex.exec(msg.content)![0]
-        || msg.embeds[0].url
-        || '';
+    if (
+      linkRegex.test(msg.content) ||
+      msg.embeds.length > 0 ||
+      msg.attachments.size > 0
+    ) {
+      const attachment =
+        msg.attachments.size > 0
+          ? Array.from(msg.attachments.values())[0]
+          : undefined;
+      const extractedLink =
+        attachment?.url ||
+        linkRegex.exec(msg.content)?.[0] ||
+        msg.embeds[0]?.url ||
+        '';
       const playButton = new ButtonBuilder()
         .setCustomId(`play_${msg.id}`)
         .setLabel('▶️ Play')
