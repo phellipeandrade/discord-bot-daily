@@ -44,7 +44,13 @@ jest.mock('discord.js', () => {
     Client: MockClient,
     REST: class { setToken() { return this; } put = jest.fn(); },
     Routes: { applicationGuildCommands: jest.fn(() => 'route'), applicationCommands: jest.fn(() => 'route') },
-    GatewayIntentBits: {},
+    GatewayIntentBits: {
+      Guilds: 1,
+      GuildMessages: 2,
+      MessageContent: 4,
+      GuildMessageReactions: 8,
+      GuildVoiceStates: 16
+    },
     Partials: {},
     TextChannel: class {},
     SlashCommandBuilder
@@ -68,6 +74,9 @@ describe('index runtime', () => {
     const { scheduleDailySelection } = await import('../scheduler');
     await import('../index');
     expect(createdClient.login).toHaveBeenCalledWith('t');
+    const { Client: MockedClient, GatewayIntentBits } = await import('discord.js');
+    const clientArgs = (MockedClient as unknown as jest.Mock).mock.calls[0][0];
+    expect(clientArgs.intents).toContain(GatewayIntentBits.GuildVoiceStates);
 
     // trigger ready
     const readyCb = (createdClient.once.mock.calls.find(
