@@ -84,7 +84,7 @@
       "options": {
         "name": {
           "name": "name",
-          "description": "User name"
+          "description": "User (mention, id or name)"
         }
       }
     },

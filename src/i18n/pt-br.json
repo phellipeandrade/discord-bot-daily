@@ -89,7 +89,7 @@
       "options": {
         "name": {
           "name": "nome",
-          "description": "Nome do usuário"
+          "description": "Usuário (menção, id ou nome)"
         }
       }
     },
