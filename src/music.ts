@@ -19,6 +19,7 @@ import {
 import play from 'play-dl';
 import { Readable } from 'stream';
 import ytdl from 'ytdl-core';
+import ffmpegPath from 'ffmpeg-static';
 import { i18n } from './i18n';
 import {
   MUSIC_CHANNEL_ID,
@@ -28,6 +29,10 @@ import {
 
 if (YOUTUBE_COOKIE) {
   play.setToken({ youtube: { cookie: YOUTUBE_COOKIE } });
+}
+
+if (ffmpegPath) {
+  process.env.FFMPEG_PATH = ffmpegPath;
 }
 
 export async function findNextSong(
@@ -164,8 +169,18 @@ async function playUrl(client: Client, url: string): Promise<void> {
     type = res.type;
   } catch (err) {
     console.warn('⚠️ play-dl failed, trying ytdl-core', err);
-    stream = ytdl(url, { filter: 'audioonly' });
-    type = StreamType.Arbitrary;
+    stream = ytdl(url, {
+      filter: 'audioonly',
+      quality: 'highestaudio',
+      requestOptions: {
+        headers: {
+          cookie: YOUTUBE_COOKIE,
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0'
+        }
+      }
+    });
+    type = StreamType.WebmOpus;
   }
   const resource = createAudioResource(stream, { inputType: type });
   const player = createAudioPlayer();
