@@ -133,9 +133,9 @@ by jsdom is also packaged to avoid runtime errors.
 - `register <name>` – register a user by name
 - `clear-bunnies` – remove bunny reactions added by the bot
 - `check-config` – verify if the bot configuration is complete.
-- `remove <name>` – remove a user
+- `remove <user>` – remove a user (mention, id or name)
 - `reset` – reset selection list (or restore original list)
-- `readd <name>` – re-add a previously selected user back into the pool
+- `readd <user>` – re-add a previously selected user back into the pool (mention, id or name)
 - `skip-today <user>` – skip today's draw for the specified user (mention, id or name)
 - `skip-until <user> <date>` – skip selection of a user until the given date (format defined by `DATE_FORMAT`, default `YYYY-MM-DD`; user can be mention, id or name)
 - `setup` – configure channels, guild ID and other settings. Provide only the parameters you want to update.

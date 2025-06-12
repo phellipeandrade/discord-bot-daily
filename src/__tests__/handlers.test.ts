@@ -101,6 +101,17 @@ describe('handlers', () => {
     expect(mockSaveUsers).toHaveBeenCalled();
   });
 
+  test('handleRemove accepts id and mention', async () => {
+    data.all.push({ name: 'Tester', id: '10' });
+    data.remaining.push({ name: 'Tester', id: '10' });
+    await handleRemove(createInteraction({ name: '10' }), data);
+    expect(data.all.length).toBe(0);
+    data.all.push({ name: 'Other', id: '20' });
+    data.remaining.push({ name: 'Other', id: '20' });
+    await handleRemove(createInteraction({ name: '<@20>' }), data);
+    expect(data.all.length).toBe(0);
+  });
+
   test('handleList replies with formatted lists', async () => {
     data.all.push({ name: 'A', id: '1' });
     const interaction = createInteraction();
@@ -135,6 +146,15 @@ describe('handlers', () => {
     await handleReadd(interaction, data);
     expect(data.remaining.length).toBe(1);
     expect(mockSaveUsers).toHaveBeenCalled();
+  });
+
+  test('handleReadd accepts id and mention', async () => {
+    data.all.push({ name: 'B', id: '2' });
+    await handleReadd(createInteraction({ name: '2' }), data);
+    expect(data.remaining.length).toBe(1);
+    data.remaining = [];
+    await handleReadd(createInteraction({ name: '<@2>' }), data);
+    expect(data.remaining.length).toBe(1);
   });
 
   test('handleSkipToday sets skip for today', async () => {

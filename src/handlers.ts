@@ -98,12 +98,20 @@ export async function handleRemove(
   interaction: ChatInputCommandInteraction,
   data: UserData
 ): Promise<void> {
-  const userName = interaction.options.getString(
+  const identifier = interaction.options.getString(
     i18n.getOptionName('remove', 'name'),
     true
   );
-  data.all = data.all.filter((u) => u.name !== userName);
-  data.remaining = data.remaining.filter((u) => u.name !== userName);
+  const user = findUser(data, identifier);
+
+  if (!user) {
+    await interaction.reply(i18n.t('user.notFound', { name: identifier }));
+    return;
+  }
+
+  const userName = user.name;
+  data.all = data.all.filter((u) => u.id !== user.id);
+  data.remaining = data.remaining.filter((u) => u.id !== user.id);
   await saveUsers(data);
   await interaction.reply(i18n.t('user.removed', { name: userName }));
 }
@@ -161,22 +169,25 @@ export async function handleReadd(
   interaction: ChatInputCommandInteraction,
   data: UserData
 ): Promise<void> {
-  const userName = interaction.options.getString(
+  const identifier = interaction.options.getString(
     i18n.getOptionName('readd', 'name'),
     true
   );
-  const user = data.all.find((u) => u.name === userName);
+  const user = findUser(data, identifier);
 
-  if (user && !data.remaining.some((u) => u.id === user.id)) {
+  if (!user) {
+    await interaction.reply(i18n.t('user.notFound', { name: identifier }));
+    return;
+  }
+
+  const userName = user.name;
+
+  if (!data.remaining.some((u) => u.id === user.id)) {
     data.remaining.push(user);
     await saveUsers(data);
     await interaction.reply(i18n.t('selection.readded', { name: userName }));
-  } else if (user) {
-    await interaction.reply(
-      i18n.t('selection.notSelected', { name: userName })
-    );
   } else {
-    await interaction.reply(i18n.t('user.notFound', { name: userName }));
+    await interaction.reply(i18n.t('selection.notSelected', { name: userName }));
   }
 }
 

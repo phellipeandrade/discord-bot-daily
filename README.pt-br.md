@@ -124,9 +124,9 @@ O arquivo `xhr-sync-worker.js` necessário pelo jsdom também é incluído para 
 - `registrar <nome>` – registra um usuário pelo nome
 - `limpar-coelhos` – remove reações de coelhinho adicionadas pelo bot
 - `verificar-config` – verifica se a configuração do bot está completa.
-- `remover <nome>` – remove um usuário
+- `remover <usuario>` – remove um usuário (menção, id ou nome)
 - `resetar` – reseta a lista de seleção (ou restaura a lista original)
-- `readicionar <nome>` – readiciona um usuário previamente selecionado
+- `readicionar <usuario>` – readiciona um usuário previamente selecionado (menção, id ou nome)
 - `pular-hoje <usuario>` – pula o sorteio de hoje para o usuário informado (menção, id ou nome)
 - `pular-ate <usuario> <data>` – pula a seleção de um usuário até a data especificada (formato definido por `DATE_FORMAT`, padrão `YYYY-MM-DD`; usuário pode ser menção, id ou nome)
 - `configurar` – configura canais, ID da guild e outras definições. Informe apenas os parâmetros que deseja atualizar.
