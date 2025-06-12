@@ -32,7 +32,9 @@ seguintes permissões:
 Esse conjunto de permissões corresponde ao inteiro `3270720`.
 Ative também a **Message Content Intent** no portal de desenvolvedores do
 Discord e certifique-se de que o papel do bot possa visualizar e interagir nos
-canais definidos por `CHANNEL_ID`, `MUSIC_CHANNEL_ID` e `DAILY_VOICE_CHANNEL_ID`.
+canais definidos por `CHANNEL_ID` e `MUSIC_CHANNEL_ID`. Caso deseje usar o
+player de música, garanta também acesso ao canal de voz configurado em
+`DAILY_VOICE_CHANNEL_ID`.
 
 ## Instalação
 
@@ -50,9 +52,9 @@ DISCORD_TOKEN=seu-token
 GUILD_ID=id-da-sua-guild
 CHANNEL_ID=id-do-canal-de-mensagens-diarias
 MUSIC_CHANNEL_ID=id-do-canal-de-pedidos-de-musica
-DAILY_VOICE_CHANNEL_ID=id-do-canal-de-voz-para-tocar-musicas
 PLAYER_FORWARD_COMMAND=m!play
 # Opcional
+DAILY_VOICE_CHANNEL_ID=id-do-canal-de-voz-para-tocar-musicas
 TIMEZONE=America/Sao_Paulo
 BOT_LANGUAGE=en
 DAILY_TIME=09:00
@@ -154,10 +156,10 @@ O controle de permissões é feito pela [`@rbac/rbac`](https://www.npmjs.com/pac
 
 O bot busca músicas no canal definido por `MUSIC_CHANNEL_ID`. O comando `/proxima-musica`
 responde com a próxima mensagem que contenha um link, anexo ou embed e que ainda
-não possua a reação 🐰, acompanhada de um botão **Play**. Ao pressionar o botão o
-bot entra no canal especificado em `DAILY_VOICE_CHANNEL_ID` e toca o áudio. Se
-`PLAYER_FORWARD_COMMAND` estiver configurado, em vez de tocar diretamente, o bot
-responderá com um comando para você copiar e colar em outro bot player. A
+não possua a reação 🐰, acompanhada de um botão **Play**. Se `DAILY_VOICE_CHANNEL_ID`
+estiver configurado, ao pressionar o botão o bot entrará nesse canal de voz e tocará
+o áudio. Se `PLAYER_FORWARD_COMMAND` estiver configurado, em vez de tocar diretamente,
+o bot responderá com um comando para você copiar e colar em outro bot player. A
 mensagem original recebe a reação 🐰 para que não seja reproduzida novamente.
 
 Use `/parar-musica` para interromper a reprodução atual. Administradores podem

@@ -95,7 +95,6 @@ export function checkRequiredConfig(): string[] {
   if (!GUILD_ID) missing.push('GUILD_ID');
   if (!CHANNEL_ID) missing.push('CHANNEL_ID');
   if (!MUSIC_CHANNEL_ID) missing.push('MUSIC_CHANNEL_ID');
-  if (!DAILY_VOICE_CHANNEL_ID) missing.push('DAILY_VOICE_CHANNEL_ID');
   return missing;
 }
 
