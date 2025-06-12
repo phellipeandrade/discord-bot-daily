@@ -76,10 +76,12 @@ test('YOUTUBE_COOKIE loaded from cookies.txt when not set', async () => {
     existsSync: jest.fn().mockImplementation((p) =>
       p.toString().includes('cookies.txt') ? true : false
     ),
-    readFileSync: jest.fn().mockReturnValue('session=abcd'),
+    readFileSync: jest
+      .fn()
+      .mockReturnValue('domain\tFALSE\t/\tFALSE\t0\tSID\tabcd'),
     promises: { writeFile: jest.fn() }
   }));
   jest.resetModules();
   const cfg = await import('../config');
-  expect(cfg.YOUTUBE_COOKIE).toBe('session=abcd');
+  expect(cfg.YOUTUBE_COOKIE).toBe('SID=abcd');
 });

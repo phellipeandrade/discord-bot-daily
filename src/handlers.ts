@@ -11,7 +11,8 @@ import {
   formatUsers
 } from './users';
 import { parseDateString, todayISO, isDateFormatValid } from './date';
-import {
+import * as config from './config';
+const {
   DATE_FORMAT,
   updateServerConfig,
   TOKEN,
@@ -24,9 +25,10 @@ import {
   HOLIDAY_COUNTRIES,
   USERS_FILE,
   checkRequiredConfig,
-  DAILY_VOICE_CHANNEL_ID
-  , YOUTUBE_COOKIE
-} from './config';
+  DAILY_VOICE_CHANNEL_ID,
+  parseCookieFile,
+  setYoutubeCookie
+} = config;
 import { scheduleDailySelection } from './scheduler';
 import {
   saveServerConfig,
@@ -253,8 +255,7 @@ export async function handleSetup(
     dailyDays: DAILY_DAYS,
     holidayCountries: HOLIDAY_COUNTRIES,
     dateFormat: DATE_FORMAT,
-    admins: [],
-    youtubeCookie: YOUTUBE_COOKIE
+    admins: []
   };
 
   const daily = interaction.options.getChannel(
@@ -290,7 +291,7 @@ export async function handleSetup(
   const dateFormat =
     interaction.options.getString(i18n.getOptionName('setup', 'dateFormat')) ??
     existing.dateFormat;
-  let youtubeCookie = existing.youtubeCookie;
+  let youtubeCookieText: string | null = null;
   const cookieFile = interaction.options.getAttachment(
     i18n.getOptionName('setup', 'cookie'),
     false
@@ -300,7 +301,7 @@ export async function handleSetup(
       await interaction.reply(i18n.t('setup.invalidCookie'));
       return false;
     }
-    youtubeCookie = (await fetchText(cookieFile.url)).trim();
+    youtubeCookieText = await fetchText(cookieFile.url);
   }
 
   const guildId = guildIdOption ?? interaction.guildId ?? existing.guildId;
@@ -324,9 +325,14 @@ export async function handleSetup(
       ? holidays.split(',').map((c) => c.trim().toUpperCase())
       : existing.holidayCountries,
     dateFormat,
-    admins: existing.admins,
-    youtubeCookie
+    admins: existing.admins
   };
+
+  if (youtubeCookieText !== null) {
+    const filePath = path.join(__dirname, 'cookies.txt');
+    await fs.promises.writeFile(filePath, youtubeCookieText, 'utf-8');
+    setYoutubeCookie(parseCookieFile(youtubeCookieText));
+  }
 
   await saveServerConfig(cfg);
   updateServerConfig(cfg);

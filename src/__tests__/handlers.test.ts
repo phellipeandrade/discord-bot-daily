@@ -180,7 +180,6 @@ describe('handlers', () => {
         channelId: 'old',
         musicChannelId: 'music',
         dailyVoiceChannelId: 'voice',
-        youtubeCookie: 'cookie',
         token: 'tok',
         timezone: 'America/Sao_Paulo',
         language: 'en',
@@ -203,7 +202,9 @@ describe('handlers', () => {
       DAILY_DAYS: '1-5',
       HOLIDAY_COUNTRIES: ['BR'],
       DATE_FORMAT: 'YYYY-MM-DD',
-      updateServerConfig
+      updateServerConfig,
+      parseCookieFile: (t: string) => 'parsed=' + t,
+      setYoutubeCookie: jest.fn()
     }));
     jest.doMock('../scheduler', () => ({ scheduleDailySelection }));
     const { handleSetup } = await import('../handlers');
@@ -234,7 +235,6 @@ describe('handlers', () => {
       channelId: 'newDaily',
       musicChannelId: 'music',
       dailyVoiceChannelId: 'voice',
-      youtubeCookie: 'cookieVal',
       token: 'tok',
       timezone: 'UTC',
       language: 'en',
@@ -261,7 +261,6 @@ describe('handlers', () => {
         channelId: 'c',
         musicChannelId: 'm',
         dailyVoiceChannelId: 'v',
-        youtubeCookie: 'cookie',
         token: 'tok',
         timezone: 'UTC',
         language: 'en',
@@ -433,7 +432,6 @@ describe('handlers', () => {
       channelId: 'c',
       musicChannelId: 'm',
       dailyVoiceChannelId: 'v',
-      youtubeCookie: 'cookie',
       token: 't',
       timezone: 'UTC',
       language: 'en',
@@ -457,7 +455,6 @@ describe('handlers', () => {
       channelId: '',
       musicChannelId: '',
       dailyVoiceChannelId: '',
-      youtubeCookie: '',
       token: '',
       dateFormat: 'YYYY-MM-DD'
     });
