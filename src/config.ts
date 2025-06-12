@@ -1,4 +1,5 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import * as dotenv from 'dotenv';
 import { loadServerConfig, ServerConfig } from './serverConfig';
 import RBAC from '@rbac/rbac';
@@ -7,6 +8,8 @@ import RBAC from '@rbac/rbac';
 dotenv.config();
 
 const fileConfig = loadServerConfig();
+const COOKIES_PATH = path.join(__dirname, 'cookies.txt');
+const ROOT_COOKIES_PATH = path.resolve(__dirname, '..', 'cookies.txt');
 export let TOKEN = process.env.DISCORD_TOKEN || fileConfig?.token || '';
 
 export let CHANNEL_ID = process.env.CHANNEL_ID || fileConfig?.channelId || '';
@@ -17,6 +20,20 @@ export let DAILY_VOICE_CHANNEL_ID =
   process.env.DAILY_VOICE_CHANNEL_ID || fileConfig?.dailyVoiceChannelId || '';
 export let YOUTUBE_COOKIE =
   process.env.YOUTUBE_COOKIE || fileConfig?.youtubeCookie || '';
+if (!YOUTUBE_COOKIE) {
+  const pathToUse = fs.existsSync(COOKIES_PATH)
+    ? COOKIES_PATH
+    : fs.existsSync(ROOT_COOKIES_PATH)
+    ? ROOT_COOKIES_PATH
+    : null;
+  if (pathToUse) {
+    try {
+      YOUTUBE_COOKIE = fs.readFileSync(pathToUse, 'utf-8').trim();
+    } catch {
+      // ignore read errors
+    }
+  }
+}
 export const USERS_FILE = process.env.USERS_FILE
   ? path.resolve(process.env.USERS_FILE)
   : path.join(__dirname, 'users.json');

@@ -70,3 +70,16 @@ test('reloadServerConfig updates values from file', async () => {
   expect(cfg.CHANNEL_ID).toBe('c1');
   expect(cfg.MUSIC_CHANNEL_ID).toBe('m1');
 });
+
+test('YOUTUBE_COOKIE loaded from cookies.txt when not set', async () => {
+  jest.doMock('fs', () => ({
+    existsSync: jest.fn().mockImplementation((p) =>
+      p.toString().includes('cookies.txt') ? true : false
+    ),
+    readFileSync: jest.fn().mockReturnValue('session=abcd'),
+    promises: { writeFile: jest.fn() }
+  }));
+  jest.resetModules();
+  const cfg = await import('../config');
+  expect(cfg.YOUTUBE_COOKIE).toBe('session=abcd');
+});
