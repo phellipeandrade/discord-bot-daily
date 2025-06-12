@@ -2,6 +2,14 @@
 
 Este repositório contém um bot do Discord escrito em TypeScript e requer Node.js >= 18.
 
+## Instalação inicial
+
+Antes de qualquer coisa, instale as dependências:
+
+```bash
+npm install
+```
+
 ## Checks obrigatórios
 
 Antes de realizar commits, sempre execute:
