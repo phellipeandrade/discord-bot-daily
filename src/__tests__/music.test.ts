@@ -375,7 +375,14 @@ describe('Comandos de Música', () => {
       );
 
       expect(ytdl).toHaveBeenCalledWith('https://example.com/song', {
-        filter: 'audioonly'
+        filter: 'audioonly',
+        quality: 'highestaudio',
+        requestOptions: {
+          headers: expect.objectContaining({
+            cookie: expect.any(String),
+            'User-Agent': expect.stringContaining('Mozilla/')
+          })
+        }
       });
     });
 
