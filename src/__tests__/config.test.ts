@@ -13,8 +13,7 @@ test('checkRequiredConfig returns missing fields', async () => {
     'TOKEN',
     'GUILD_ID',
     'CHANNEL_ID',
-    'MUSIC_CHANNEL_ID',
-    'DAILY_VOICE_CHANNEL_ID'
+    'MUSIC_CHANNEL_ID'
   ]);
 });
 
@@ -24,7 +23,7 @@ test('isConfigValid returns true when all fields set', async () => {
   config.GUILD_ID = 'g';
   config.CHANNEL_ID = 'c';
   config.MUSIC_CHANNEL_ID = 'm';
-  config.DAILY_VOICE_CHANNEL_ID = 'd';
+  config.DAILY_VOICE_CHANNEL_ID = '';
   expect(config.isConfigValid()).toBe(true);
 });
 

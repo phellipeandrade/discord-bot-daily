@@ -34,7 +34,8 @@ permissions:
 This set of permissions corresponds to the integer `3270720`.
 Enable the **Message Content Intent** in the Discord developer portal and ensure
 the bot role can view and interact in the channels defined by
-`CHANNEL_ID`, `MUSIC_CHANNEL_ID` and `DAILY_VOICE_CHANNEL_ID`.
+`CHANNEL_ID` and `MUSIC_CHANNEL_ID`. If you plan to use the music player,
+also allow access to the voice channel configured by `DAILY_VOICE_CHANNEL_ID`.
 
 ## Installation
 
@@ -52,9 +53,9 @@ DISCORD_TOKEN=your-bot-token
 GUILD_ID=your-guild-id
 CHANNEL_ID=id-of-channel-for-daily-messages
 MUSIC_CHANNEL_ID=id-of-channel-with-song-requests
-DAILY_VOICE_CHANNEL_ID=id-of-voice-channel-to-play-songs
 PLAYER_FORWARD_COMMAND=m!play
 # Optional
+DAILY_VOICE_CHANNEL_ID=id-of-voice-channel-to-play-songs
 TIMEZONE=America/Sao_Paulo
 BOT_LANGUAGE=en
 DAILY_TIME=09:00
@@ -169,12 +170,12 @@ library.
 
 The bot fetches songs from the text channel defined by `MUSIC_CHANNEL_ID`.
 Running `/next-song` replies with the next unplayed message containing a link,
-attachment or embed along with a **Play** button. When the button is pressed the
-bot joins the voice channel set in `DAILY_VOICE_CHANNEL_ID` and streams the
-audio. If `PLAYER_FORWARD_COMMAND` is configured, instead of playing the music
-directly, the bot will reply with a command you can copy and paste in another
-player bot. The original request message receives a 🐰 reaction so it won't be
-selected again.
+attachment or embed along with a **Play** button. If `DAILY_VOICE_CHANNEL_ID`
+is set, pressing the button will make the bot join that voice channel and stream
+the audio. If `PLAYER_FORWARD_COMMAND` is configured, instead of playing the
+music directly, the bot will reply with a command you can copy and paste in
+another player bot. The original request message receives a 🐰 reaction so it
+won't be selected again.
 
 Use `/stop-music` to stop the current playback. Admins can remove all bunny
 reactions from the request channel with `/clear-bunnies` if needed.
