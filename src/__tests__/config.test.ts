@@ -85,3 +85,27 @@ test('YOUTUBE_COOKIE loaded from cookies.txt when not set', async () => {
   const cfg = await import('../config');
   expect(cfg.YOUTUBE_COOKIE).toBe('SID=abcd');
 });
+
+test('YOUTUBE_COOKIE loaded from path in YOUTUBE_COOKIE_FILE', async () => {
+  process.env.YOUTUBE_COOKIE_FILE = '/tmp/mycookie.txt';
+  jest.doMock('fs', () => ({
+    existsSync: jest.fn().mockImplementation((p) => p === '/tmp/mycookie.txt'),
+    readFileSync: jest.fn().mockReturnValue('d\tF\t/\tF\t0\tSAPISID\txyz'),
+    promises: { writeFile: jest.fn() }
+  }));
+  jest.resetModules();
+  const cfg = await import('../config');
+  expect(cfg.YOUTUBE_COOKIE).toBe('SAPISID=xyz');
+  delete process.env.YOUTUBE_COOKIE_FILE;
+});
+
+test('parseCookieFile ignores malformed lines and deduplicates', async () => {
+  const { parseCookieFile } = await import('../config');
+  const content = [
+    '# comment',
+    'bad line',
+    'domain\tF\t/\tF\t0\tSID\ta',
+    'domain\tF\t/\tF\t0\tSID\tb'
+  ].join('\n');
+  expect(parseCookieFile(content)).toBe('SID=b');
+});

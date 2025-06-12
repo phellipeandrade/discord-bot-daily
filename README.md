@@ -63,13 +63,13 @@ USERS_FILE=./src/users.json
 DATE_FORMAT=YYYY-MM-DD
 ADMIN_IDS=1234567890,0987654321
 YOUTUBE_COOKIE=your-youtube-cookie
+YOUTUBE_COOKIE_FILE=/path/to/cookies.txt
 ```
 
 `ADMIN_IDS` should list the Discord user IDs that start with admin rights. You can also
 edit `serverConfig.json` (either inside `src/` or at the repository root) to manage the list.
 `YOUTUBE_COOKIE` may be required for videos that ask you to sign in to confirm you're not a bot. If playback fails, the bot automatically falls back to `ytdl-core`. You can set this value in the `.env` file or later using `/setup` with the `cookie` option.
-If a `cookies.txt` file exists in the project root, its contents are also used as the YouTube cookie when `YOUTUBE_COOKIE` is not set.
-The `/setup` command always saves the provided cookie file to `cookies.txt` so it can be reused on the next start.
+If `YOUTUBE_COOKIE` is not set, the bot checks `YOUTUBE_COOKIE_FILE` (default `./dist/cookies.txt` then `./cookies.txt`) and loads it if found. The `/setup` command always saves the provided cookie file to `cookies.txt` so it can be reused on the next start. The cookie file must follow the "Netscape HTTP Cookie File" format with seven tab‑separated columns (domain, flags, path, secure, expiration, name and value). The bot validates and converts this file automatically when present.
 
 Set `BOT_LANGUAGE` to `en` or `pt-br` to change the bot responses.
 `DAILY_TIME` uses 24h format `HH:MM` and `DAILY_DAYS` follows cron day-of-week

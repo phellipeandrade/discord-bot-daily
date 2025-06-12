@@ -8,19 +8,24 @@ import RBAC from '@rbac/rbac';
 dotenv.config();
 
 const fileConfig = loadServerConfig();
-const COOKIES_PATH = path.join(__dirname, 'cookies.txt');
+const ENV_COOKIE_FILE = process.env.YOUTUBE_COOKIE_FILE
+  ? path.resolve(process.env.YOUTUBE_COOKIE_FILE)
+  : null;
+const COOKIES_PATH = ENV_COOKIE_FILE || path.join(__dirname, 'cookies.txt');
 const ROOT_COOKIES_PATH = path.resolve(__dirname, '..', 'cookies.txt');
 
 export function parseCookieFile(content: string): string {
-  return content
-    .split('\n')
-    .filter((line) => line && !line.startsWith('#'))
-    .map((line) => {
-      const parts = line.split('\t');
-      const name = parts[5];
-      const value = parts[6];
-      return `${name}=${value}`;
-    })
+  const map = new Map<string, string>();
+  for (const line of content.split('\n')) {
+    if (!line || line.startsWith('#')) continue;
+    const parts = line.split('\t');
+    if (parts.length < 7) continue; // skip malformed lines
+    const name = parts[5].trim();
+    const value = parts[6].trim();
+    if (name && value) map.set(name, value);
+  }
+  return Array.from(map.entries())
+    .map(([n, v]) => `${n}=${v}`)
     .join('; ');
 }
 
@@ -37,11 +42,10 @@ export let DAILY_VOICE_CHANNEL_ID =
   process.env.DAILY_VOICE_CHANNEL_ID || fileConfig?.dailyVoiceChannelId || '';
 export let YOUTUBE_COOKIE = process.env.YOUTUBE_COOKIE || '';
 if (!YOUTUBE_COOKIE) {
-  const pathToUse = fs.existsSync(COOKIES_PATH)
-    ? COOKIES_PATH
-    : fs.existsSync(ROOT_COOKIES_PATH)
-    ? ROOT_COOKIES_PATH
-    : null;
+  const candidatePaths = ENV_COOKIE_FILE
+    ? [ENV_COOKIE_FILE, path.join(__dirname, 'cookies.txt'), ROOT_COOKIES_PATH]
+    : [COOKIES_PATH, ROOT_COOKIES_PATH];
+  const pathToUse = candidatePaths.find((p) => fs.existsSync(p)) || null;
   if (pathToUse) {
     try {
       const raw = fs.readFileSync(pathToUse, 'utf-8');
