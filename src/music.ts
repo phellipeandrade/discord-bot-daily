@@ -24,13 +24,21 @@ export const musicPlayer = { instance: null as Player | null };
 
 function getPlayer(client: Client): Player {
   if (!musicPlayer.instance) {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { DefaultExtractors } = require('@discord-player/extractor') as {
-      DefaultExtractors: typeof import('@discord-player/extractor')['DefaultExtractors'];
-    };
+    let DefaultExtractors: typeof import('@discord-player/extractor')['DefaultExtractors'];
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      ({ DefaultExtractors } = require('@discord-player/extractor') as {
+        DefaultExtractors: typeof import('@discord-player/extractor')['DefaultExtractors'];
+      });
+    } catch (err) {
+      console.error('❌ Failed to load default extractors:', err);
+      DefaultExtractors = [] as unknown as typeof import('@discord-player/extractor')['DefaultExtractors'];
+    }
     const player = new Player(client);
     // carrega todos extractors padrão (Spotify, SoundCloud, etc)
-    player.extractors.loadMulti(DefaultExtractors);
+    if (Array.isArray(DefaultExtractors) && DefaultExtractors.length > 0) {
+      player.extractors.loadMulti(DefaultExtractors);
+    }
     // adiciona suporte ao YouTube
     player.extractors.register(YoutubeiExtractor, {});
     musicPlayer.instance = player;
