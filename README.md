@@ -68,6 +68,7 @@ YOUTUBE_COOKIE=your-youtube-cookie
 `ADMIN_IDS` should list the Discord user IDs that start with admin rights. You can also
 edit `serverConfig.json` (either inside `src/` or at the repository root) to manage the list.
 `YOUTUBE_COOKIE` may be required for videos that ask you to sign in to confirm you're not a bot. If playback fails, the bot automatically falls back to `ytdl-core`. You can set this value in the `.env` file or later using `/setup` with the `cookie` option.
+If a `cookies.txt` file exists in the project root, its contents are also used as the YouTube cookie when `YOUTUBE_COOKIE` is not set.
 
 Set `BOT_LANGUAGE` to `en` or `pt-br` to change the bot responses.
 `DAILY_TIME` uses 24h format `HH:MM` and `DAILY_DAYS` follows cron day-of-week
@@ -113,7 +114,8 @@ npm run build-zip
 
 This archive includes a `serverConfig.json` file used by the `/setup` command to
 store guild and channel information. The bot searches for this file in `src/`
-first and falls back to the repository root if not found.
+first and falls back to the repository root if not found. If a `cookies.txt`
+file is present it will also be bundled.
 
 ### Commands
 
