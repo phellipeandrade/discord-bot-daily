@@ -120,8 +120,10 @@ export async function handleClearReactions(
   }
 }
 
-export let currentConnection: ReturnType<typeof joinVoiceChannel> | null = null;
-export let currentPlayer: ReturnType<typeof createAudioPlayer> | null = null;
+export const musicState = {
+  currentConnection: null as ReturnType<typeof joinVoiceChannel> | null,
+  currentPlayer: null as ReturnType<typeof createAudioPlayer> | null
+};
 
 async function playUrl(client: Client, url: string): Promise<void> {
   console.log('🔊 Entrando em playUrl com URL:', url);
@@ -131,7 +133,7 @@ async function playUrl(client: Client, url: string): Promise<void> {
   }
   const channel = await client.channels.fetch(DAILY_VOICE_CHANNEL_ID);
   console.log('🎤 Canal de voz buscado:', channel?.id, 'type:', channel?.type);
-  if (!channel || !channel.isVoiceBased()) {
+  if (!channel?.isVoiceBased()) {
     console.warn('⚠️ Canal não é de voz ou não encontrado');
     return;
   }
@@ -142,17 +144,17 @@ async function playUrl(client: Client, url: string): Promise<void> {
       channel.guild.voiceAdapterCreator as unknown as DiscordGatewayAdapterCreator
   });
   console.log('🔗 Conexão criada:', !!connection);
-  currentConnection = connection;
+  musicState.currentConnection = connection;
   const { stream, type } = await play.stream(url);
   const resource = createAudioResource(stream, { inputType: type });
   const player = createAudioPlayer();
-  currentPlayer = player;
+  musicState.currentPlayer = player;
   connection.subscribe(player);
   player.on('error', (err) => console.error('🔈 Player error', err));
   player.once(AudioPlayerStatus.Idle, () => {
     connection.destroy();
-    currentConnection = null;
-    currentPlayer = null;
+    musicState.currentConnection = null;
+    musicState.currentPlayer = null;
     console.log('📴 Conexão finalizada');
   });
   player.play(resource);
@@ -162,10 +164,10 @@ async function playUrl(client: Client, url: string): Promise<void> {
 export async function handleStopMusic(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
-  if (currentPlayer) currentPlayer.stop();
-  if (currentConnection) currentConnection.destroy();
-  currentPlayer = null;
-  currentConnection = null;
+  if (musicState.currentPlayer) musicState.currentPlayer.stop();
+  if (musicState.currentConnection) musicState.currentConnection.destroy();
+  musicState.currentPlayer = null;
+  musicState.currentConnection = null;
   await interaction.reply(i18n.t('music.stopped'));
 }
 

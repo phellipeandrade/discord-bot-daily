@@ -409,8 +409,8 @@ describe('Comandos de Música', () => {
       const music = await import('../music');
       const player = { stop: jest.fn() } as any;
       const connection = { destroy: jest.fn() } as any;
-      music.currentPlayer = player;
-      music.currentConnection = connection;
+      music.musicState.currentPlayer = player;
+      music.musicState.currentConnection = connection;
       const interaction = {
         reply: jest.fn()
       } as unknown as ChatInputCommandInteraction;
