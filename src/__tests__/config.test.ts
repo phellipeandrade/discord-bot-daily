@@ -49,3 +49,24 @@ test('ADMINS loaded from environment variable', async () => {
   expect(cfg.ADMINS).toEqual(['a', 'b']);
   delete process.env.ADMIN_IDS;
 });
+
+test('reloadServerConfig updates values from file', async () => {
+  jest.doMock('fs', () => ({
+    existsSync: jest.fn().mockReturnValue(true),
+    readFileSync: jest
+      .fn()
+      .mockReturnValue(
+        JSON.stringify({
+          guildId: 'g1',
+          channelId: 'c1',
+          musicChannelId: 'm1'
+        })
+      ),
+    promises: { writeFile: jest.fn() }
+  }));
+  const cfg = await import('../config');
+  cfg.reloadServerConfig();
+  expect(cfg.GUILD_ID).toBe('g1');
+  expect(cfg.CHANNEL_ID).toBe('c1');
+  expect(cfg.MUSIC_CHANNEL_ID).toBe('m1');
+});
