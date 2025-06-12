@@ -16,6 +16,24 @@ Bot do Discord que seleciona automaticamente um usuário aleatório a cada dia �
 - Node.js >= 18
 - Token do bot do Discord e permissões para registrar comandos slash (/comando)
 
+## Configuração no Discord
+
+Convide o bot usando os escopos `bot` e `applications.commands` e garanta as
+seguintes permissões:
+
+- Enviar mensagens
+- Ler histórico de mensagens
+- Adicionar reações
+- Gerenciar mensagens (necessário para `/limpar-coelhos`)
+- Inserir links e anexos
+- Conectar e falar em canais de voz
+- Usar comandos de aplicação
+
+Esse conjunto de permissões corresponde ao inteiro `3270720`.
+Ative também a **Message Content Intent** no portal de desenvolvedores do
+Discord e certifique-se de que o papel do bot possa visualizar e interagir nos
+canais definidos por `CHANNEL_ID`, `MUSIC_CHANNEL_ID` e `DAILY_VOICE_CHANNEL_ID`.
+
 ## Instalação
 
 ```bash
