@@ -127,6 +127,7 @@ export async function handleClearReactions(interaction: ChatInputCommandInteract
     await interaction.reply({ content: i18n.t('music.channelError') });
     return;
   }
+  await interaction.deferReply();
   const messages = await (channel as TextChannel).messages.fetch();
   let count = 0;
   for (const msg of messages.values()) {
@@ -136,7 +137,9 @@ export async function handleClearReactions(interaction: ChatInputCommandInteract
       count++;
     }
   }
-  await interaction.reply({ content: i18n.t('music.reactionsCleared', { count }) });
+  await interaction.editReply({
+    content: i18n.t('music.reactionsCleared', { count })
+  });
 }
 
 export async function handleStopMusic(interaction: ChatInputCommandInteraction): Promise<void> {

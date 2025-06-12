@@ -122,6 +122,8 @@ interface MockInteractionOptions extends CommandInteractionOptionResolver {
 interface MockInteraction extends BaseMockInteraction {
   client: Client<true>;
   reply: jest.Mock;
+  deferReply: jest.Mock;
+  editReply: jest.Mock;
   options: MockInteractionOptions;
 }
 
@@ -214,6 +216,8 @@ describe('Comandos de Música', () => {
     mockInteraction = {
       client: mockClientInstance,
       reply: jest.fn(),
+      deferReply: jest.fn(),
+      editReply: jest.fn(),
       customId: '',
       commandType: ApplicationCommandType.ChatInput,
       options: mockOptions
@@ -485,7 +489,8 @@ describe('Comandos de Música', () => {
       );
 
       expect(mockBunnyReaction.remove).toHaveBeenCalled();
-      expect(mockInteraction.reply).toHaveBeenCalledWith({
+      expect(mockInteraction.deferReply).toHaveBeenCalled();
+      expect(mockInteraction.editReply).toHaveBeenCalledWith({
         content: expect.stringContaining('Removed'),
         components: undefined
       });
