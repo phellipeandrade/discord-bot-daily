@@ -1,7 +1,11 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import * as dotenv from 'dotenv';
 import { loadServerConfig, ServerConfig } from './serverConfig';
 import RBAC from '@rbac/rbac';
+
+const CONFIG_PATH = path.join(__dirname, 'serverConfig.json');
+const ROOT_CONFIG_PATH = path.resolve(__dirname, '..', 'serverConfig.json');
 
 dotenv.config();
 
@@ -71,6 +75,7 @@ export function logConfig(): void {
       `LANG=${LANGUAGE}`,
       `DAILY=${DAILY_TIME} (${DAILY_DAYS})`,
       `HOLIDAYS=${HOLIDAY_COUNTRIES.join(',')}`,
+      `VOICE=${DAILY_VOICE_CHANNEL_ID || 'N/A'}`,
       `ADMINS=${ADMINS.length}`,
       `USERS=${USERS_FILE}`,
       `DATE_FMT=${DATE_FORMAT}`
@@ -84,6 +89,7 @@ export function checkRequiredConfig(): string[] {
   if (!GUILD_ID) missing.push('GUILD_ID');
   if (!CHANNEL_ID) missing.push('CHANNEL_ID');
   if (!MUSIC_CHANNEL_ID) missing.push('MUSIC_CHANNEL_ID');
+  if (!DAILY_VOICE_CHANNEL_ID) missing.push('DAILY_VOICE_CHANNEL_ID');
   return missing;
 }
 
@@ -101,4 +107,25 @@ export function getRole(id: string): 'admin' | 'user' {
 
 export async function canUseAdminCommands(id: string): Promise<boolean> {
   return rbac.can(getRole(id), 'admin');
+}
+
+export function watchServerConfig(): void {
+  const pathToUse = fs.existsSync(CONFIG_PATH)
+    ? CONFIG_PATH
+    : fs.existsSync(ROOT_CONFIG_PATH)
+    ? ROOT_CONFIG_PATH
+    : null;
+
+  if (!pathToUse) return;
+
+  fs.watch(pathToUse, (eventType) => {
+    if (eventType === 'change') {
+      const cfg = loadServerConfig();
+      if (cfg) {
+        console.log('🔄 serverConfig.json changed, reloading');
+        updateServerConfig(cfg);
+        logConfig();
+      }
+    }
+  });
 }

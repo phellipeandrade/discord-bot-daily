@@ -124,29 +124,39 @@ export let currentConnection: ReturnType<typeof joinVoiceChannel> | null = null;
 export let currentPlayer: ReturnType<typeof createAudioPlayer> | null = null;
 
 async function playUrl(client: Client, url: string): Promise<void> {
-  if (!DAILY_VOICE_CHANNEL_ID) return;
+  console.log('🔊 Entrando em playUrl com URL:', url);
+  if (!DAILY_VOICE_CHANNEL_ID) {
+    console.warn('⚠️ DAILY_VOICE_CHANNEL_ID not set');
+    return;
+  }
   const channel = await client.channels.fetch(DAILY_VOICE_CHANNEL_ID);
-  if (!channel || !channel.isVoiceBased()) return;
+  console.log('🎤 Canal de voz buscado:', channel?.id, 'type:', channel?.type);
+  if (!channel || !channel.isVoiceBased()) {
+    console.warn('⚠️ Canal não é de voz ou não encontrado');
+    return;
+  }
   const connection = joinVoiceChannel({
     channelId: channel.id,
     guildId: channel.guild.id,
     adapterCreator:
       channel.guild.voiceAdapterCreator as unknown as DiscordGatewayAdapterCreator
   });
+  console.log('🔗 Conexão criada:', !!connection);
   currentConnection = connection;
-  try {
-    const { stream, type } = await play.stream(url);
-    const resource = createAudioResource(stream, { inputType: type });
-    const player = createAudioPlayer();
-    currentPlayer = player;
-    connection.subscribe(player);
-    player.play(resource);
-    await entersState(player, AudioPlayerStatus.Idle, 30_000);
-  } finally {
+  const { stream, type } = await play.stream(url);
+  const resource = createAudioResource(stream, { inputType: type });
+  const player = createAudioPlayer();
+  currentPlayer = player;
+  connection.subscribe(player);
+  player.on('error', (err) => console.error('🔈 Player error', err));
+  player.once(AudioPlayerStatus.Idle, () => {
     connection.destroy();
     currentConnection = null;
     currentPlayer = null;
-  }
+    console.log('📴 Conexão finalizada');
+  });
+  player.play(resource);
+  await entersState(player, AudioPlayerStatus.Playing, 5_000);
 }
 
 export async function handleStopMusic(
@@ -162,6 +172,7 @@ export async function handleStopMusic(
 export async function handlePlayButton(
   interaction: ButtonInteraction
 ): Promise<void> {
+  console.log('▶️ Clicou em Play:', interaction.customId);
   const customId = interaction.customId;
   if (!customId.startsWith('play_')) return;
 
@@ -203,8 +214,14 @@ export async function handlePlayButton(
       return;
     }
 
+    console.log('📢 VID do canal de voz:', DAILY_VOICE_CHANNEL_ID);
     await originalMsg.react('🐰');
-    await playUrl(interaction.client, linkToPlay);
+    try {
+      await playUrl(interaction.client, linkToPlay);
+      console.log('✅ playUrl finalizado com sucesso');
+    } catch (err) {
+      console.error('❌ erro em playUrl:', err);
+    }
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
