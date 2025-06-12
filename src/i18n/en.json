@@ -23,9 +23,9 @@
   "selection.noEligibleUsers": "❌ No eligible users to select.",
   "user.notFound": "❌ User {{name}} not found.",
   "setup.saved": "✅ Configuration saved!",
-  "setup.instructions": "Use /setup to configure channels, token and cookie.",
+  "setup.instructions": "Use /setup to configure channels and token.",
   "setup.invalidDateFormat": "❌ Invalid date format. Use placeholders YYYY, MM and DD.",
-  "setup.invalidCookie": "❌ Cookie file must be a .txt.",
+  
   "export.success": "✅ Attached data files.",
   "export.noFiles": "❌ No data files found.",
   "commands": {
@@ -158,11 +158,8 @@
         "dateFormat": {
           "name": "dateformat",
           "description": "Date format (e.g. YYYY-MM-DD)"
-        },
-        "cookie": {
-          "name": "cookie",
-          "description": "YouTube cookie (.txt file)"
         }
+
       }
     },
     "export": {

@@ -166,7 +166,7 @@ describe('handlers', () => {
             new EventEmitter() as unknown as import('http').IncomingMessage;
           cb(res);
           process.nextTick(() => {
-            res.emit('data', Buffer.from('cookieVal'));
+            res.emit('data', Buffer.from('testData'));
             res.emit('end');
           });
           return { on: jest.fn() };
@@ -195,16 +195,14 @@ describe('handlers', () => {
       CHANNEL_ID: 'old',
       MUSIC_CHANNEL_ID: 'music',
       DAILY_VOICE_CHANNEL_ID: 'voice',
-      YOUTUBE_COOKIE: 'cookie',
-      TIMEZONE: 'America/Sao_Paulo',
+          TIMEZONE: 'America/Sao_Paulo',
       LANGUAGE: 'en',
       DAILY_TIME: '09:00',
       DAILY_DAYS: '1-5',
       HOLIDAY_COUNTRIES: ['BR'],
       DATE_FORMAT: 'YYYY-MM-DD',
       updateServerConfig,
-      parseCookieFile: (t: string) => 'parsed=' + t,
-      setYoutubeCookie: jest.fn()
+
     }));
     jest.doMock('../scheduler', () => ({ scheduleDailySelection }));
     const { handleSetup } = await import('../handlers');
@@ -221,9 +219,7 @@ describe('handlers', () => {
           if (name === 'guild') return 'newGuild';
           return null;
         }),
-        getAttachment: jest
-          .fn()
-          .mockReturnValueOnce({ name: 'cookie.txt', url: 'c' }),
+        getAttachment: jest.fn(() => null),
         getBoolean: jest.fn()
       },
       reply: jest.fn(),
@@ -276,7 +272,6 @@ describe('handlers', () => {
       CHANNEL_ID: 'c',
       MUSIC_CHANNEL_ID: 'm',
       DAILY_VOICE_CHANNEL_ID: 'v',
-      YOUTUBE_COOKIE: 'cookie',
       TIMEZONE: 'UTC',
       LANGUAGE: 'en',
       DAILY_TIME: '09:00',

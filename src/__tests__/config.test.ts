@@ -71,29 +71,7 @@ test('reloadServerConfig updates values from file', async () => {
   expect(cfg.MUSIC_CHANNEL_ID).toBe('m1');
 });
 
-test('YOUTUBE_COOKIE loaded from cookies.txt when not set', async () => {
-  jest.doMock('fs', () => ({
-    existsSync: jest.fn().mockImplementation((p) =>
-      p.toString().includes('cookies.txt') ? true : false
-    ),
-    readFileSync: jest
-      .fn()
-      .mockReturnValue('domain\tFALSE\t/\tFALSE\t0\tSID\tabcd'),
-    promises: { writeFile: jest.fn() }
-  }));
-  jest.resetModules();
-  const cfg = await import('../config');
-  expect(cfg.YOUTUBE_COOKIE).toBe('SID=abcd');
-});
 
 
-test('parseCookieFile ignores malformed lines and deduplicates', async () => {
-  const { parseCookieFile } = await import('../config');
-  const content = [
-    '# comment',
-    'bad line',
-    'domain\tF\t/\tF\t0\tSID\ta',
-    'domain\tF\t/\tF\t0\tSID\tb'
-  ].join('\n');
-  expect(parseCookieFile(content)).toBe('SID=b');
-});
+
+

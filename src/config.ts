@@ -1,5 +1,5 @@
 import * as path from 'path';
-import * as fs from 'fs';
+
 import * as dotenv from 'dotenv';
 import { loadServerConfig, ServerConfig } from './serverConfig';
 import RBAC from '@rbac/rbac';
@@ -8,27 +8,7 @@ import RBAC from '@rbac/rbac';
 dotenv.config();
 
 const fileConfig = loadServerConfig();
-const COOKIES_PATH = path.join(__dirname, 'cookies.txt');
-const ROOT_COOKIES_PATH = path.resolve(__dirname, '..', 'cookies.txt');
 
-export function parseCookieFile(content: string): string {
-  const map = new Map<string, string>();
-  for (const line of content.split('\n')) {
-    if (!line || line.startsWith('#')) continue;
-    const parts = line.split('\t');
-    if (parts.length < 7) continue; // skip malformed lines
-    const name = parts[5].trim();
-    const value = parts[6].trim();
-    if (name && value) map.set(name, value);
-  }
-  return Array.from(map.entries())
-    .map(([n, v]) => `${n}=${v}`)
-    .join('; ');
-}
-
-export function setYoutubeCookie(value: string): void {
-  YOUTUBE_COOKIE = value;
-}
 export let TOKEN = process.env.DISCORD_TOKEN || fileConfig?.token || '';
 
 export let CHANNEL_ID = process.env.CHANNEL_ID || fileConfig?.channelId || '';
@@ -37,22 +17,7 @@ export let MUSIC_CHANNEL_ID =
   process.env.MUSIC_CHANNEL_ID || fileConfig?.musicChannelId || '';
 export let DAILY_VOICE_CHANNEL_ID =
   process.env.DAILY_VOICE_CHANNEL_ID || fileConfig?.dailyVoiceChannelId || '';
-export let YOUTUBE_COOKIE = process.env.YOUTUBE_COOKIE || '';
-if (!YOUTUBE_COOKIE) {
-  const pathToUse = fs.existsSync(COOKIES_PATH)
-    ? COOKIES_PATH
-    : fs.existsSync(ROOT_COOKIES_PATH)
-    ? ROOT_COOKIES_PATH
-    : null;
-  if (pathToUse) {
-    try {
-      const raw = fs.readFileSync(pathToUse, 'utf-8');
-      YOUTUBE_COOKIE = parseCookieFile(raw);
-    } catch {
-      // ignore read errors
-    }
-  }
-}
+
 export const USERS_FILE = process.env.USERS_FILE
   ? path.resolve(process.env.USERS_FILE)
   : path.join(__dirname, 'users.json');
@@ -111,7 +76,7 @@ export function logConfig(): void {
       `DAILY=${DAILY_TIME} (${DAILY_DAYS})`,
       `HOLIDAYS=${HOLIDAY_COUNTRIES.join(',')}`,
       `VOICE=${DAILY_VOICE_CHANNEL_ID || 'N/A'}`,
-      `YTC=${YOUTUBE_COOKIE ? 'yes' : 'N/A'}`,
+
       `ADMINS=${ADMINS.length}`,
       `USERS=${USERS_FILE}`,
       `DATE_FMT=${DATE_FORMAT}`

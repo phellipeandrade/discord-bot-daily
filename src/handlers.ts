@@ -26,8 +26,7 @@ const {
   USERS_FILE,
   checkRequiredConfig,
   DAILY_VOICE_CHANNEL_ID,
-  parseCookieFile,
-  setYoutubeCookie
+
 } = config;
 import { scheduleDailySelection } from './scheduler';
 import {
@@ -291,18 +290,7 @@ export async function handleSetup(
   const dateFormat =
     interaction.options.getString(i18n.getOptionName('setup', 'dateFormat')) ??
     existing.dateFormat;
-  let youtubeCookieText: string | null = null;
-  const cookieFile = interaction.options.getAttachment(
-    i18n.getOptionName('setup', 'cookie'),
-    false
-  );
-  if (cookieFile) {
-    if (!cookieFile.name.endsWith('.txt')) {
-      await interaction.reply(i18n.t('setup.invalidCookie'));
-      return false;
-    }
-    youtubeCookieText = await fetchText(cookieFile.url);
-  }
+
 
   const guildId = guildIdOption ?? interaction.guildId ?? existing.guildId;
 
@@ -328,11 +316,7 @@ export async function handleSetup(
     admins: existing.admins
   };
 
-  if (youtubeCookieText !== null) {
-    const filePath = path.join(__dirname, 'cookies.txt');
-    await fs.promises.writeFile(filePath, youtubeCookieText, 'utf-8');
-    setYoutubeCookie(parseCookieFile(youtubeCookieText));
-  }
+
 
   await saveServerConfig(cfg);
   updateServerConfig(cfg);

@@ -28,9 +28,9 @@
   "user.selfRegistered": "✅ Você foi registrado(a) com sucesso!",
   "user.removed": "✅ Usuário {{name}} foi removido com sucesso!",
   "setup.saved": "✅ Configuração salva!",
-  "setup.instructions": "Use /configurar para definir canais, token e cookie.",
+  "setup.instructions": "Use /configurar para definir canais e token.",
   "setup.invalidDateFormat": "❌ Formato de data inválido. Use YYYY, MM e DD.",
-  "setup.invalidCookie": "❌ O cookie deve ser um arquivo .txt.",
+  
   "export.success": "✅ Arquivos de dados anexados.",
   "export.noFiles": "❌ Nenhum arquivo de dados encontrado.",
   "commands": {
@@ -163,11 +163,8 @@
         "dateFormat": {
           "name": "formato",
           "description": "Formato da data (ex.: YYYY-MM-DD)"
-        },
-        "cookie": {
-          "name": "cookie",
-          "description": "Cookie do YouTube (.txt)"
         }
+
       }
     },
     "export": {
