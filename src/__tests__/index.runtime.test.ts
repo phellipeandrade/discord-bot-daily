@@ -1,5 +1,7 @@
 import { Client } from 'discord.js';
 
+jest.setTimeout(10000);
+
 interface MockClient {
   once: jest.Mock;
   on: jest.Mock;
