@@ -12,7 +12,7 @@ import {
   isConfigValid,
   checkRequiredConfig,
   canUseAdminCommands,
-  watchServerConfig
+  reloadServerConfig
 } from './config';
 import {
   UserData,
@@ -57,9 +57,6 @@ if (missingCfg.length === 0) {
   console.warn(`⚠️ Missing configuration: ${missingCfg.join(', ')}`);
 }
 
-if (process.env.NODE_ENV !== 'test') {
-  watchServerConfig();
-}
 
 let commands = createCommands();
 let adminCommands = createAdminCommands();
@@ -107,6 +104,7 @@ if (process.env.NODE_ENV !== 'test') {
 
   client.on('interactionCreate', async (interaction) => {
     if (interaction.isChatInputCommand()) {
+      reloadServerConfig();
       console.log(
         `➡️ Command received: /${interaction.commandName} from ${interaction.user.tag}`
       );

@@ -1,11 +1,8 @@
 import * as path from 'path';
-import * as fs from 'fs';
 import * as dotenv from 'dotenv';
 import { loadServerConfig, ServerConfig } from './serverConfig';
 import RBAC from '@rbac/rbac';
 
-const CONFIG_PATH = path.join(__dirname, 'serverConfig.json');
-const ROOT_CONFIG_PATH = path.resolve(__dirname, '..', 'serverConfig.json');
 
 dotenv.config();
 
@@ -109,23 +106,14 @@ export async function canUseAdminCommands(id: string): Promise<boolean> {
   return rbac.can(getRole(id), 'admin');
 }
 
-export function watchServerConfig(): void {
-  const pathToUse = fs.existsSync(CONFIG_PATH)
-    ? CONFIG_PATH
-    : fs.existsSync(ROOT_CONFIG_PATH)
-    ? ROOT_CONFIG_PATH
-    : null;
-
-  if (!pathToUse) return;
-
-  fs.watch(pathToUse, (eventType) => {
-    if (eventType === 'change') {
-      const cfg = loadServerConfig();
-      if (cfg) {
-        console.log('🔄 serverConfig.json changed, reloading');
-        updateServerConfig(cfg);
-        logConfig();
-      }
-    }
-  });
+/**
+ * Reload configuration from `serverConfig.json` if present.
+ * This is used instead of file watchers and should be called
+ * before handling commands that depend on the config.
+ */
+export function reloadServerConfig(): void {
+  const cfg = loadServerConfig();
+  if (cfg) {
+    updateServerConfig(cfg);
+  }
 }
