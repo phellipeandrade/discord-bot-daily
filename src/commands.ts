@@ -136,6 +136,12 @@ export function createCommands(): RESTPostAPIApplicationCommandsJSONBody[] {
       )
       .addStringOption((option) =>
         option
+          .setName(i18n.getOptionName('setup', 'player'))
+          .setDescription(i18n.getOptionDescription('setup', 'player'))
+          .setRequired(false)
+      )
+      .addStringOption((option) =>
+        option
           .setName(i18n.getOptionName('setup', 'token'))
           .setDescription(i18n.getOptionDescription('setup', 'token'))
           .setRequired(false)

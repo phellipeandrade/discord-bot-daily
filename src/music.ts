@@ -13,7 +13,11 @@ import { Player } from 'discord-player';
 import { YoutubeiExtractor } from 'discord-player-youtubei';
 import ffmpegPath from 'ffmpeg-static';
 import { i18n } from './i18n';
-import { MUSIC_CHANNEL_ID, DAILY_VOICE_CHANNEL_ID } from './config';
+import {
+  MUSIC_CHANNEL_ID,
+  DAILY_VOICE_CHANNEL_ID,
+  PLAYER_FORWARD_COMMAND
+} from './config';
 
 if (ffmpegPath) {
   process.env.FFMPEG_PATH = ffmpegPath;
@@ -86,12 +90,20 @@ export async function findNextSong(
     const bunnyReaction = msg.reactions.cache.find((r) => r.emoji.name === bunny);
     if (bunnyReaction && bunnyReaction.count > 0) continue;
 
-    if (linkRegex.test(msg.content) || msg.embeds.length > 0 || msg.attachments.size > 0) {
-      const attachment = msg.attachments.size > 0 ? Array.from(msg.attachments.values())[0] : undefined;
-      const extractedLink = attachment?.url
-        || linkRegex.exec(msg.content)![0]
-        || msg.embeds[0].url
-        || '';
+    if (
+      linkRegex.test(msg.content) ||
+      msg.embeds.length > 0 ||
+      msg.attachments.size > 0
+    ) {
+      const attachment =
+        msg.attachments.size > 0
+          ? Array.from(msg.attachments.values())[0]
+          : undefined;
+      const extractedLink =
+        attachment?.url ||
+        linkRegex.exec(msg.content)?.[0] ||
+        msg.embeds[0]?.url ||
+        '';
       const playButton = new ButtonBuilder()
         .setCustomId(`play_${msg.id}`)
         .setLabel('▶️ Play')
@@ -115,6 +127,7 @@ export async function handleClearReactions(interaction: ChatInputCommandInteract
     await interaction.reply({ content: i18n.t('music.channelError') });
     return;
   }
+  await interaction.deferReply();
   const messages = await (channel as TextChannel).messages.fetch();
   let count = 0;
   for (const msg of messages.values()) {
@@ -124,7 +137,9 @@ export async function handleClearReactions(interaction: ChatInputCommandInteract
       count++;
     }
   }
-  await interaction.reply({ content: i18n.t('music.reactionsCleared', { count }) });
+  await interaction.editReply({
+    content: i18n.t('music.reactionsCleared', { count })
+  });
 }
 
 export async function handleStopMusic(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -165,20 +180,40 @@ export async function handlePlayButton(interaction: ButtonInteraction): Promise<
   }
 
   await originalMsg.react('🐰');
-  try {
-    await playUrl(interaction.client, linkToPlay);
-    console.log('✅ playUrl finalizado com sucesso');
-  } catch (err) {
-    console.error('❌ erro em playUrl:', err);
+  if (PLAYER_FORWARD_COMMAND) {
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel('🔗 Open song link')
+        .setStyle(ButtonStyle.Link)
+        .setURL(linkToPlay)
+    );
+    await interaction.reply({
+      content: i18n.t('music.marked', {
+        command: PLAYER_FORWARD_COMMAND,
+        link: linkToPlay
+      }),
+      components: [row],
+      flags: 1 << 6
+    });
+  } else {
+    try {
+      await playUrl(interaction.client, linkToPlay);
+      console.log('✅ playUrl finalizado com sucesso');
+    } catch (err) {
+      console.error('❌ erro em playUrl:', err);
+    }
+
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setLabel('🔗 Open song link')
+        .setStyle(ButtonStyle.Link)
+        .setURL(linkToPlay)
+    );
+
+    await interaction.reply({
+      content: i18n.t('music.markedPlaying', { link: linkToPlay }),
+      components: [row],
+      flags: 1 << 6
+    });
   }
-
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setLabel('🔗 Open song link').setStyle(ButtonStyle.Link).setURL(linkToPlay)
-  );
-
-  await interaction.reply({
-    content: i18n.t('music.markedPlaying', { link: linkToPlay }),
-    components: [row],
-    flags: 1 << 6
-  });
 }

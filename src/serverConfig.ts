@@ -6,6 +6,7 @@ export interface ServerConfig {
   channelId: string;
   musicChannelId: string;
   dailyVoiceChannelId?: string;
+  playerForwardCommand?: string;
   token?: string;
   timezone?: string;
   language?: string;

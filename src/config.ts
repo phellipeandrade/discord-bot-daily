@@ -17,6 +17,8 @@ export let MUSIC_CHANNEL_ID =
   process.env.MUSIC_CHANNEL_ID || fileConfig?.musicChannelId || '';
 export let DAILY_VOICE_CHANNEL_ID =
   process.env.DAILY_VOICE_CHANNEL_ID || fileConfig?.dailyVoiceChannelId || '';
+export let PLAYER_FORWARD_COMMAND =
+  process.env.PLAYER_FORWARD_COMMAND || fileConfig?.playerForwardCommand || '';
 
 export const USERS_FILE = process.env.USERS_FILE
   ? path.resolve(process.env.USERS_FILE)
@@ -57,6 +59,8 @@ export function updateServerConfig(config: ServerConfig): void {
   MUSIC_CHANNEL_ID = config.musicChannelId;
   if (config.dailyVoiceChannelId)
     DAILY_VOICE_CHANNEL_ID = config.dailyVoiceChannelId;
+  if (config.playerForwardCommand)
+    PLAYER_FORWARD_COMMAND = config.playerForwardCommand;
   if (config.token) TOKEN = config.token;
   if (config.timezone) TIMEZONE = config.timezone;
   if (config.language) LANGUAGE = config.language;
@@ -76,6 +80,7 @@ export function logConfig(): void {
       `DAILY=${DAILY_TIME} (${DAILY_DAYS})`,
       `HOLIDAYS=${HOLIDAY_COUNTRIES.join(',')}`,
       `VOICE=${DAILY_VOICE_CHANNEL_ID || 'N/A'}`,
+      `PLAYER_CMD=${PLAYER_FORWARD_COMMAND || 'N/A'}`,
 
       `ADMINS=${ADMINS.length}`,
       `USERS=${USERS_FILE}`,

@@ -53,6 +53,7 @@ GUILD_ID=your-guild-id
 CHANNEL_ID=id-of-channel-for-daily-messages
 MUSIC_CHANNEL_ID=id-of-channel-with-song-requests
 DAILY_VOICE_CHANNEL_ID=id-of-voice-channel-to-play-songs
+PLAYER_FORWARD_COMMAND=m!play
 # Optional
 TIMEZONE=America/Sao_Paulo
 BOT_LANGUAGE=en
@@ -170,7 +171,9 @@ The bot fetches songs from the text channel defined by `MUSIC_CHANNEL_ID`.
 Running `/next-song` replies with the next unplayed message containing a link,
 attachment or embed along with a **Play** button. When the button is pressed the
 bot joins the voice channel set in `DAILY_VOICE_CHANNEL_ID` and streams the
-audio. The original request message receives a 🐰 reaction so it won't be
+audio. If `PLAYER_FORWARD_COMMAND` is configured, instead of playing the music
+directly, the bot will reply with a command you can copy and paste in another
+player bot. The original request message receives a 🐰 reaction so it won't be
 selected again.
 
 Use `/stop-music` to stop the current playback. Admins can remove all bunny

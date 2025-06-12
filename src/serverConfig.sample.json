@@ -3,6 +3,7 @@
   "channelId": "",
   "musicChannelId": "",
   "dailyVoiceChannelId": "",
+  "playerForwardCommand": "",
   "token": "",
   "timezone": "America/Sao_Paulo",
   "language": "pt-br",
