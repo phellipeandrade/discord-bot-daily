@@ -8,10 +8,7 @@ import RBAC from '@rbac/rbac';
 dotenv.config();
 
 const fileConfig = loadServerConfig();
-const ENV_COOKIE_FILE = process.env.YOUTUBE_COOKIE_FILE
-  ? path.resolve(process.env.YOUTUBE_COOKIE_FILE)
-  : null;
-const COOKIES_PATH = ENV_COOKIE_FILE || path.join(__dirname, 'cookies.txt');
+const COOKIES_PATH = path.join(__dirname, 'cookies.txt');
 const ROOT_COOKIES_PATH = path.resolve(__dirname, '..', 'cookies.txt');
 
 export function parseCookieFile(content: string): string {
@@ -42,10 +39,11 @@ export let DAILY_VOICE_CHANNEL_ID =
   process.env.DAILY_VOICE_CHANNEL_ID || fileConfig?.dailyVoiceChannelId || '';
 export let YOUTUBE_COOKIE = process.env.YOUTUBE_COOKIE || '';
 if (!YOUTUBE_COOKIE) {
-  const candidatePaths = ENV_COOKIE_FILE
-    ? [ENV_COOKIE_FILE, path.join(__dirname, 'cookies.txt'), ROOT_COOKIES_PATH]
-    : [COOKIES_PATH, ROOT_COOKIES_PATH];
-  const pathToUse = candidatePaths.find((p) => fs.existsSync(p)) || null;
+  const pathToUse = fs.existsSync(COOKIES_PATH)
+    ? COOKIES_PATH
+    : fs.existsSync(ROOT_COOKIES_PATH)
+    ? ROOT_COOKIES_PATH
+    : null;
   if (pathToUse) {
     try {
       const raw = fs.readFileSync(pathToUse, 'utf-8');
