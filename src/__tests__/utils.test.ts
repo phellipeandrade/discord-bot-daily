@@ -141,7 +141,8 @@ jest.mock('discord.js', () => {
       Guilds: 1,
       GuildMessages: 2,
       MessageContent: 4,
-      GuildMessageReactions: 8
+      GuildMessageReactions: 8,
+      GuildVoiceStates: 16
     },
     Partials: {
       Message: 'Message',
