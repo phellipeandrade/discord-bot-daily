@@ -17,6 +17,25 @@ Discord bot that automatically selects a random user each weekday and manages mu
 - Node.js >= 18
 - Discord bot token and permissions to register slash commands
 
+## Discord setup
+
+Invite the bot with the `bot` and `applications.commands` scopes and grant these
+permissions:
+
+- Send Messages
+- Read Message History
+- Add Reactions
+- Manage Messages (needed for `/clear-bunnies`)
+- Embed Links
+- Attach Files
+- Connect and Speak in voice channels
+- Use Application Commands
+
+This set of permissions corresponds to the integer `3270720`.
+Enable the **Message Content Intent** in the Discord developer portal and ensure
+the bot role can view and interact in the channels defined by
+`CHANNEL_ID`, `MUSIC_CHANNEL_ID` and `DAILY_VOICE_CHANNEL_ID`.
+
 ## Installation
 
 ```bash
