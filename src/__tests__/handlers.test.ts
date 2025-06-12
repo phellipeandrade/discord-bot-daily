@@ -120,6 +120,25 @@ describe('handlers', () => {
     expect(interaction.reply).toHaveBeenCalled();
   });
 
+  test('handleSelect readds previous user on same day', async () => {
+    const userA = { name: 'A', id: '1' };
+    const userB = { name: 'B', id: '2' };
+    data.all.push(userA, userB);
+    data.remaining.push(userA, userB);
+    const today = new Date().toISOString().split('T')[0];
+    mockSelectUser.mockResolvedValueOnce(userA);
+    const interaction = createInteraction();
+    await handleSelect(interaction, data);
+    data.lastSelected = userA;
+    data.lastSelectionDate = today;
+    data.remaining = [userB];
+    mockSelectUser.mockResolvedValueOnce(userB);
+    await handleSelect(interaction, data);
+    expect(data.remaining.some((u) => u.id === '1')).toBe(true);
+    const msg = (interaction.reply as jest.Mock).mock.calls[1][0];
+    expect(String(msg)).toContain('selection.readded');
+  });
+
   test('handleReset loads original file', async () => {
     (mockFs.promises.readFile as jest.Mock).mockResolvedValue(
       JSON.stringify({ all: [] })

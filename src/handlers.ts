@@ -127,10 +127,21 @@ export async function handleSelect(
   interaction: ChatInputCommandInteraction,
   data: UserData
 ): Promise<void> {
+  const today = todayISO();
+  let message = '';
+  if (data.lastSelected && data.lastSelectionDate === today) {
+    if (!data.remaining.some((u) => u.id === data.lastSelected!.id)) {
+      data.remaining.push(data.lastSelected);
+    }
+    message += i18n.t('selection.readded', { name: data.lastSelected.name }) +
+      '\n';
+  }
   const selected = await selectUser(data);
-  await interaction.reply(
-    i18n.t('selection.nextUser', { id: selected.id, name: selected.name })
-  );
+  message += i18n.t('daily.announcement', {
+    id: selected.id,
+    name: selected.name
+  });
+  await interaction.reply(message);
 }
 
 export async function handleReset(
