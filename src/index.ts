@@ -20,7 +20,8 @@ import {
   loadUsers,
   saveUsers,
   selectUser,
-  formatUsers
+  formatUsers,
+  findUser
 } from './users';
 import {
   handleRegister,
@@ -151,6 +152,7 @@ export {
   saveUsers,
   selectUser,
   formatUsers,
+  findUser,
   handleRegister,
   handleJoin,
   handleRemove,

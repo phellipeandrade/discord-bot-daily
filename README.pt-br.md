@@ -127,8 +127,8 @@ O arquivo `xhr-sync-worker.js` necessário pelo jsdom também é incluído para 
 - `remover <nome>` – remove um usuário
 - `resetar` – reseta a lista de seleção (ou restaura a lista original)
 - `readicionar <nome>` – readiciona um usuário previamente selecionado
-- `pular-hoje <nome>` – pula o sorteio de hoje para o usuário informado
-- `pular-ate <nome> <data>` – pula a seleção de um usuário até a data especificada (formato definido por `DATE_FORMAT`, padrão `YYYY-MM-DD`)
+- `pular-hoje <usuario>` – pula o sorteio de hoje para o usuário informado (menção, id ou nome)
+- `pular-ate <usuario> <data>` – pula a seleção de um usuário até a data especificada (formato definido por `DATE_FORMAT`, padrão `YYYY-MM-DD`; usuário pode ser menção, id ou nome)
 - `configurar` – configura canais, ID da guild e outras definições. Informe apenas os parâmetros que deseja atualizar.
 - `exportar` – exporta arquivos de dados
 - `importar` – importa arquivos de dados

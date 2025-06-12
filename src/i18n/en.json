@@ -36,7 +36,7 @@
       "options": {
         "name": {
           "name": "name",
-          "description": "User name"
+        "description": "User (mention, id or name)"
         }
       }
     },
@@ -50,7 +50,7 @@
       "options": {
         "name": {
           "name": "name",
-          "description": "User name"
+        "description": "User (mention, id or name)"
         }
       }
     },
@@ -94,20 +94,20 @@
       "options": {
         "name": {
           "name": "name",
-          "description": "User name"
-        }
+        "description": "User (mention, id or name)"
       }
-    },
-    "skip-until": {
-      "name": "skip-until",
-      "description": "Skip a user until a date",
-      "options": {
-        "name": {
-          "name": "name",
-          "description": "User name"
-        },
-        "date": {
-          "name": "date",
+    }
+  },
+  "skip-until": {
+    "name": "skip-until",
+    "description": "Skip a user until a date",
+    "options": {
+      "name": {
+        "name": "name",
+        "description": "User (mention, id or name)"
+      },
+      "date": {
+        "name": "date",
           "description": "Date ({{format}})"
         }
       }

@@ -8,7 +8,8 @@ import {
   UserData,
   saveUsers,
   selectUser,
-  formatUsers
+  formatUsers,
+  findUser
 } from './users';
 import { parseDateString, todayISO, isDateFormatValid } from './date';
 import * as config from './config';
@@ -183,16 +184,18 @@ export async function handleSkipToday(
   interaction: ChatInputCommandInteraction,
   data: UserData
 ): Promise<void> {
-  const userName = interaction.options.getString(
+  const identifier = interaction.options.getString(
     i18n.getOptionName('skip-today', 'name'),
     true
   );
-  const user = data.all.find((u) => u.name === userName);
+  const user = findUser(data, identifier);
 
   if (!user) {
-    await interaction.reply(i18n.t('user.notFound', { name: userName }));
+    await interaction.reply(i18n.t('user.notFound', { name: identifier }));
     return;
   }
+
+  const userName = user.name;
 
   const today = todayISO();
   data.skips = data.skips || {};
@@ -205,7 +208,7 @@ export async function handleSkipUntil(
   interaction: ChatInputCommandInteraction,
   data: UserData
 ): Promise<void> {
-  const userName = interaction.options.getString(
+  const identifier = interaction.options.getString(
     i18n.getOptionName('skip-until', 'name'),
     true
   );
@@ -213,12 +216,14 @@ export async function handleSkipUntil(
     i18n.getOptionName('skip-until', 'date'),
     true
   );
-  const user = data.all.find((u) => u.name === userName);
+  const user = findUser(data, identifier);
 
   if (!user) {
-    await interaction.reply(i18n.t('user.notFound', { name: userName }));
+    await interaction.reply(i18n.t('user.notFound', { name: identifier }));
     return;
   }
+
+  const userName = user.name;
 
   const iso = parseDateString(dateStr);
   if (!iso) {
