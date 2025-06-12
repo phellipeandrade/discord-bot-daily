@@ -11,7 +11,8 @@ import {
   logConfig,
   isConfigValid,
   checkRequiredConfig,
-  canUseAdminCommands
+  canUseAdminCommands,
+  watchServerConfig
 } from './config';
 import {
   UserData,
@@ -48,6 +49,17 @@ import { scheduleDailySelection } from './scheduler';
 
 i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
 logConfig();
+
+const missingCfg = checkRequiredConfig();
+if (missingCfg.length === 0) {
+  console.log('✅ Required configuration present');
+} else {
+  console.warn(`⚠️ Missing configuration: ${missingCfg.join(', ')}`);
+}
+
+if (process.env.NODE_ENV !== 'test') {
+  watchServerConfig();
+}
 
 let commands = createCommands();
 let adminCommands = createAdminCommands();
