@@ -13,7 +13,7 @@
     "build": "npm run copy-assets && npm run compile && npm run bundle",
     "start": "node build/index.js",
     "dev": "ts-node src/index.ts",
-    "generate-zip": "rm -f bot.zip && cd build && zip -r ../bot.zip index.js users.json serverConfig.json i18n/ && if [ -f cookies.txt ]; then zip ../bot.zip cookies.txt; fi && zip -j ../bot.zip ../package.json ../.env",
+    "generate-zip": "rm -f bot.zip && cd build && zip -r ../bot.zip index.js xhr-sync-worker.js users.json serverConfig.json i18n/ && if [ -f cookies.txt ]; then zip ../bot.zip cookies.txt; fi && zip -j ../bot.zip ../package.json ../.env",
     "build-zip": "npm run clean && npm run build && npm run generate-zip",
     "lint": "eslint \"src/**/*.ts\" && tsc --noEmit",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
