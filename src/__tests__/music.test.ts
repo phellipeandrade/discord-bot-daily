@@ -31,7 +31,7 @@ jest.mock('../i18n', () => {
     'music.markedPlaying':
       '✅ Song marked as played!\n\n🎵 Playing in the voice channel.',
     'music.forwarded':
-      '✅ Song marked as played!\n\n🎵 Playback requested from another bot.',
+      '✅ Song marked as played!\n\n🎵 Copy and send the command below:\n```\n{{command}} {{link}}\n```',
     'music.stopped': '⏹️ Music playback stopped.',
     'music.reactionsCleared':
       '✅ Removed {{count}} 🐰 reactions made by the bot.',
@@ -350,7 +350,7 @@ describe('Comandos de Música', () => {
       });
     });
 
-    it('deve redirecionar a reprodução para outro bot quando configurado', async () => {
+    it('deve orientar a usar outro bot quando configurado', async () => {
       const config = await import('../config');
       config.PLAYER_FORWARD_COMMAND = '/play';
 
@@ -367,11 +367,12 @@ describe('Comandos de Música', () => {
         mockButtonInteraction as unknown as ButtonInteraction
       );
 
-      expect(mockVoiceChannelInstance.send).toHaveBeenCalledWith(
-        '/play https://example.com/song'
-      );
+      expect(mockVoiceChannelInstance.send).not.toHaveBeenCalled();
+      const expectedMsg = mockTranslations['music.marked']
+        .replace('{{command}}', '/play')
+        .replace('{{link}}', 'https://example.com/song');
       expect(mockButtonInteraction.reply).toHaveBeenCalledWith({
-        content: mockTranslations['music.forwarded'],
+        content: expectedMsg,
         components: expect.any(Array),
         flags: 1 << 6
       });

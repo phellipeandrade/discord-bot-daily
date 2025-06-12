@@ -9,7 +9,8 @@ export const i18n = {
       'music.noValidMusic': '✅ No valid music found.',
       'music.marked': '✅ Song marked as played!\n\n🎵 To play the song in the bot, copy and send the command below:\n```\n{{command}} {{link}}\n```',
       'music.markedPlaying': '✅ Song marked as played!\n\n🎵 Playing in the voice channel.',
-      'music.forwarded': '✅ Song marked as played!\n\n🎵 Playback requested from another bot.',
+      'music.forwarded':
+        '✅ Song marked as played!\n\n🎵 Copy and send the command below:\n```\n{{command}} {{link}}\n```',
       'music.stopped': '⏹️ Music playback stopped.',
       'music.reactionsCleared': '✅ Removed {{count}} 🐰 reactions made by the bot.',
       'user.registered': '✅ User {{name}} has been registered!',

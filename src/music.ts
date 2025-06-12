@@ -170,16 +170,6 @@ export async function handlePlayButton(interaction: ButtonInteraction): Promise<
 
   await originalMsg.react('🐰');
   if (PLAYER_FORWARD_COMMAND) {
-    if (DAILY_VOICE_CHANNEL_ID) {
-      const voiceChannel = await interaction.client.channels.fetch(
-        DAILY_VOICE_CHANNEL_ID
-      );
-      if (voiceChannel?.isTextBased()) {
-        await (voiceChannel as TextChannel).send(
-          `${PLAYER_FORWARD_COMMAND} ${linkToPlay}`
-        );
-      }
-    }
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
         .setLabel('🔗 Open song link')
@@ -187,7 +177,10 @@ export async function handlePlayButton(interaction: ButtonInteraction): Promise<
         .setURL(linkToPlay)
     );
     await interaction.reply({
-      content: i18n.t('music.forwarded', { link: linkToPlay }),
+      content: i18n.t('music.marked', {
+        command: PLAYER_FORWARD_COMMAND,
+        link: linkToPlay
+      }),
       components: [row],
       flags: 1 << 6
     });

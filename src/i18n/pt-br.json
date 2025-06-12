@@ -6,7 +6,7 @@
   "music.noValidMusic": "✅ Nenhuma música válida encontrada.",
   "music.marked": "✅ Música marcada como tocada!\n\n🎵 Para tocar a música no bot, copie e envie o comando abaixo:\n```\n{{command}} {{link}}\n```",
   "music.markedPlaying": "✅ Música marcada como tocada!\n\n🎵 Tocando agora no canal de voz.",
-  "music.forwarded": "✅ Música marcada como tocada!\n\n🎵 Pedido de reprodução enviado para outro bot.",
+  "music.forwarded": "✅ Música marcada como tocada!\n\n🎵 Copie e envie o comando abaixo:\n```\n{{command}} {{link}}\n```",
   "music.stopped": "⏹️ Reprodução de música parada.",
   "music.reactionsCleared": "✅ Removidas {{count}} reações 🐰 feitas pelo bot.",
   "music.channelError": "Não foi possível acessar o canal de música.",

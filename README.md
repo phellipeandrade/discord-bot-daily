@@ -172,9 +172,9 @@ Running `/next-song` replies with the next unplayed message containing a link,
 attachment or embed along with a **Play** button. When the button is pressed the
 bot joins the voice channel set in `DAILY_VOICE_CHANNEL_ID` and streams the
 audio. If `PLAYER_FORWARD_COMMAND` is configured, instead of playing the music
-directly, the bot will send that command with the link to the voice channel,
-allowing another bot to handle playback. The original request message receives a
-🐰 reaction so it won't be selected again.
+directly, the bot will reply with a command you can copy and paste in another
+player bot. The original request message receives a 🐰 reaction so it won't be
+selected again.
 
 Use `/stop-music` to stop the current playback. Admins can remove all bunny
 reactions from the request channel with `/clear-bunnies` if needed.
