@@ -62,7 +62,8 @@ Set `BOT_LANGUAGE` to `en` or `pt-br` to change the bot responses.
 syntax (e.g. `1-5` for Monday–Friday). `HOLIDAY_COUNTRIES` is a comma-separated
 list of country codes (currently `BR` and `US` are supported).
 `DATE_FORMAT` controls the date pattern used for the `/skip-until` command and
-can also be changed via `/setup`.
+can also be changed via `/setup`. When `BOT_LANGUAGE` is `pt-br`, the default
+format becomes `DD-MM-YYYY`.
 `DISABLED_UNTIL` can set an ISO date to pause daily announcements until that day.
 
 ## Usage

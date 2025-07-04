@@ -11,7 +11,12 @@ import {
   formatUsers,
   findUser
 } from './users';
-import { parseDateString, todayISO, isDateFormatValid } from './date';
+import {
+  parseDateString,
+  todayISO,
+  isDateFormatValid,
+  formatDateString
+} from './date';
 import * as config from './config';
 const {
   DATE_FORMAT,
@@ -264,7 +269,7 @@ export async function handleSkipUntil(
   data.skips[user.id] = iso;
   await saveUsers(data);
   await interaction.reply(
-    i18n.t('selection.skipUntil', { name: userName, date: iso })
+    i18n.t('selection.skipUntil', { name: userName, date: formatDateString(iso) })
   );
 }
 
@@ -550,7 +555,9 @@ export async function handleDisableUntil(
   existing.disabledUntil = parsed;
   await saveServerConfig(existing);
   updateServerConfig(existing);
-  await interaction.reply(i18n.t('bot.disabledUntil', { date: parsed }));
+  await interaction.reply(
+    i18n.t('bot.disabledUntil', { date: formatDateString(parsed) })
+  );
 }
 
 export async function handleEnable(
