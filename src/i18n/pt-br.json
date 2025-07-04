@@ -29,6 +29,8 @@
   "user.selfRegistered": "✅ Você foi registrado(a) com sucesso!",
   "user.removed": "✅ Usuário {{name}} foi removido com sucesso!",
   "setup.saved": "✅ Configuração salva!",
+  "setup.savedDetailed": "✅ Configuração salva! Campos atualizados: {{fields}}.",
+  "setup.savedNoChanges": "✅ Configuração salva! Nenhuma alteração detectada.",
   "setup.instructions": "Use /configurar para definir canais e token.",
   "setup.invalidDateFormat": "❌ Formato de data inválido. Use YYYY, MM e DD.",
   

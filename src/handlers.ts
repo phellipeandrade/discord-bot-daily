@@ -360,7 +360,44 @@ export async function handleSetup(
   await saveServerConfig(cfg);
   updateServerConfig(cfg);
   scheduleDailySelection(interaction.client);
-  await interaction.reply(i18n.t('setup.saved'));
+
+  const changes: string[] = [];
+  if (cfg.channelId !== existing.channelId)
+    changes.push(i18n.getOptionName('setup', 'daily'));
+  if (cfg.musicChannelId !== existing.musicChannelId)
+    changes.push(i18n.getOptionName('setup', 'music'));
+  if (cfg.dailyVoiceChannelId !== existing.dailyVoiceChannelId)
+    changes.push(i18n.getOptionName('setup', 'voice'));
+  if (cfg.playerForwardCommand !== existing.playerForwardCommand)
+    changes.push(i18n.getOptionName('setup', 'player'));
+  if (cfg.token !== existing.token)
+    changes.push(i18n.getOptionName('setup', 'token'));
+  if (cfg.guildId !== existing.guildId)
+    changes.push(i18n.getOptionName('setup', 'guild'));
+  if (cfg.timezone !== existing.timezone)
+    changes.push(i18n.getOptionName('setup', 'timezone'));
+  if (cfg.language !== existing.language)
+    changes.push(i18n.getOptionName('setup', 'language'));
+  if (cfg.dailyTime !== existing.dailyTime)
+    changes.push(i18n.getOptionName('setup', 'dailyTime'));
+  if (cfg.dailyDays !== existing.dailyDays)
+    changes.push(i18n.getOptionName('setup', 'dailyDays'));
+  if (
+    (cfg.holidayCountries ?? []).join(',') !==
+    (existing.holidayCountries ?? []).join(',')
+  )
+    changes.push(i18n.getOptionName('setup', 'holidayCountries'));
+  if (cfg.dateFormat !== existing.dateFormat)
+    changes.push(i18n.getOptionName('setup', 'dateFormat'));
+
+  const changedFields = changes.join(', ');
+  if (changes.length > 0) {
+    await interaction.reply(
+      i18n.t('setup.savedDetailed', { fields: changedFields })
+    );
+  } else {
+    await interaction.reply(i18n.t('setup.savedNoChanges'));
+  }
   return language !== existing.language || guildId !== existing.guildId;
 }
 
