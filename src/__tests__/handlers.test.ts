@@ -327,6 +327,8 @@ describe('handlers', () => {
 
   test('handleSkipUntil sets future skip', async () => {
     data.all.push({ name: 'A', id: '1' });
+    jest.resetModules();
+    jest.doMock('../config', () => ({ DATE_FORMAT: 'YYYY-MM-DD' }));
     const future = '2099-01-01';
     const interaction = createInteraction({ name: 'A', date: future });
     const { handleSkipUntil } = await import('../handlers');
@@ -337,6 +339,8 @@ describe('handlers', () => {
 
   test('handleSkipUntil accepts id and mention', async () => {
     data.all.push({ name: 'A', id: '1' });
+    jest.resetModules();
+    jest.doMock('../config', () => ({ DATE_FORMAT: 'YYYY-MM-DD' }));
     const future = '2099-01-01';
     const { handleSkipUntil } = await import('../handlers');
     await handleSkipUntil(createInteraction({ name: '1', date: future }), data);

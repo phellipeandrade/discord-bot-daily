@@ -56,7 +56,7 @@ O campo `admins` em `serverConfig.json` define quais IDs de usuário do
 Discord começam com direitos de administrador.
 
 
-Defina `BOT_LANGUAGE` como `en` ou `pt-br` para alterar as respostas do bot. `DAILY_TIME` usa o formato 24h `HH:MM` e `DAILY_DAYS` segue a sintaxe de dia da semana do cron (ex.: `1-5` para segunda a sexta). `HOLIDAY_COUNTRIES` é uma lista separada por vírgulas de códigos de país (`BR` e `US` são suportados). `DATE_FORMAT` controla o padrão de data usado pelo comando `/skip-until` e também pode ser alterado via `/setup`.
+Defina `BOT_LANGUAGE` como `en` ou `pt-br` para alterar as respostas do bot. `DAILY_TIME` usa o formato 24h `HH:MM` e `DAILY_DAYS` segue a sintaxe de dia da semana do cron (ex.: `1-5` para segunda a sexta). `HOLIDAY_COUNTRIES` é uma lista separada por vírgulas de códigos de país (`BR` e `US` são suportados). `DATE_FORMAT` controla o padrão de data usado pelo comando `/skip-until` e também pode ser alterado via `/setup`. O idioma `pt-br` usa por padrão `DD-MM-YYYY`.
 `DISABLED_UNTIL` permite definir uma data ISO para pausar os anúncios diários até esse dia.
 
 ## Uso
@@ -117,9 +117,9 @@ O arquivo `xhr-sync-worker.js` necessário pelo jsdom também é incluído para 
 - `resetar` – reseta a lista de seleção (ou restaura a lista original)
 - `readicionar <usuario>` – readiciona um usuário previamente selecionado (menção, id ou nome)
 - `pular-hoje <usuario>` – pula o sorteio de hoje para o usuário informado (menção, id ou nome)
-- `pular-ate <usuario> <data>` – pula a seleção de um usuário até a data especificada (formato definido por `DATE_FORMAT`, padrão `YYYY-MM-DD`; usuário pode ser menção, id ou nome)
+- `pular-ate <usuario> <data>` – pula a seleção de um usuário até a data especificada (formato definido por `DATE_FORMAT`, padrão `DD-MM-YYYY`; usuário pode ser menção, id ou nome)
 - `desativar` – desativa os anúncios diários por tempo indeterminado
-- `desativar-ate <data>` – desativa os anúncios diários até a data informada (formato definido por `DATE_FORMAT`, padrão `YYYY-MM-DD`)
+- `desativar-ate <data>` – desativa os anúncios diários até a data informada (formato definido por `DATE_FORMAT`, padrão `DD-MM-YYYY`)
 - `ativar` – reativa os anúncios diários
 - `configurar` – configura canais, ID da guild e outras definições. Informe apenas os parâmetros que deseja atualizar.
 - `exportar` – exporta arquivos de dados

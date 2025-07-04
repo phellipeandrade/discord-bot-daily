@@ -27,7 +27,12 @@ export let DAILY_DAYS = fileConfig?.dailyDays || '1-5';
 export let HOLIDAY_COUNTRIES = (fileConfig?.holidayCountries || ['BR']).map((c) =>
   c.trim().toUpperCase()
 );
-export let DATE_FORMAT = fileConfig?.dateFormat || 'YYYY-MM-DD';
+function defaultDateFormat(lang: string): string {
+  return lang === 'pt-br' ? 'DD-MM-YYYY' : 'YYYY-MM-DD';
+}
+
+export let DATE_FORMAT =
+  fileConfig?.dateFormat || defaultDateFormat(LANGUAGE);
 export let DISABLED_UNTIL = fileConfig?.disabledUntil || '';
 export let ADMINS: string[] = fileConfig?.admins || [];
 
@@ -50,7 +55,11 @@ export function updateServerConfig(config: ServerConfig): void {
   if (config.dailyTime) DAILY_TIME = config.dailyTime;
   if (config.dailyDays) DAILY_DAYS = config.dailyDays;
   if (config.holidayCountries) HOLIDAY_COUNTRIES = config.holidayCountries;
-  if (config.dateFormat) DATE_FORMAT = config.dateFormat;
+  if (config.dateFormat) {
+    DATE_FORMAT = config.dateFormat;
+  } else if (config.language) {
+    DATE_FORMAT = defaultDateFormat(config.language);
+  }
   if (config.disabledUntil !== undefined) DISABLED_UNTIL = config.disabledUntil;
   if (config.admins) ADMINS = config.admins;
 }

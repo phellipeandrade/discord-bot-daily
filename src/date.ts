@@ -43,3 +43,8 @@ export function parseDateString(input: string): string | null {
 export function todayISO(): string {
   return new Date().toISOString().split('T')[0];
 }
+
+export function formatDateString(iso: string): string {
+  const [year, month, day] = iso.split('-');
+  return DATE_FORMAT.replace('YYYY', year).replace('MM', month).replace('DD', day);
+}

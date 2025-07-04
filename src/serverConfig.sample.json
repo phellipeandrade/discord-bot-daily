@@ -10,7 +10,7 @@
   "dailyTime": "09:00",
   "dailyDays": "1-5",
   "holidayCountries": ["BR"],
-  "dateFormat": "YYYY-MM-DD",
+  "dateFormat": "DD-MM-YYYY",
   "disabledUntil": "",
   "admins": []
 }
