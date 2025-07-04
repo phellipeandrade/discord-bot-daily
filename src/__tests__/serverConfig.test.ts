@@ -51,6 +51,17 @@ describe('serverConfig module', () => {
     expect(loadServerConfig()).toBeNull();
   });
 
+  test('loadServerConfig falls back to root path', async () => {
+    const data = { guildId: '9', channelId: '8', musicChannelId: '7' };
+    jest.doMock('fs', () => ({
+      existsSync: jest.fn((p: string) => !p.includes('/src/')),
+      readFileSync: jest.fn().mockReturnValue(JSON.stringify(data)),
+      promises: { writeFile: jest.fn() }
+    }));
+    const { loadServerConfig } = await import('../serverConfig');
+    expect(loadServerConfig()).toEqual(data);
+  });
+
   test('saveServerConfig writes config to file', async () => {
     const writeFile = jest.fn();
     jest.doMock('fs', () => ({
