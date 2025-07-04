@@ -63,6 +63,7 @@ DAILY_DAYS=1-5
 HOLIDAY_COUNTRIES=BR
 USERS_FILE=./src/users.json
 DATE_FORMAT=YYYY-MM-DD
+DISABLED_UNTIL=
 ADMIN_IDS=1234567890,0987654321
 
 ```
@@ -77,6 +78,7 @@ syntax (e.g. `1-5` for Monday–Friday). `HOLIDAY_COUNTRIES` is a comma-separate
 list of country codes (currently `BR` and `US` are supported).
 `DATE_FORMAT` controls the date pattern used for the `/skip-until` command and
 can also be changed via `/setup`.
+`DISABLED_UNTIL` can set an ISO date to pause daily announcements until that day.
 
 ## Usage
 
@@ -138,6 +140,8 @@ by jsdom is also packaged to avoid runtime errors.
 - `readd <user>` – re-add a previously selected user back into the pool (mention, id or name)
 - `skip-today <user>` – skip today's draw for the specified user (mention, id or name)
 - `skip-until <user> <date>` – skip selection of a user until the given date (format defined by `DATE_FORMAT`, default `YYYY-MM-DD`; user can be mention, id or name)
+- `disable [date]` – disable daily announcements (optionally until the given date)
+- `enable` – re-enable daily announcements
 - `setup` – configure channels, guild ID and other settings. Provide only the parameters you want to update.
 - `export` – export data files
 - `import` – import runtime data files

@@ -28,7 +28,7 @@ const {
   checkRequiredConfig,
   DAILY_VOICE_CHANNEL_ID,
   PLAYER_FORWARD_COMMAND,
-
+  
 } = config;
 import { scheduleDailySelection } from './scheduler';
 import {
@@ -466,4 +466,47 @@ export async function handleRole(
   await interaction.reply(
     i18n.t('role.updated', { name: user.username, role })
   );
+}
+
+export async function handleDisable(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  const dateStr = interaction.options.getString(
+    i18n.getOptionName('disable', 'date'),
+    false
+  );
+  const parsed = dateStr ? parseDateString(dateStr) : null;
+  if (dateStr && !parsed) {
+    await interaction.reply(
+      i18n.t('selection.invalidDate', { format: DATE_FORMAT })
+    );
+    return;
+  }
+  const until = parsed ?? '9999-12-31';
+  const existing = loadServerConfig() || {
+    guildId: interaction.guildId!,
+    channelId: CHANNEL_ID,
+    musicChannelId: MUSIC_CHANNEL_ID,
+    disabledUntil: until
+  } as ServerConfig;
+  existing.disabledUntil = until;
+  await saveServerConfig(existing);
+  updateServerConfig(existing);
+  if (dateStr) {
+    await interaction.reply(i18n.t('bot.disabledUntil', { date: until }));
+  } else {
+    await interaction.reply(i18n.t('bot.disabled'));
+  }
+}
+
+export async function handleEnable(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  const existing = loadServerConfig();
+  if (existing) {
+    existing.disabledUntil = '';
+    await saveServerConfig(existing);
+    updateServerConfig(existing);
+  }
+  await interaction.reply(i18n.t('bot.enabled'));
 }

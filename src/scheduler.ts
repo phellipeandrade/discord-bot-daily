@@ -7,10 +7,12 @@ import {
   TIMEZONE,
   DAILY_TIME,
   DAILY_DAYS,
-  HOLIDAY_COUNTRIES
+  HOLIDAY_COUNTRIES,
+  DISABLED_UNTIL
 } from './config';
 import { loadUsers, selectUser } from './users';
 import { findNextSong } from './music';
+import { todayISO } from './date';
 
 let dailyJob: cron.ScheduledTask | null = null;
 
@@ -25,6 +27,10 @@ export function scheduleDailySelection(client: Client): void {
   dailyJob = cron.schedule(
     cronExpr,
     async () => {
+      if (DISABLED_UNTIL && todayISO() <= DISABLED_UNTIL) {
+        console.log(`⏸️ Bot disabled until ${DISABLED_UNTIL}`);
+        return;
+      }
       if (isHoliday(new Date(), HOLIDAY_COUNTRIES)) {
         console.log(i18n.t('daily.holiday'));
         return;

@@ -63,12 +63,14 @@ HOLIDAY_COUNTRIES=BR
 USERS_FILE=./src/users.json
 ADMIN_IDS=1234567890,0987654321
 DATE_FORMAT=YYYY-MM-DD
+DISABLED_UNTIL=
 
 ```
 `ADMIN_IDS` deve listar os IDs dos usuários do Discord que iniciam com direitos de administrador. Você também pode editar `serverConfig.json` para gerenciar a lista.
 
 
 Defina `BOT_LANGUAGE` como `en` ou `pt-br` para alterar as respostas do bot. `DAILY_TIME` usa o formato 24h `HH:MM` e `DAILY_DAYS` segue a sintaxe de dia da semana do cron (ex.: `1-5` para segunda a sexta). `HOLIDAY_COUNTRIES` é uma lista separada por vírgulas de códigos de país (`BR` e `US` são suportados). `DATE_FORMAT` controla o padrão de data usado pelo comando `/skip-until` e também pode ser alterado via `/setup`.
+`DISABLED_UNTIL` permite definir uma data ISO para pausar os anúncios diários até esse dia.
 
 ## Uso
 
@@ -129,6 +131,8 @@ O arquivo `xhr-sync-worker.js` necessário pelo jsdom também é incluído para 
 - `readicionar <usuario>` – readiciona um usuário previamente selecionado (menção, id ou nome)
 - `pular-hoje <usuario>` – pula o sorteio de hoje para o usuário informado (menção, id ou nome)
 - `pular-ate <usuario> <data>` – pula a seleção de um usuário até a data especificada (formato definido por `DATE_FORMAT`, padrão `YYYY-MM-DD`; usuário pode ser menção, id ou nome)
+- `desativar [data]` – desativa os anúncios diários (opcionalmente até a data informada)
+- `ativar` – reativa os anúncios diários
 - `configurar` – configura canais, ID da guild e outras definições. Informe apenas os parâmetros que deseja atualizar.
 - `exportar` – exporta arquivos de dados
 - `importar` – importa arquivos de dados

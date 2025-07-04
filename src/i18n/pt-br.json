@@ -194,15 +194,29 @@
       "name": "verificar-config",
       "description": "Verifica a configuração do bot"
     },
-    "role": {
-      "name": "role",
-      "description": "Define o papel de um usuário",
-      "options": {
-        "user": { "name": "usuario", "description": "Usuário" },
-        "role": { "name": "papel", "description": "Papel" }
+      "role": {
+        "name": "role",
+        "description": "Define o papel de um usuário",
+        "options": {
+          "user": { "name": "usuario", "description": "Usuário" },
+          "role": { "name": "papel", "description": "Papel" }
+        }
+      },
+      "disable": {
+        "name": "desativar",
+        "description": "Desativa os anúncios diários",
+        "options": {
+          "date": {
+            "name": "data",
+            "description": "Reativar em ({{format}})"
+          }
+        }
+      },
+      "enable": {
+        "name": "ativar",
+        "description": "Ativa os anúncios diários"
       }
-    }
-  },
+    },
   "import.success": "✅ Dados importados com sucesso.",
   "import.invalid": "❌ Arquivos inválidos ou ausentes.",
   "config.valid": "✅ Configuração correta.",
@@ -210,6 +224,9 @@
   "user.alreadyRegistered": "❌ Usuário {{name}} já está registrado.",
   "user.alreadySelfRegistered": "❌ Você já está registrado(a).",
   "selection.nextUser": "➡️ Próximo usuário selecionado: <@{{id}}> ({{name}})",
-  "errors.unauthorized": "❌ Você não tem permissão para usar este comando.",
-  "role.updated": "✅ {{name}} agora é {{role}}."
-}
+    "errors.unauthorized": "❌ Você não tem permissão para usar este comando.",
+    "role.updated": "✅ {{name}} agora é {{role}}.",
+    "bot.disabled": "⏸️ Anúncios diários desativados.",
+    "bot.disabledUntil": "⏸️ Anúncios diários desativados até {{date}}.",
+    "bot.enabled": "✅ Anúncios diários ativados."
+  }

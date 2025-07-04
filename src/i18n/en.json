@@ -189,15 +189,29 @@
       "name": "check-config",
       "description": "Verify bot configuration"
     },
-    "role": {
-      "name": "role",
-      "description": "Set user role",
-      "options": {
-        "user": { "name": "user", "description": "Target user" },
-        "role": { "name": "role", "description": "Role" }
+      "role": {
+        "name": "role",
+        "description": "Set user role",
+        "options": {
+          "user": { "name": "user", "description": "Target user" },
+          "role": { "name": "role", "description": "Role" }
+        }
+      },
+      "disable": {
+        "name": "disable",
+        "description": "Disable daily announcements",
+        "options": {
+          "date": {
+            "name": "date",
+            "description": "Enable again on date ({{format}})"
+          }
+        }
+      },
+      "enable": {
+        "name": "enable",
+        "description": "Enable daily announcements"
       }
-    }
-  },
+    },
   "import.success": "✅ Data imported successfully.",
   "import.invalid": "❌ Invalid or missing files.",
   "config.valid": "✅ Configuration looks good.",
@@ -210,6 +224,9 @@
   "selection.nextUser": "➡️ Selected user: <@{{id}}> ({{name}})",
   "selection.resetOriginal": "✅ Selection list has been reset to original state.",
   "selection.resetAll": "✅ {{count}} users have been readded to the selection list.",
-  "errors.unauthorized": "❌ You do not have permission to use this command.",
-  "role.updated": "✅ {{name}} is now {{role}}."
-}
+    "errors.unauthorized": "❌ You do not have permission to use this command.",
+    "role.updated": "✅ {{name}} is now {{role}}.",
+    "bot.disabled": "⏸️ Daily announcements disabled.",
+    "bot.disabledUntil": "⏸️ Daily announcements disabled until {{date}}.",
+    "bot.enabled": "✅ Daily announcements enabled."
+  }

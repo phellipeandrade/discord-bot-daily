@@ -26,7 +26,9 @@ import {
   handleExport,
   handleImport,
   handleCheckConfig,
-  handleRole
+  handleRole,
+  handleDisable,
+  handleEnable
 } from './handlers';
 import {
   handleNextSong,
@@ -240,6 +242,20 @@ export function createCommands(): RESTPostAPIApplicationCommandsJSONBody[] {
           .setRequired(true)
       ),
     new SlashCommandBuilder()
+      .setName(i18n.getCommandName('disable'))
+      .setDescription(i18n.getCommandDescription('disable'))
+      .addStringOption((option) =>
+        option
+          .setName(i18n.getOptionName('disable', 'date'))
+          .setDescription(
+            i18n.t('commands.disable.options.date.description', { format: DATE_FORMAT })
+          )
+          .setRequired(false)
+      ),
+    new SlashCommandBuilder()
+      .setName(i18n.getCommandName('enable'))
+      .setDescription(i18n.getCommandDescription('enable')),
+    new SlashCommandBuilder()
       .setName(i18n.getCommandName('check-config'))
       .setDescription(i18n.getCommandDescription('check-config'))
   ].map((cmd) => cmd.toJSON());
@@ -258,7 +274,9 @@ export function createAdminCommands(): Set<string> {
     i18n.getCommandName('role'),
     i18n.getCommandName('clear-bunnies'),
     i18n.getCommandName('check-config'),
-    i18n.getCommandName('register')
+    i18n.getCommandName('register'),
+    i18n.getCommandName('disable'),
+    i18n.getCommandName('enable')
   ]);
 }
 
@@ -301,6 +319,12 @@ export function createCommandHandlers(): Record<string, CommandHandler> {
     },
     [i18n.getCommandName('check-config')]: async (interaction) => {
       await handleCheckConfig(interaction);
+    },
+    [i18n.getCommandName('disable')]: async (interaction) => {
+      await handleDisable(interaction);
+    },
+    [i18n.getCommandName('enable')]: async (interaction) => {
+      await handleEnable(interaction);
     }
   };
 }
