@@ -495,5 +495,38 @@ describe('Comandos de Música', () => {
         components: undefined
       });
     });
+
+    it('deve retornar erro se não conseguir acessar o canal', async () => {
+      (mockClientInstance.channels as unknown as MockChannelManager).fetch.mockResolvedValueOnce(null);
+
+      await handleClearReactions(
+        mockInteraction as unknown as ChatInputCommandInteraction
+      );
+
+      expect(mockInteraction.reply).toHaveBeenCalledWith({
+        content: mockTranslations['music.channelError']
+      });
+    });
+
+    it('deve informar quando nenhuma reação foi removida', async () => {
+      const messageWithoutReaction = {
+        ...mockMessageInstance,
+        reactions: { cache: new MockCollection() }
+      };
+
+      (mockClientInstance.channels as unknown as MockChannelManager).fetch.mockResolvedValue(mockChannelInstance);
+      mockChannelInstance.messages.fetch.mockResolvedValue(
+        new MockCollection([['123', messageWithoutReaction]])
+      );
+
+      await handleClearReactions(
+        mockInteraction as unknown as ChatInputCommandInteraction
+      );
+
+      expect(mockInteraction.editReply).toHaveBeenCalledWith({
+        content: mockTranslations['music.reactionsCleared'].replace('{{count}}', '0'),
+        components: undefined
+      });
+    });
   });
 });
