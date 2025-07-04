@@ -24,6 +24,8 @@
   "selection.noEligibleUsers": "❌ No eligible users to select.",
   "user.notFound": "❌ User {{name}} not found.",
   "setup.saved": "✅ Configuration saved!",
+  "setup.savedDetailed": "✅ Configuration saved! Updated: {{fields}}.",
+  "setup.savedNoChanges": "✅ Configuration saved! No changes detected.",
   "setup.instructions": "Use /setup to configure channels and token.",
   "setup.invalidDateFormat": "❌ Invalid date format. Use placeholders YYYY, MM and DD.",
   

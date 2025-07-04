@@ -23,6 +23,8 @@ jest.mock('../i18n', () => ({
       const translations: Record<string, string> = {
         'selection.readded': 'selection.readded',
         'setup.invalidDateFormat': 'setup.invalidDateFormat',
+        'setup.savedDetailed': 'setup.savedDetailed',
+        'setup.savedNoChanges': 'setup.savedNoChanges',
         'config.valid': 'config.valid',
         'config.invalid': 'config.invalid'
       };
@@ -375,7 +377,7 @@ describe('handlers', () => {
     });
     expect(updateServerConfig).toHaveBeenCalled();
     expect(scheduleDailySelection).toHaveBeenCalledWith(interaction.client);
-    expect(interaction.reply).toHaveBeenCalled();
+    expect(interaction.reply).toHaveBeenCalledWith('setup.savedDetailed');
     expect(res).toBe(true);
   });
 
