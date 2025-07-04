@@ -104,7 +104,8 @@ describe('serverConfig module', () => {
       dailyDays: '1-5',
       holidayCountries: ['BR', 'US'],
       dateFormat: 'YYYY-MM-DD',
-      admins: ['x']
+      admins: ['x'],
+      disabledUntil: '2025-01-01'
     });
     expect(config.GUILD_ID).toBe('g');
     expect(config.CHANNEL_ID).toBe('c');
@@ -118,5 +119,6 @@ describe('serverConfig module', () => {
     expect(config.HOLIDAY_COUNTRIES).toEqual(['BR', 'US']);
     expect(config.DATE_FORMAT).toBe('YYYY-MM-DD');
     expect(config.ADMINS).toEqual(['x']);
+    expect(config.DISABLED_UNTIL).toBe('2025-01-01');
   });
 });

@@ -26,7 +26,10 @@ import {
   handleExport,
   handleImport,
   handleCheckConfig,
-  handleRole
+  handleRole,
+  handleDisable,
+  handleDisableUntil,
+  handleEnable
 } from './handlers';
 import {
   handleNextSong,
@@ -240,6 +243,25 @@ export function createCommands(): RESTPostAPIApplicationCommandsJSONBody[] {
           .setRequired(true)
       ),
     new SlashCommandBuilder()
+      .setName(i18n.getCommandName('disable'))
+      .setDescription(i18n.getCommandDescription('disable')),
+    new SlashCommandBuilder()
+      .setName(i18n.getCommandName('disable-until'))
+      .setDescription(i18n.getCommandDescription('disable-until'))
+      .addStringOption((option) =>
+        option
+          .setName(i18n.getOptionName('disable-until', 'date'))
+          .setDescription(
+            i18n.t('commands.disable-until.options.date.description', {
+              format: DATE_FORMAT
+            })
+          )
+          .setRequired(true)
+      ),
+    new SlashCommandBuilder()
+      .setName(i18n.getCommandName('enable'))
+      .setDescription(i18n.getCommandDescription('enable')),
+    new SlashCommandBuilder()
       .setName(i18n.getCommandName('check-config'))
       .setDescription(i18n.getCommandDescription('check-config'))
   ].map((cmd) => cmd.toJSON());
@@ -258,7 +280,10 @@ export function createAdminCommands(): Set<string> {
     i18n.getCommandName('role'),
     i18n.getCommandName('clear-bunnies'),
     i18n.getCommandName('check-config'),
-    i18n.getCommandName('register')
+    i18n.getCommandName('register'),
+    i18n.getCommandName('disable'),
+    i18n.getCommandName('disable-until'),
+    i18n.getCommandName('enable')
   ]);
 }
 
@@ -301,6 +326,15 @@ export function createCommandHandlers(): Record<string, CommandHandler> {
     },
     [i18n.getCommandName('check-config')]: async (interaction) => {
       await handleCheckConfig(interaction);
+    },
+    [i18n.getCommandName('disable')]: async (interaction) => {
+      await handleDisable(interaction);
+    },
+    [i18n.getCommandName('disable-until')]: async (interaction) => {
+      await handleDisableUntil(interaction);
+    },
+    [i18n.getCommandName('enable')]: async (interaction) => {
+      await handleEnable(interaction);
     }
   };
 }

@@ -520,4 +520,88 @@ describe('handlers', () => {
     await handleCheckConfig(interaction);
     expect(interaction.reply).toHaveBeenCalledWith('config.invalid');
   });
+
+  test('handleDisable stores infinite date', async () => {
+    jest.resetModules();
+    const saveServerConfig = jest.fn();
+    const updateServerConfig = jest.fn();
+    jest.doMock('../serverConfig', () => ({
+      saveServerConfig,
+      loadServerConfig: jest.fn()
+    }));
+    jest.doMock('../config', () => ({
+      CHANNEL_ID: 'c',
+      MUSIC_CHANNEL_ID: 'm',
+      DATE_FORMAT: 'YYYY-MM-DD',
+      updateServerConfig
+    }));
+    const { handleDisable } = await import('../handlers');
+    const interaction = {
+      guildId: 'g',
+      options: { getString: jest.fn() },
+      reply: jest.fn()
+    } as unknown as ChatInputCommandInteraction;
+    await handleDisable(interaction);
+    expect(saveServerConfig).toHaveBeenCalledWith({
+      guildId: 'g',
+      channelId: 'c',
+      musicChannelId: 'm',
+      disabledUntil: '9999-12-31'
+    });
+    expect(interaction.reply).toHaveBeenCalledWith('bot.disabled');
+  });
+
+  test('handleDisableUntil validates date', async () => {
+    jest.resetModules();
+    const saveServerConfig = jest.fn();
+    jest.doMock('../serverConfig', () => ({
+      saveServerConfig,
+      loadServerConfig: jest.fn()
+    }));
+    jest.doMock('../config', () => ({
+      CHANNEL_ID: 'c',
+      MUSIC_CHANNEL_ID: 'm',
+      DATE_FORMAT: 'YYYY-MM-DD',
+      updateServerConfig: jest.fn()
+    }));
+    const { handleDisableUntil } = await import('../handlers');
+    const interaction = {
+      guildId: 'g',
+      options: { getString: jest.fn(() => 'bad') },
+      reply: jest.fn()
+    } as unknown as ChatInputCommandInteraction;
+    await handleDisableUntil(interaction);
+    expect(saveServerConfig).not.toHaveBeenCalled();
+    expect(interaction.reply).toHaveBeenCalledWith('selection.invalidDate');
+  });
+
+  test('handleDisableUntil stores date', async () => {
+    jest.resetModules();
+    const saveServerConfig = jest.fn();
+    const updateServerConfig = jest.fn();
+    jest.doMock('../serverConfig', () => ({
+      saveServerConfig,
+      loadServerConfig: jest.fn()
+    }));
+    jest.doMock('../config', () => ({
+      CHANNEL_ID: 'c',
+      MUSIC_CHANNEL_ID: 'm',
+      DATE_FORMAT: 'YYYY-MM-DD',
+      updateServerConfig
+    }));
+    const { handleDisableUntil } = await import('../handlers');
+    const interaction = {
+      guildId: 'g',
+      options: { getString: jest.fn(() => '2099-12-31') },
+      reply: jest.fn()
+    } as unknown as ChatInputCommandInteraction;
+    await handleDisableUntil(interaction);
+    expect(saveServerConfig).toHaveBeenCalledWith({
+      guildId: 'g',
+      channelId: 'c',
+      musicChannelId: 'm',
+      disabledUntil: '2099-12-31'
+    });
+    expect(interaction.reply).toHaveBeenCalledWith('bot.disabledUntil');
+  });
 });

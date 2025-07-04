@@ -14,6 +14,7 @@ export interface ServerConfig {
   dailyDays?: string;
   holidayCountries?: string[];
   dateFormat?: string;
+  disabledUntil?: string;
   admins?: string[];
 }
 

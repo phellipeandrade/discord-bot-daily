@@ -40,6 +40,7 @@ export let HOLIDAY_COUNTRIES = (
   .filter((c) => c);
 export let DATE_FORMAT =
   process.env.DATE_FORMAT || fileConfig?.dateFormat || 'YYYY-MM-DD';
+export let DISABLED_UNTIL = process.env.DISABLED_UNTIL || fileConfig?.disabledUntil || '';
 const envAdmins = process.env.ADMIN_IDS;
 export let ADMINS: string[] = envAdmins
   ? envAdmins
@@ -68,6 +69,7 @@ export function updateServerConfig(config: ServerConfig): void {
   if (config.dailyDays) DAILY_DAYS = config.dailyDays;
   if (config.holidayCountries) HOLIDAY_COUNTRIES = config.holidayCountries;
   if (config.dateFormat) DATE_FORMAT = config.dateFormat;
+  if (config.disabledUntil !== undefined) DISABLED_UNTIL = config.disabledUntil;
   if (config.admins && !envAdmins) ADMINS = config.admins;
 }
 
@@ -84,7 +86,8 @@ export function logConfig(): void {
 
       `ADMINS=${ADMINS.length}`,
       `USERS=${USERS_FILE}`,
-      `DATE_FMT=${DATE_FORMAT}`
+      `DATE_FMT=${DATE_FORMAT}`,
+      `DISABLED_UNTIL=${DISABLED_UNTIL || 'none'}`
     ].join(' | ')
   );
 }
