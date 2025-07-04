@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import { ChatInputCommandInteraction, Client } from 'discord.js';
 import {
   handleRegister,
   handleJoin,
@@ -6,22 +8,25 @@ import {
   handleSelect,
   handleReset,
   handleReadd,
+  handleSkipToday,
+  handleSkipUntil,
+  handleSetup,
   handleExport,
-  handleImport
+  handleImport,
+  handleCheckConfig
 } from '../handlers';
-import type { UserData } from '../users';
-import * as fs from 'fs';
-import { ChatInputCommandInteraction, Client } from 'discord.js';
+import { UserData } from '../users';
 
-// Mock do i18n
 jest.mock('../i18n', () => ({
   i18n: {
-    t: jest.fn((key: string, params: Record<string, string | number> = {}) => {
-      const text = key;
-      return text.replace(/\{\{(\w+)\}\}/g, (_, paramKey) => {
-        const value = params[paramKey];
-        return value !== undefined ? String(value) : `{{${paramKey}}}`;
-      });
+    t: jest.fn((key: string, params: Record<string, string> = {}) => {
+      const translations: Record<string, string> = {
+        'selection.readded': 'selection.readded',
+        'setup.invalidDateFormat': 'setup.invalidDateFormat',
+        'config.valid': 'config.valid',
+        'config.invalid': 'config.invalid'
+      };
+      return translations[key] || key;
     }),
     getCommandName: jest.fn((c: string) => c),
     getCommandDescription: jest.fn(() => ''),
@@ -69,6 +74,89 @@ function createInteraction(options: MockInteractionOptions = {}) {
   } as unknown as ChatInputCommandInteraction;
 }
 
+// Helper functions para reduzir aninhamento
+function createMockHttpsModule() {
+  return {
+    get: jest.fn((url: string, cb: (res: any) => void) => {
+      const EventEmitter = require('events').EventEmitter;
+      const res = new EventEmitter();
+      cb(res);
+      process.nextTick(() => {
+        res.emit('data', Buffer.from(url.includes('config') ? '{}' : 'testData'));
+        res.emit('end');
+      });
+      return { on: jest.fn() };
+    })
+  };
+}
+
+function setupBasicMocks() {
+  const saveServerConfig = jest.fn();
+  const updateServerConfig = jest.fn();
+  const scheduleDailySelection = jest.fn();
+  
+  return {
+    saveServerConfig,
+    updateServerConfig,
+    scheduleDailySelection
+  };
+}
+
+function createMockServerConfig() {
+  return {
+    guildId: 'guild',
+    channelId: 'old',
+    musicChannelId: 'music',
+    dailyVoiceChannelId: 'voice',
+    token: 'tok',
+    timezone: 'America/Sao_Paulo',
+    language: 'en',
+    dailyTime: '09:00',
+    dailyDays: '1-5',
+    holidayCountries: ['BR'],
+    dateFormat: 'YYYY-MM-DD',
+    admins: []
+  };
+}
+
+function createMockConfig(updateServerConfig: jest.Mock) {
+  return {
+    TOKEN: 'tok',
+    CHANNEL_ID: 'old',
+    MUSIC_CHANNEL_ID: 'music',
+    DAILY_VOICE_CHANNEL_ID: 'voice',
+    TIMEZONE: 'America/Sao_Paulo',
+    LANGUAGE: 'en',
+    DAILY_TIME: '09:00',
+    DAILY_DAYS: '1-5',
+    HOLIDAY_COUNTRIES: ['BR'],
+    DATE_FORMAT: 'YYYY-MM-DD',
+    updateServerConfig
+  };
+}
+
+function createMockInteractionForSetup() {
+  return {
+    guildId: 'guild',
+    options: {
+      getChannel: jest
+        .fn()
+        .mockReturnValueOnce({ id: 'newDaily' })
+        .mockReturnValueOnce(null)
+        .mockReturnValueOnce(null),
+      getString: jest.fn((name: string) => {
+        if (name === 'timezone') return 'UTC';
+        if (name === 'guild') return 'newGuild';
+        return null;
+      }),
+      getAttachment: jest.fn(() => null),
+      getBoolean: jest.fn()
+    },
+    reply: jest.fn(),
+    client: {} as Client
+  } as unknown as ChatInputCommandInteraction;
+}
+
 describe('handlers', () => {
   let data: UserData;
 
@@ -110,6 +198,45 @@ describe('handlers', () => {
     data.remaining.push({ name: 'Other', id: '20' });
     await handleRemove(createInteraction({ name: '<@20>' }), data);
     expect(data.all.length).toBe(0);
+  });
+
+  test('handleRemove removes orphaned skips', async () => {
+    data.all.push({ name: 'Tester', id: '10' });
+    data.remaining.push({ name: 'Tester', id: '10' });
+    data.skips = { '10': '2999-01-01', '20': '2999-01-01' };
+    
+    const interaction = createInteraction({ name: 'Tester' });
+    await handleRemove(interaction, data);
+    
+    expect(data.all.length).toBe(0);
+    expect(data.skips).not.toHaveProperty('10'); // Skip do usuário removido deve ter sido removido
+    expect(data.skips).toHaveProperty('20'); // Skip de outro usuário deve permanecer
+    expect(mockSaveUsers).toHaveBeenCalled();
+  });
+
+  test('handleRemove works when user has no skip', async () => {
+    data.all.push({ name: 'Tester', id: '10' });
+    data.remaining.push({ name: 'Tester', id: '10' });
+    data.skips = { '20': '2999-01-01' }; // Apenas skip de outro usuário
+    
+    const interaction = createInteraction({ name: 'Tester' });
+    await handleRemove(interaction, data);
+    
+    expect(data.all.length).toBe(0);
+    expect(data.skips).toHaveProperty('20'); // Skip de outro usuário deve permanecer
+    expect(mockSaveUsers).toHaveBeenCalled();
+  });
+
+  test('handleRemove works when skips object is undefined', async () => {
+    data.all.push({ name: 'Tester', id: '10' });
+    data.remaining.push({ name: 'Tester', id: '10' });
+    // data.skips não definido
+    
+    const interaction = createInteraction({ name: 'Tester' });
+    await handleRemove(interaction, data);
+    
+    expect(data.all.length).toBe(0);
+    expect(mockSaveUsers).toHaveBeenCalled();
   });
 
   test('handleList replies with formatted lists', async () => {
@@ -218,77 +345,20 @@ describe('handlers', () => {
 
   test('handleSetup writes configuration', async () => {
     jest.resetModules();
-    const EventEmitter = (await import('events')).EventEmitter;
-    const saveServerConfig = jest.fn();
-    const updateServerConfig = jest.fn();
-    const scheduleDailySelection = jest.fn();
-    jest.doMock('https', () => ({
-      get: jest.fn(
-        (_url: string, cb: (res: import('http').IncomingMessage) => void) => {
-          const res =
-            new EventEmitter() as unknown as import('http').IncomingMessage;
-          cb(res);
-          process.nextTick(() => {
-            res.emit('data', Buffer.from('testData'));
-            res.emit('end');
-          });
-          return { on: jest.fn() };
-        }
-      )
-    }));
+    const { saveServerConfig, updateServerConfig, scheduleDailySelection } = setupBasicMocks();
+    
+    jest.doMock('https', () => createMockHttpsModule());
     jest.doMock('../serverConfig', () => ({
       saveServerConfig,
-      loadServerConfig: jest.fn().mockReturnValue({
-        guildId: 'guild',
-        channelId: 'old',
-        musicChannelId: 'music',
-        dailyVoiceChannelId: 'voice',
-        token: 'tok',
-        timezone: 'America/Sao_Paulo',
-        language: 'en',
-        dailyTime: '09:00',
-        dailyDays: '1-5',
-        holidayCountries: ['BR'],
-        dateFormat: 'YYYY-MM-DD',
-        admins: []
-      })
+      loadServerConfig: jest.fn().mockReturnValue(createMockServerConfig())
     }));
-  jest.doMock('../config', () => ({
-      TOKEN: 'tok',
-      CHANNEL_ID: 'old',
-      MUSIC_CHANNEL_ID: 'music',
-      DAILY_VOICE_CHANNEL_ID: 'voice',
-          TIMEZONE: 'America/Sao_Paulo',
-      LANGUAGE: 'en',
-      DAILY_TIME: '09:00',
-      DAILY_DAYS: '1-5',
-      HOLIDAY_COUNTRIES: ['BR'],
-      DATE_FORMAT: 'YYYY-MM-DD',
-      updateServerConfig,
-
-    }));
+    jest.doMock('../config', () => createMockConfig(updateServerConfig));
     jest.doMock('../scheduler', () => ({ scheduleDailySelection }));
+    
     const { handleSetup } = await import('../handlers');
-    const interaction = {
-      guildId: 'guild',
-      options: {
-        getChannel: jest
-          .fn()
-          .mockReturnValueOnce({ id: 'newDaily' })
-          .mockReturnValueOnce(null)
-          .mockReturnValueOnce(null),
-        getString: jest.fn((name: string) => {
-          if (name === 'timezone') return 'UTC';
-          if (name === 'guild') return 'newGuild';
-          return null;
-        }),
-        getAttachment: jest.fn(() => null),
-        getBoolean: jest.fn()
-      },
-      reply: jest.fn(),
-      client: {} as Client
-    } as unknown as ChatInputCommandInteraction;
+    const interaction = createMockInteractionForSetup();
     const res = await handleSetup(interaction);
+    
     expect(saveServerConfig).toHaveBeenCalledWith({
       guildId: 'newGuild',
       channelId: 'newDaily',
@@ -309,41 +379,18 @@ describe('handlers', () => {
     expect(res).toBe(true);
   });
 
-
   test('handleSetup validates dateFormat', async () => {
     jest.resetModules();
     const saveServerConfig = jest.fn();
+    const updateServerConfig = jest.fn();
+    
     jest.doMock('../serverConfig', () => ({
       saveServerConfig,
-      loadServerConfig: jest.fn().mockReturnValue({
-        guildId: 'g',
-        channelId: 'c',
-        musicChannelId: 'm',
-        dailyVoiceChannelId: 'v',
-        token: 'tok',
-        timezone: 'UTC',
-        language: 'en',
-        dailyTime: '09:00',
-        dailyDays: '1-5',
-        holidayCountries: ['BR'],
-        dateFormat: 'YYYY-MM-DD'
-      })
+      loadServerConfig: jest.fn().mockReturnValue(createMockServerConfig())
     }));
-    const updateServerConfig = jest.fn();
-    jest.doMock('../config', () => ({
-      TOKEN: 'tok',
-      CHANNEL_ID: 'c',
-      MUSIC_CHANNEL_ID: 'm',
-      DAILY_VOICE_CHANNEL_ID: 'v',
-      TIMEZONE: 'UTC',
-      LANGUAGE: 'en',
-      DAILY_TIME: '09:00',
-      DAILY_DAYS: '1-5',
-      HOLIDAY_COUNTRIES: ['BR'],
-      DATE_FORMAT: 'YYYY-MM-DD',
-      updateServerConfig
-    }));
+    jest.doMock('../config', () => createMockConfig(updateServerConfig));
     jest.doMock('../scheduler', () => ({ scheduleDailySelection: jest.fn() }));
+    
     const { handleSetup } = await import('../handlers');
     const interaction = {
       guildId: 'g',
@@ -356,6 +403,7 @@ describe('handlers', () => {
       reply: jest.fn(),
       client: {} as Client
     } as unknown as ChatInputCommandInteraction;
+    
     await handleSetup(interaction);
     expect(saveServerConfig).not.toHaveBeenCalled();
     expect(interaction.reply).toHaveBeenCalledWith('setup.invalidDateFormat');
@@ -395,24 +443,26 @@ describe('handlers', () => {
 
   test('handleImport saves data and updates config', async () => {
     jest.resetModules();
-    const EventEmitter = (await import('events')).EventEmitter;
     const writeFile = jest.fn();
     const saveServerConfig = jest.fn();
     const updateServerConfig = jest.fn();
     const scheduleDailySelection = jest.fn();
+    
     jest.doMock('https', () => ({
-      get: jest.fn(
-        (_url: string, cb: (res: import('http').IncomingMessage) => void) => {
-          const res =
-            new EventEmitter() as unknown as import('http').IncomingMessage;
-          cb(res);
-          process.nextTick(() => {
-            res.emit('data', Buffer.from('{}'));
-            res.emit('end');
-          });
-          return { on: jest.fn() };
-        }
-      )
+      get: jest.fn((url: string, cb: (res: any) => void) => {
+        const EventEmitter = require('events').EventEmitter;
+        const res = new EventEmitter();
+        cb(res);
+        process.nextTick(() => {
+          // Retorna JSON válido para ambos os arquivos
+          const data = url.includes('serverConfig') 
+            ? JSON.stringify({ guildId: 'test', channelId: 'test' })
+            : JSON.stringify({ all: [], remaining: [] });
+          res.emit('data', Buffer.from(data));
+          res.emit('end');
+        });
+        return { on: jest.fn() };
+      })
     }));
     jest.doMock('fs', () => ({
       promises: { writeFile },
@@ -429,17 +479,19 @@ describe('handlers', () => {
       updateServerConfig
     }));
     jest.doMock('../scheduler', () => ({ scheduleDailySelection }));
+    
     const { handleImport } = await import('../handlers');
     const interaction = {
       options: {
         getAttachment: jest
           .fn()
-          .mockReturnValueOnce({ name: 'users.json', url: 'u' })
-          .mockReturnValueOnce({ name: 'serverConfig.json', url: 'c' })
+          .mockReturnValueOnce({ name: 'users.json', url: 'users' })
+          .mockReturnValueOnce({ name: 'serverConfig.json', url: 'serverConfig' })
       },
       reply: jest.fn(),
       client: {} as Client
     } as unknown as ChatInputCommandInteraction;
+    
     await handleImport(interaction);
     expect(writeFile).toHaveBeenCalled();
     expect(saveServerConfig).toHaveBeenCalled();
@@ -450,21 +502,8 @@ describe('handlers', () => {
 
   test('handleImport validates file type', async () => {
     jest.resetModules();
-    const EventEmitter = (await import('events')).EventEmitter;
-    jest.doMock('https', () => ({
-      get: jest.fn(
-        (_url: string, cb: (res: import('http').IncomingMessage) => void) => {
-          const res =
-            new EventEmitter() as unknown as import('http').IncomingMessage;
-          cb(res);
-          process.nextTick(() => {
-            res.emit('data', Buffer.from('{}'));
-            res.emit('end');
-          });
-          return { on: jest.fn() };
-        }
-      )
-    }));
+    jest.doMock('https', () => createMockHttpsModule());
+    
     const { handleImport } = await import('../handlers');
     const interaction = {
       options: {
@@ -476,6 +515,7 @@ describe('handlers', () => {
       reply: jest.fn(),
       client: {} as Client
     } as unknown as ChatInputCommandInteraction;
+    
     await handleImport(interaction);
     expect(interaction.reply).toHaveBeenCalled();
   });
@@ -485,7 +525,7 @@ describe('handlers', () => {
     jest.dontMock('../config');
     const interaction = createInteraction();
     const config = await import('../config');
-  config.updateServerConfig({
+    config.updateServerConfig({
       guildId: 'g',
       channelId: 'c',
       musicChannelId: 'm',
@@ -508,7 +548,7 @@ describe('handlers', () => {
     jest.dontMock('../config');
     const interaction = createInteraction();
     const config = await import('../config');
-  config.updateServerConfig({
+    config.updateServerConfig({
       guildId: '',
       channelId: '',
       musicChannelId: '',

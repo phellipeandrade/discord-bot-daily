@@ -224,5 +224,69 @@ describe('Funções Utilitárias', () => {
 
       expect(resultado.id).not.toBe('1');
     });
+
+    it('deve remover automaticamente skips expirados', async () => {
+      const dados = JSON.parse(JSON.stringify(mockData));
+      const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      dados.skips = { 
+        '1': ontem, // Skip expirado
+        '2': '2999-01-01' // Skip válido
+      };
+
+      await selectUser(dados);
+
+      // Skip expirado deve ter sido removido
+      expect(dados.skips).not.toHaveProperty('1');
+      // Skip válido deve permanecer
+      expect(dados.skips).toHaveProperty('2');
+      expect(dados.skips['2']).toBe('2999-01-01');
+    });
+
+    it('deve salvar dados quando skips expirados são removidos', async () => {
+      const dados = JSON.parse(JSON.stringify(mockData));
+      const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      dados.skips = { '1': ontem };
+
+      await selectUser(dados);
+
+      // Deve ter sido chamado saveUsers duas vezes: uma para limpar skips expirados, outra para salvar seleção
+      expect(fs.promises.writeFile).toHaveBeenCalledTimes(2);
+    });
+
+    it('deve salvar dados apenas uma vez quando não há skips expirados', async () => {
+      const dados = JSON.parse(JSON.stringify(mockData));
+      dados.skips = { '1': '2999-01-01' };
+
+      await selectUser(dados);
+
+      // Deve ter sido chamado saveUsers apenas uma vez para salvar seleção
+      expect(fs.promises.writeFile).toHaveBeenCalledTimes(1);
+    });
+
+    it('deve permitir seleção de usuário com skip expirado', async () => {
+      const dados = JSON.parse(JSON.stringify(mockData));
+      const ontem = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      dados.skips = { '1': ontem };
+      dados.remaining = [{ name: 'User1', id: '1' }]; // Apenas o usuário com skip expirado
+
+      const resultado = await selectUser(dados);
+
+      // O usuário deve poder ser selecionado pois seu skip expirou
+      expect(resultado.id).toBe('1');
+      expect(dados.skips).not.toHaveProperty('1');
+    });
+
+    it('deve manter funcionamento normal quando não há skips', async () => {
+      const dados = JSON.parse(JSON.stringify(mockData));
+      dados.skips = {};
+
+      const resultado = await selectUser(dados);
+
+      expect(resultado).toBeDefined();
+      expect(fs.promises.writeFile).toHaveBeenCalledTimes(1);
+    });
   });
 });

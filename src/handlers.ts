@@ -112,6 +112,12 @@ export async function handleRemove(
   const userName = user.name;
   data.all = data.all.filter((u) => u.id !== user.id);
   data.remaining = data.remaining.filter((u) => u.id !== user.id);
+  
+  // Remove o skip do usuário removido se existir
+  if (data.skips && data.skips[user.id]) {
+    delete data.skips[user.id];
+  }
+  
   await saveUsers(data);
   await interaction.reply(i18n.t('user.removed', { name: userName }));
 }
