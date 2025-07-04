@@ -204,11 +204,15 @@
       },
       "disable": {
         "name": "desativar",
-        "description": "Desativa os anúncios diários",
+        "description": "Desativa os anúncios diários"
+      },
+      "disable-until": {
+        "name": "desativar-ate",
+        "description": "Desativa os anúncios diários até a data informada",
         "options": {
           "date": {
             "name": "data",
-            "description": "Reativar em ({{format}})"
+            "description": "Data para reativar ({{format}})"
           }
         }
       },

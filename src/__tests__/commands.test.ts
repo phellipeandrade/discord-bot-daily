@@ -16,5 +16,6 @@ describe('createAdminCommands', () => {
     expect(cmds.has('register')).toBe(true);
     expect(cmds.has('clear-bunnies')).toBe(true);
     expect(cmds.has('check-config')).toBe(true);
+    expect(cmds.has('disable-until')).toBe(true);
   });
 });

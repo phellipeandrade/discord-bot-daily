@@ -140,7 +140,8 @@ by jsdom is also packaged to avoid runtime errors.
 - `readd <user>` – re-add a previously selected user back into the pool (mention, id or name)
 - `skip-today <user>` – skip today's draw for the specified user (mention, id or name)
 - `skip-until <user> <date>` – skip selection of a user until the given date (format defined by `DATE_FORMAT`, default `YYYY-MM-DD`; user can be mention, id or name)
-- `disable [date]` – disable daily announcements (optionally until the given date)
+- `disable` – disable daily announcements indefinitely
+- `disable-until <date>` – disable daily announcements until the given date (format defined by `DATE_FORMAT`, default `YYYY-MM-DD`)
 - `enable` – re-enable daily announcements
 - `setup` – configure channels, guild ID and other settings. Provide only the parameters you want to update.
 - `export` – export data files

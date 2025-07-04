@@ -199,11 +199,15 @@
       },
       "disable": {
         "name": "disable",
-        "description": "Disable daily announcements",
+        "description": "Disable daily announcements"
+      },
+      "disable-until": {
+        "name": "disable-until",
+        "description": "Disable daily announcements until the given date",
         "options": {
           "date": {
             "name": "date",
-            "description": "Enable again on date ({{format}})"
+            "description": "Date to re-enable ({{format}})"
           }
         }
       },

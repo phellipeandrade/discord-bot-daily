@@ -28,6 +28,7 @@ import {
   handleCheckConfig,
   handleRole,
   handleDisable,
+  handleDisableUntil,
   handleEnable
 } from './handlers';
 import {
@@ -243,14 +244,19 @@ export function createCommands(): RESTPostAPIApplicationCommandsJSONBody[] {
       ),
     new SlashCommandBuilder()
       .setName(i18n.getCommandName('disable'))
-      .setDescription(i18n.getCommandDescription('disable'))
+      .setDescription(i18n.getCommandDescription('disable')),
+    new SlashCommandBuilder()
+      .setName(i18n.getCommandName('disable-until'))
+      .setDescription(i18n.getCommandDescription('disable-until'))
       .addStringOption((option) =>
         option
-          .setName(i18n.getOptionName('disable', 'date'))
+          .setName(i18n.getOptionName('disable-until', 'date'))
           .setDescription(
-            i18n.t('commands.disable.options.date.description', { format: DATE_FORMAT })
+            i18n.t('commands.disable-until.options.date.description', {
+              format: DATE_FORMAT
+            })
           )
-          .setRequired(false)
+          .setRequired(true)
       ),
     new SlashCommandBuilder()
       .setName(i18n.getCommandName('enable'))
@@ -276,6 +282,7 @@ export function createAdminCommands(): Set<string> {
     i18n.getCommandName('check-config'),
     i18n.getCommandName('register'),
     i18n.getCommandName('disable'),
+    i18n.getCommandName('disable-until'),
     i18n.getCommandName('enable')
   ]);
 }
@@ -322,6 +329,9 @@ export function createCommandHandlers(): Record<string, CommandHandler> {
     },
     [i18n.getCommandName('disable')]: async (interaction) => {
       await handleDisable(interaction);
+    },
+    [i18n.getCommandName('disable-until')]: async (interaction) => {
+      await handleDisableUntil(interaction);
     },
     [i18n.getCommandName('enable')]: async (interaction) => {
       await handleEnable(interaction);

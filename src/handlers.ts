@@ -471,18 +471,7 @@ export async function handleRole(
 export async function handleDisable(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
-  const dateStr = interaction.options.getString(
-    i18n.getOptionName('disable', 'date'),
-    false
-  );
-  const parsed = dateStr ? parseDateString(dateStr) : null;
-  if (dateStr && !parsed) {
-    await interaction.reply(
-      i18n.t('selection.invalidDate', { format: DATE_FORMAT })
-    );
-    return;
-  }
-  const until = parsed ?? '9999-12-31';
+  const until = '9999-12-31';
   const existing = loadServerConfig() || {
     guildId: interaction.guildId!,
     channelId: CHANNEL_ID,
@@ -492,11 +481,33 @@ export async function handleDisable(
   existing.disabledUntil = until;
   await saveServerConfig(existing);
   updateServerConfig(existing);
-  if (dateStr) {
-    await interaction.reply(i18n.t('bot.disabledUntil', { date: until }));
-  } else {
-    await interaction.reply(i18n.t('bot.disabled'));
+  await interaction.reply(i18n.t('bot.disabled'));
+}
+
+export async function handleDisableUntil(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  const dateStr = interaction.options.getString(
+    i18n.getOptionName('disable-until', 'date'),
+    true
+  );
+  const parsed = parseDateString(dateStr);
+  if (!parsed) {
+    await interaction.reply(
+      i18n.t('selection.invalidDate', { format: DATE_FORMAT })
+    );
+    return;
   }
+  const existing = loadServerConfig() || {
+    guildId: interaction.guildId!,
+    channelId: CHANNEL_ID,
+    musicChannelId: MUSIC_CHANNEL_ID,
+    disabledUntil: parsed
+  } as ServerConfig;
+  existing.disabledUntil = parsed;
+  await saveServerConfig(existing);
+  updateServerConfig(existing);
+  await interaction.reply(i18n.t('bot.disabledUntil', { date: parsed }));
 }
 
 export async function handleEnable(

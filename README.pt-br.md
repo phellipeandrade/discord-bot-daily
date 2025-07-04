@@ -131,7 +131,8 @@ O arquivo `xhr-sync-worker.js` necessário pelo jsdom também é incluído para 
 - `readicionar <usuario>` – readiciona um usuário previamente selecionado (menção, id ou nome)
 - `pular-hoje <usuario>` – pula o sorteio de hoje para o usuário informado (menção, id ou nome)
 - `pular-ate <usuario> <data>` – pula a seleção de um usuário até a data especificada (formato definido por `DATE_FORMAT`, padrão `YYYY-MM-DD`; usuário pode ser menção, id ou nome)
-- `desativar [data]` – desativa os anúncios diários (opcionalmente até a data informada)
+- `desativar` – desativa os anúncios diários por tempo indeterminado
+- `desativar-ate <data>` – desativa os anúncios diários até a data informada (formato definido por `DATE_FORMAT`, padrão `YYYY-MM-DD`)
 - `ativar` – reativa os anúncios diários
 - `configurar` – configura canais, ID da guild e outras definições. Informe apenas os parâmetros que deseja atualizar.
 - `exportar` – exporta arquivos de dados
