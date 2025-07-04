@@ -7,7 +7,7 @@ Discord bot that automatically selects a random user each weekday and manages mu
 
 - Slash commands to register users, list participants and manage selections
 - Daily selection at a configurable time and weekdays
-  (timezone and holiday countries can be set via environment variables)
+  (timezone and holiday countries are configured via `serverConfig.json`)
 - Slash command names are also available in Portuguese (pt-br)
 - Music utilities to fetch songs and play them directly in a voice channel (with a stop command)
 - Optional multilingual responses (English default, Portuguese-BR available)
@@ -45,31 +45,16 @@ npm install
 
 ## Configuration
 
-Create an `.env` file with the following variables:
+Copy `src/serverConfig.sample.json` to `src/serverConfig.json` and
+fill in the desired values. All settings such as token, guild ID,
+channel IDs and scheduling options are read from this file. Only
+`NODE_ENV` and `USERS_FILE` are read from environment variables.
 
-```
-DISCORD_TOKEN=your-bot-token
-# If omitted, run `/setup` in your server to set the token, guild and channel ids.
-GUILD_ID=your-guild-id
-CHANNEL_ID=id-of-channel-for-daily-messages
-MUSIC_CHANNEL_ID=id-of-channel-with-song-requests
-PLAYER_FORWARD_COMMAND=m!play
-# Optional
-DAILY_VOICE_CHANNEL_ID=id-of-voice-channel-to-play-songs
-TIMEZONE=America/Sao_Paulo
-BOT_LANGUAGE=en
-DAILY_TIME=09:00
-DAILY_DAYS=1-5
-HOLIDAY_COUNTRIES=BR
-USERS_FILE=./src/users.json
-DATE_FORMAT=YYYY-MM-DD
-DISABLED_UNTIL=
-ADMIN_IDS=1234567890,0987654321
+`USERS_FILE` can point to a custom path for user data; otherwise the
+default `src/users.json` will be used.
 
-```
-
-`ADMIN_IDS` should list the Discord user IDs that start with admin rights. You can also
-edit `serverConfig.json` (either inside `src/` or at the repository root) to manage the list.
+The `admins` field in `serverConfig.json` defines which Discord user IDs
+start with admin rights.
 
 
 Set `BOT_LANGUAGE` to `en` or `pt-br` to change the bot responses.
@@ -154,7 +139,7 @@ Two roles are available: **admin** and **user**. All members listed in
 `users.json` start as **user**. Admin IDs are stored in `serverConfig.json` and a
 Discord user does not need to be registered to become an admin.
 
-The initial admin list can be provided using the `ADMIN_IDS` environment variable or the `admins` field in the config file.
+The initial admin list can be defined in the `admins` field of `serverConfig.json`.
 
 Only admins may run privileged commands such as `/register`, `/clear-bunnies`,
 `/check-config`, `/setup`, `/import`, `/export`, `/skip-*` and `/role` itself.

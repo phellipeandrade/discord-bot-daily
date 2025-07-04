@@ -66,10 +66,20 @@ describe('index runtime', () => {
     jest.resetModules();
     jest.unmock('fs');
     process.env.NODE_ENV = 'development';
-    process.env.DISCORD_TOKEN = 't';
-    process.env.GUILD_ID = 'g';
-    process.env.CHANNEL_ID = 'c';
-    process.env.MUSIC_CHANNEL_ID = 'm';
+    jest.doMock('fs', () => ({
+      existsSync: jest.fn().mockReturnValue(true),
+      readFileSync: jest
+        .fn()
+        .mockReturnValue(
+          JSON.stringify({
+            token: 't',
+            guildId: 'g',
+            channelId: 'c',
+            musicChannelId: 'm'
+          })
+        ),
+      promises: { writeFile: jest.fn() }
+    }));
   });
 
   test('initializes client and schedules daily selection', async () => {

@@ -9,45 +9,27 @@ dotenv.config();
 
 const fileConfig = loadServerConfig();
 
-export let TOKEN = process.env.DISCORD_TOKEN || fileConfig?.token || '';
+export let TOKEN = fileConfig?.token || '';
 
-export let CHANNEL_ID = process.env.CHANNEL_ID || fileConfig?.channelId || '';
-export let GUILD_ID = process.env.GUILD_ID || fileConfig?.guildId || '';
-export let MUSIC_CHANNEL_ID =
-  process.env.MUSIC_CHANNEL_ID || fileConfig?.musicChannelId || '';
-export let DAILY_VOICE_CHANNEL_ID =
-  process.env.DAILY_VOICE_CHANNEL_ID || fileConfig?.dailyVoiceChannelId || '';
-export let PLAYER_FORWARD_COMMAND =
-  process.env.PLAYER_FORWARD_COMMAND || fileConfig?.playerForwardCommand || '';
+export let CHANNEL_ID = fileConfig?.channelId || '';
+export let GUILD_ID = fileConfig?.guildId || '';
+export let MUSIC_CHANNEL_ID = fileConfig?.musicChannelId || '';
+export let DAILY_VOICE_CHANNEL_ID = fileConfig?.dailyVoiceChannelId || '';
+export let PLAYER_FORWARD_COMMAND = fileConfig?.playerForwardCommand || '';
 
 export const USERS_FILE = process.env.USERS_FILE
   ? path.resolve(process.env.USERS_FILE)
   : path.join(__dirname, 'users.json');
-export let TIMEZONE =
-  process.env.TIMEZONE || fileConfig?.timezone || 'America/Sao_Paulo';
-export let LANGUAGE =
-  process.env.BOT_LANGUAGE || fileConfig?.language || 'pt-br';
-export let DAILY_TIME =
-  process.env.DAILY_TIME || fileConfig?.dailyTime || '09:00';
-export let DAILY_DAYS =
-  process.env.DAILY_DAYS || fileConfig?.dailyDays || '1-5';
-export let HOLIDAY_COUNTRIES = (
-  process.env.HOLIDAY_COUNTRIES ||
-  (fileConfig?.holidayCountries ? fileConfig.holidayCountries.join(',') : 'BR')
-)
-  .split(',')
-  .map((c) => c.trim().toUpperCase())
-  .filter((c) => c);
-export let DATE_FORMAT =
-  process.env.DATE_FORMAT || fileConfig?.dateFormat || 'YYYY-MM-DD';
-export let DISABLED_UNTIL = process.env.DISABLED_UNTIL || fileConfig?.disabledUntil || '';
-const envAdmins = process.env.ADMIN_IDS;
-export let ADMINS: string[] = envAdmins
-  ? envAdmins
-      .split(',')
-      .map((a) => a.trim())
-      .filter((a) => a)
-  : fileConfig?.admins || [];
+export let TIMEZONE = fileConfig?.timezone || 'America/Sao_Paulo';
+export let LANGUAGE = fileConfig?.language || 'pt-br';
+export let DAILY_TIME = fileConfig?.dailyTime || '09:00';
+export let DAILY_DAYS = fileConfig?.dailyDays || '1-5';
+export let HOLIDAY_COUNTRIES = (fileConfig?.holidayCountries || ['BR']).map((c) =>
+  c.trim().toUpperCase()
+);
+export let DATE_FORMAT = fileConfig?.dateFormat || 'YYYY-MM-DD';
+export let DISABLED_UNTIL = fileConfig?.disabledUntil || '';
+export let ADMINS: string[] = fileConfig?.admins || [];
 
 const rbac = RBAC({ enableLogger: true })({
   user: { can: ['basic'] },
@@ -70,7 +52,7 @@ export function updateServerConfig(config: ServerConfig): void {
   if (config.holidayCountries) HOLIDAY_COUNTRIES = config.holidayCountries;
   if (config.dateFormat) DATE_FORMAT = config.dateFormat;
   if (config.disabledUntil !== undefined) DISABLED_UNTIL = config.disabledUntil;
-  if (config.admins && !envAdmins) ADMINS = config.admins;
+  if (config.admins) ADMINS = config.admins;
 }
 
 export function logConfig(): void {

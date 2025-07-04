@@ -3,7 +3,6 @@ import fs from 'fs';
 
 // Configurar variáveis de ambiente para teste
 process.env.USERS_FILE = path.join(__dirname, 'users.test.json');
-process.env.DATE_FORMAT = 'YYYY-MM-DD';
 
 // Garantir que o arquivo de teste existe
 if (!fs.existsSync(process.env.USERS_FILE)) {

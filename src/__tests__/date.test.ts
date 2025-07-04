@@ -2,7 +2,6 @@ import { jest } from '@jest/globals';
 
 beforeEach(() => {
   jest.resetModules();
-  process.env.DATE_FORMAT = 'YYYY-MM-DD';
 });
 
 describe('date utilities', () => {

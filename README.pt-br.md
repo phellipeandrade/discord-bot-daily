@@ -6,7 +6,7 @@ Bot do Discord que seleciona automaticamente um usuário aleatório a cada dia �
 ## Recursos
 
 - Comandos de barra para registrar usuários, listar participantes e gerenciar seleções
-- Seleção diária em horário e dias configuráveis (fuso horário e países de feriado podem ser definidos por variáveis de ambiente)
+- Seleção diária em horário e dias configuráveis (fuso horário e países de feriado são definidos em `serverConfig.json`)
 - Nomes dos comandos também estão disponíveis em português (pt-br)
 - Utilidades de música para tocar músicas diretamente em um canal de voz (inclui comando para parar)
 - Respostas multilíngues opcionais (inglês por padrão e português-BR disponível)
@@ -44,29 +44,16 @@ npm install
 
 ## Configuração
 
-Crie um arquivo `.env` com as seguintes variáveis:
+Copie `src/serverConfig.sample.json` para `src/serverConfig.json` e
+preencha os valores desejados. Todas as configurações como token,
+IDs de guild e canais são lidas desse arquivo. Somente `NODE_ENV` e
+`USERS_FILE` são lidos de variáveis de ambiente.
 
-```
-DISCORD_TOKEN=seu-token
-# Caso omitido, execute `/setup` no seu servidor para definir token, guild e canal.
-GUILD_ID=id-da-sua-guild
-CHANNEL_ID=id-do-canal-de-mensagens-diarias
-MUSIC_CHANNEL_ID=id-do-canal-de-pedidos-de-musica
-PLAYER_FORWARD_COMMAND=m!play
-# Opcional
-DAILY_VOICE_CHANNEL_ID=id-do-canal-de-voz-para-tocar-musicas
-TIMEZONE=America/Sao_Paulo
-BOT_LANGUAGE=en
-DAILY_TIME=09:00
-DAILY_DAYS=1-5
-HOLIDAY_COUNTRIES=BR
-USERS_FILE=./src/users.json
-ADMIN_IDS=1234567890,0987654321
-DATE_FORMAT=YYYY-MM-DD
-DISABLED_UNTIL=
+`USERS_FILE` pode apontar para um caminho personalizado de dados dos
+usuários; caso contrário o padrão `src/users.json` será utilizado.
 
-```
-`ADMIN_IDS` deve listar os IDs dos usuários do Discord que iniciam com direitos de administrador. Você também pode editar `serverConfig.json` para gerenciar a lista.
+O campo `admins` em `serverConfig.json` define quais IDs de usuário do
+Discord começam com direitos de administrador.
 
 
 Defina `BOT_LANGUAGE` como `en` ou `pt-br` para alterar as respostas do bot. `DAILY_TIME` usa o formato 24h `HH:MM` e `DAILY_DAYS` segue a sintaxe de dia da semana do cron (ex.: `1-5` para segunda a sexta). `HOLIDAY_COUNTRIES` é uma lista separada por vírgulas de códigos de país (`BR` e `US` são suportados). `DATE_FORMAT` controla o padrão de data usado pelo comando `/skip-until` e também pode ser alterado via `/setup`.
@@ -144,7 +131,7 @@ O arquivo `xhr-sync-worker.js` necessário pelo jsdom também é incluído para 
 
 Dois papéis estão disponíveis: **admin** e **user**. Todos os membros listados em `users.json` começam como **user**. Os IDs de administradores são armazenados em `serverConfig.json` e um usuário do Discord não precisa estar registrado para se tornar administrador.
 
-A lista inicial de administradores pode ser fornecida usando a variável de ambiente `ADMIN_IDS` ou o campo `admins` no arquivo de configuração.
+A lista inicial de administradores deve ser definida no campo `admins` do arquivo `serverConfig.json`.
 
 Somente administradores podem executar comandos privilegiados como `/registrar`, `/limpar-coelhos`, `/verificar-config`, `/configurar`, `/importar`, `/exportar`, `/pular-*` e o próprio `/role`. Usuários comuns ainda podem usar comandos básicos como `/entrar`, `/listar`, `/selecionar`, `/proxima-musica` e `/parar-musica`.
 
