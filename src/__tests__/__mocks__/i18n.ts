@@ -1,4 +1,4 @@
-import { i18n as realI18n, Language } from '../../i18n';
+import { i18n as realI18n, Language } from '@/i18n';
 
 export const i18n = {
   ...realI18n,

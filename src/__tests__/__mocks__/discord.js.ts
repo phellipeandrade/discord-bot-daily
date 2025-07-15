@@ -1,4 +1,4 @@
-import { MockCollection } from './MockCollection';
+import { MockCollection } from '@/__tests__/__mocks__/MockCollection';
 
 export class MockActionRowBuilder {
   private readonly components: unknown[] = [];

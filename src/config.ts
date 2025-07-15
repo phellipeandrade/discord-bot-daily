@@ -1,7 +1,7 @@
 import * as path from 'path';
 
 import * as dotenv from 'dotenv';
-import { loadServerConfig, ServerConfig } from './serverConfig';
+import { loadServerConfig, ServerConfig } from '@/serverConfig';
 import RBAC from '@rbac/rbac';
 
 

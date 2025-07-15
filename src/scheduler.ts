@@ -1,7 +1,7 @@
 import { Client, TextChannel } from 'discord.js';
 import * as cron from 'node-cron';
-import { isHoliday } from './holidays';
-import { i18n } from './i18n';
+import { isHoliday } from '@/holidays';
+import { i18n } from '@/i18n';
 import {
   CHANNEL_ID,
   TIMEZONE,
@@ -9,10 +9,10 @@ import {
   DAILY_DAYS,
   HOLIDAY_COUNTRIES,
   DISABLED_UNTIL
-} from './config';
-import { loadUsers, selectUser } from './users';
-import { findNextSong } from './music';
-import { todayISO } from './date';
+} from '@/config';
+import { loadUsers, selectUser } from '@/users';
+import { findNextSong } from '@/music';
+import { todayISO } from '@/date';
 
 let dailyJob: cron.ScheduledTask | null = null;
 

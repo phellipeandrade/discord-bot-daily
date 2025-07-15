@@ -6,12 +6,12 @@ import {
   Routes,
   type RESTPostAPIApplicationCommandsJSONBody
 } from 'discord.js';
-import { i18n } from './i18n';
+import { i18n } from '@/i18n';
 import {
   TOKEN,
   GUILD_ID,
   DATE_FORMAT
-} from './config';
+} from '@/config';
 import {
   handleRegister,
   handleJoin,
@@ -30,13 +30,13 @@ import {
   handleDisable,
   handleDisableUntil,
   handleEnable
-} from './handlers';
+} from '@/handlers';
 import {
   handleNextSong,
   handleClearReactions,
   handleStopMusic
-} from './music';
-import { UserData } from './users';
+} from '@/music';
+import { UserData } from '@/users';
 
 export function createCommands(): RESTPostAPIApplicationCommandsJSONBody[] {
   return [

@@ -12,12 +12,12 @@ import {
 import { Player } from 'discord-player';
 import { YoutubeiExtractor } from 'discord-player-youtubei';
 import ffmpegPath from 'ffmpeg-static';
-import { i18n } from './i18n';
+import { i18n } from '@/i18n';
 import {
   MUSIC_CHANNEL_ID,
   DAILY_VOICE_CHANNEL_ID,
   PLAYER_FORWARD_COMMAND
-} from './config';
+} from '@/config';
 
 if (ffmpegPath) {
   process.env.FFMPEG_PATH = ffmpegPath;

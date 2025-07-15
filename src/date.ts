@@ -1,4 +1,4 @@
-import { DATE_FORMAT } from './config';
+import { DATE_FORMAT } from '@/config';
 
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

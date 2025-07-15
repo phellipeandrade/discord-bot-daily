@@ -4,7 +4,7 @@ import {
   Partials,
   TextChannel
 } from 'discord.js';
-import { i18n } from './i18n';
+import { i18n } from '@/i18n';
 import {
   TOKEN,
   LANGUAGE,
@@ -13,7 +13,7 @@ import {
   checkRequiredConfig,
   canUseAdminCommands,
   reloadServerConfig
-} from './config';
+} from '@/config';
 import {
   UserData,
   UserEntry,
@@ -22,7 +22,7 @@ import {
   selectUser,
   formatUsers,
   findUser
-} from './users';
+} from '@/users';
 import {
   handleRegister,
   handleJoin,
@@ -37,16 +37,16 @@ import {
   handleImport,
   handleCheckConfig,
   handleRole
-} from './handlers';
-import { createCommands, createAdminCommands, createCommandHandlers, registerCommands } from "./commands";
+} from '@/handlers';
+import { createCommands, createAdminCommands, createCommandHandlers, registerCommands } from "@/commands";
 import {
   handleNextSong,
   findNextSong,
   handlePlayButton,
   handleClearReactions,
   handleStopMusic
-} from './music';
-import { scheduleDailySelection } from './scheduler';
+} from '@/music';
+import { scheduleDailySelection } from '@/scheduler';
 
 i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
 logConfig();
