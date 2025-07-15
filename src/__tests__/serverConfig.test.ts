@@ -11,7 +11,7 @@ describe('serverConfig module', () => {
       readFileSync: jest.fn(),
       promises: { writeFile: jest.fn() }
     }));
-    const { loadServerConfig } = await import('../serverConfig');
+    const { loadServerConfig } = await import('@/serverConfig');
     expect(loadServerConfig()).toBeNull();
   });
 
@@ -35,7 +35,7 @@ describe('serverConfig module', () => {
       readFileSync: jest.fn().mockReturnValue(JSON.stringify(data)),
       promises: { writeFile: jest.fn() }
     }));
-    const { loadServerConfig } = await import('../serverConfig');
+    const { loadServerConfig } = await import('@/serverConfig');
     expect(loadServerConfig()).toEqual(data);
   });
 
@@ -47,7 +47,7 @@ describe('serverConfig module', () => {
       }),
       promises: { writeFile: jest.fn() }
     }));
-    const { loadServerConfig } = await import('../serverConfig');
+    const { loadServerConfig } = await import('@/serverConfig');
     expect(loadServerConfig()).toBeNull();
   });
 
@@ -58,7 +58,7 @@ describe('serverConfig module', () => {
       readFileSync: jest.fn().mockReturnValue(JSON.stringify(data)),
       promises: { writeFile: jest.fn() }
     }));
-    const { loadServerConfig } = await import('../serverConfig');
+    const { loadServerConfig } = await import('@/serverConfig');
     expect(loadServerConfig()).toEqual(data);
   });
 
@@ -69,7 +69,7 @@ describe('serverConfig module', () => {
       readFileSync: jest.fn(),
       promises: { writeFile }
     }));
-    const { saveServerConfig } = await import('../serverConfig');
+    const { saveServerConfig } = await import('@/serverConfig');
     const cfg = {
       guildId: '1',
       channelId: '2',
@@ -102,7 +102,7 @@ describe('serverConfig module', () => {
       readFileSync: jest.fn(),
       promises: { writeFile: jest.fn() }
     }));
-    const config = await import('../config');
+    const config = await import('@/config');
     config.updateServerConfig({
       guildId: 'g',
       channelId: 'c',

@@ -3,7 +3,7 @@ beforeEach(() => {
 });
 
 test('checkRequiredConfig returns missing fields', async () => {
-  const config = await import('../config');
+  const config = await import('@/config');
   config.TOKEN = '';
   config.GUILD_ID = '';
   config.CHANNEL_ID = '';
@@ -18,7 +18,7 @@ test('checkRequiredConfig returns missing fields', async () => {
 });
 
 test('isConfigValid returns true when all fields set', async () => {
-  const config = await import('../config');
+  const config = await import('@/config');
   config.TOKEN = 't';
   config.GUILD_ID = 'g';
   config.CHANNEL_ID = 'c';
@@ -28,14 +28,14 @@ test('isConfigValid returns true when all fields set', async () => {
 });
 
 test('isAdmin checks list', async () => {
-  const config = await import('../config');
+  const config = await import('@/config');
   config.ADMINS = ['1'];
   expect(config.isAdmin('1')).toBe(true);
   expect(config.isAdmin('2')).toBe(false);
 });
 
 test('canUseAdminCommands respects roles', async () => {
-  const config = await import('../config');
+  const config = await import('@/config');
   config.ADMINS = ['1'];
   await expect(config.canUseAdminCommands('1')).resolves.toBe(true);
   await expect(config.canUseAdminCommands('2')).resolves.toBe(false);
@@ -53,7 +53,7 @@ test('ADMINS loaded from config file', async () => {
     promises: { writeFile: jest.fn() }
   }));
   jest.resetModules();
-  const cfg = await import('../config');
+  const cfg = await import('@/config');
   expect(cfg.ADMINS).toEqual(['a', 'b']);
 });
 
@@ -71,7 +71,7 @@ test('reloadServerConfig updates values from file', async () => {
       ),
     promises: { writeFile: jest.fn() }
   }));
-  const cfg = await import('../config');
+  const cfg = await import('@/config');
   cfg.reloadServerConfig();
   expect(cfg.GUILD_ID).toBe('g1');
   expect(cfg.CHANNEL_ID).toBe('c1');

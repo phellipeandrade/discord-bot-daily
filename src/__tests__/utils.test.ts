@@ -11,7 +11,7 @@ jest.mock('fs', () => ({
   }
 }));
 
-jest.mock('../i18n', () => ({
+jest.mock('@/i18n', () => ({
   i18n: {
     t: jest.fn((key: string, params: Record<string, string> = {}) => {
       const translations: Record<string, string> = {
@@ -40,7 +40,7 @@ import {
   type UserData,
   type UserEntry,
   formatUsers
-} from '../index';
+} from '@/index';
 
 // Mock do módulo fs
 jest.mock('fs', () => ({
@@ -159,7 +159,7 @@ jest.mock('discord.js', () => {
 });
 
 // Mock do i18n
-jest.mock('../i18n', () => ({
+jest.mock('@/i18n', () => ({
   i18n: {
     t: jest.fn((key: string, params: Record<string, string> = {}) => {
       const translations: Record<string, string> = {
@@ -289,7 +289,7 @@ describe('Funções Utilitárias', () => {
     });
 
     it('deve manter a estrutura correta dos dados', async () => {
-      let savedData!: import('../index').UserData;
+      let savedData!: import('@/index').UserData;
       (fs.promises.writeFile as jest.Mock).mockImplementation((file, data) => {
         savedData = JSON.parse(data as string);
       });

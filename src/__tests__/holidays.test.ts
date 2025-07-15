@@ -3,7 +3,7 @@ import {
   getBrazilianHolidays,
   BRAZILIAN_FIXED_HOLIDAYS,
   getUSHolidays
-} from '../holidays';
+} from '@/holidays';
 
 describe('Módulo de Feriados', () => {
   describe('Feriados Fixos', () => {

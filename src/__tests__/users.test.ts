@@ -1,4 +1,4 @@
-import { findUser, UserData } from '../users';
+import { findUser, UserData } from '@/users';
 
 describe('findUser', () => {
   const data: UserData = {

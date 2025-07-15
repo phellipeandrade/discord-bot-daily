@@ -59,7 +59,7 @@ jest.mock('discord.js', () => {
   };
 });
 
-jest.mock('../scheduler', () => ({ scheduleDailySelection: jest.fn() }));
+jest.mock('@/scheduler', () => ({ scheduleDailySelection: jest.fn() }));
 
 describe('index runtime', () => {
   beforeEach(() => {
@@ -83,8 +83,8 @@ describe('index runtime', () => {
   });
 
   test('initializes client and schedules daily selection', async () => {
-    const { scheduleDailySelection } = await import('../scheduler');
-    await import('../index');
+    const { scheduleDailySelection } = await import('@/scheduler');
+    await import('@/index');
     expect(createdClient.login).toHaveBeenCalledWith('t');
     const { Client: MockedClient, GatewayIntentBits } = await import('discord.js');
     const clientArgs = (MockedClient as unknown as jest.Mock).mock.calls[0][0];

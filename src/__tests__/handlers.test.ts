@@ -14,10 +14,10 @@ import {
   handleExport,
   handleImport,
   handleCheckConfig
-} from '../handlers';
-import { UserData } from '../users';
+} from '@/handlers';
+import { UserData } from '@/users';
 
-jest.mock('../i18n', () => ({
+jest.mock('@/i18n', () => ({
   i18n: {
     t: jest.fn((key: string, params: Record<string, string> = {}) => {
       const translations: Record<string, string> = {
@@ -46,8 +46,8 @@ const mockFormatUsers = jest.fn(
     '(none)'
 );
 
-jest.mock('../users', () => {
-  const actual = jest.requireActual('../users');
+jest.mock('@/users', () => {
+  const actual = jest.requireActual('@/users');
   return {
     ...actual,
     saveUsers: (data: UserData) => mockSaveUsers(data),
@@ -309,7 +309,7 @@ describe('handlers', () => {
     data.all.push({ name: 'A', id: '1' });
     const interaction = createInteraction({ name: 'A' });
     const today = new Date().toISOString().split('T')[0];
-    const { handleSkipToday } = await import('../handlers');
+    const { handleSkipToday } = await import('@/handlers');
     await handleSkipToday(interaction, data);
     expect(data.skips?.['1']).toBe(today);
     expect(mockSaveUsers).toHaveBeenCalled();
@@ -318,7 +318,7 @@ describe('handlers', () => {
   test('handleSkipToday accepts id and mention', async () => {
     data.all.push({ name: 'A', id: '1' });
     const today = new Date().toISOString().split('T')[0];
-    const { handleSkipToday } = await import('../handlers');
+    const { handleSkipToday } = await import('@/handlers');
     await handleSkipToday(createInteraction({ name: '1' }), data);
     expect(data.skips?.['1']).toBe(today);
     await handleSkipToday(createInteraction({ name: '<@1>' }), data);
@@ -328,10 +328,10 @@ describe('handlers', () => {
   test('handleSkipUntil sets future skip', async () => {
     data.all.push({ name: 'A', id: '1' });
     jest.resetModules();
-    jest.doMock('../config', () => ({ DATE_FORMAT: 'YYYY-MM-DD' }));
+    jest.doMock('@/config', () => ({ DATE_FORMAT: 'YYYY-MM-DD' }));
     const future = '2099-01-01';
     const interaction = createInteraction({ name: 'A', date: future });
-    const { handleSkipUntil } = await import('../handlers');
+    const { handleSkipUntil } = await import('@/handlers');
     await handleSkipUntil(interaction, data);
     expect(data.skips?.['1']).toBe(future);
     expect(mockSaveUsers).toHaveBeenCalled();
@@ -340,9 +340,9 @@ describe('handlers', () => {
   test('handleSkipUntil accepts id and mention', async () => {
     data.all.push({ name: 'A', id: '1' });
     jest.resetModules();
-    jest.doMock('../config', () => ({ DATE_FORMAT: 'YYYY-MM-DD' }));
+    jest.doMock('@/config', () => ({ DATE_FORMAT: 'YYYY-MM-DD' }));
     const future = '2099-01-01';
-    const { handleSkipUntil } = await import('../handlers');
+    const { handleSkipUntil } = await import('@/handlers');
     await handleSkipUntil(createInteraction({ name: '1', date: future }), data);
     expect(data.skips?.['1']).toBe(future);
     await handleSkipUntil(createInteraction({ name: '<@1>', date: future }), data);
@@ -354,14 +354,14 @@ describe('handlers', () => {
     const { saveServerConfig, updateServerConfig, scheduleDailySelection } = setupBasicMocks();
     
     jest.doMock('https', () => createMockHttpsModule());
-    jest.doMock('../serverConfig', () => ({
+    jest.doMock('@/serverConfig', () => ({
       saveServerConfig,
       loadServerConfig: jest.fn().mockReturnValue(createMockServerConfig())
     }));
-    jest.doMock('../config', () => createMockConfig(updateServerConfig));
-    jest.doMock('../scheduler', () => ({ scheduleDailySelection }));
+    jest.doMock('@/config', () => createMockConfig(updateServerConfig));
+    jest.doMock('@/scheduler', () => ({ scheduleDailySelection }));
     
-    const { handleSetup } = await import('../handlers');
+    const { handleSetup } = await import('@/handlers');
     const interaction = createMockInteractionForSetup();
     const res = await handleSetup(interaction);
     
@@ -390,14 +390,14 @@ describe('handlers', () => {
     const saveServerConfig = jest.fn();
     const updateServerConfig = jest.fn();
     
-    jest.doMock('../serverConfig', () => ({
+    jest.doMock('@/serverConfig', () => ({
       saveServerConfig,
       loadServerConfig: jest.fn().mockReturnValue(createMockServerConfig())
     }));
-    jest.doMock('../config', () => createMockConfig(updateServerConfig));
-    jest.doMock('../scheduler', () => ({ scheduleDailySelection: jest.fn() }));
+    jest.doMock('@/config', () => createMockConfig(updateServerConfig));
+    jest.doMock('@/scheduler', () => ({ scheduleDailySelection: jest.fn() }));
     
-    const { handleSetup } = await import('../handlers');
+    const { handleSetup } = await import('@/handlers');
     const interaction = {
       guildId: 'g',
       options: {
@@ -418,8 +418,8 @@ describe('handlers', () => {
   test('handleSetup ignores missing guildId', async () => {
     jest.resetModules();
     const saveServerConfig = jest.fn();
-    jest.doMock('../serverConfig', () => ({ saveServerConfig }));
-    const { handleSetup } = await import('../handlers');
+    jest.doMock('@/serverConfig', () => ({ saveServerConfig }));
+    const { handleSetup } = await import('@/handlers');
     const interaction = {
       guildId: undefined,
       options: { getChannel: jest.fn(), getString: jest.fn(), getAttachment: jest.fn() },
@@ -475,18 +475,18 @@ describe('handlers', () => {
       existsSync: jest.fn(),
       readFileSync: jest.fn()
     }));
-    jest.doMock('../serverConfig', () => ({
+    jest.doMock('@/serverConfig', () => ({
       saveServerConfig,
       loadServerConfig: jest.fn(),
       ServerConfig: {}
     }));
-    jest.doMock('../config', () => ({
+    jest.doMock('@/config', () => ({
       USERS_FILE: 'users.json',
       updateServerConfig
     }));
-    jest.doMock('../scheduler', () => ({ scheduleDailySelection }));
+    jest.doMock('@/scheduler', () => ({ scheduleDailySelection }));
     
-    const { handleImport } = await import('../handlers');
+    const { handleImport } = await import('@/handlers');
     const interaction = {
       options: {
         getAttachment: jest
@@ -510,7 +510,7 @@ describe('handlers', () => {
     jest.resetModules();
     jest.doMock('https', () => createMockHttpsModule());
     
-    const { handleImport } = await import('../handlers');
+    const { handleImport } = await import('@/handlers');
     const interaction = {
       options: {
         getAttachment: jest
@@ -528,9 +528,9 @@ describe('handlers', () => {
 
   test('handleCheckConfig reports valid config', async () => {
     jest.resetModules();
-    jest.dontMock('../config');
+    jest.dontMock('@/config');
     const interaction = createInteraction();
-    const config = await import('../config');
+    const config = await import('@/config');
     config.updateServerConfig({
       guildId: 'g',
       channelId: 'c',
@@ -544,16 +544,16 @@ describe('handlers', () => {
       holidayCountries: ['BR'],
       dateFormat: 'YYYY-MM-DD'
     });
-    const { handleCheckConfig } = await import('../handlers');
+    const { handleCheckConfig } = await import('@/handlers');
     await handleCheckConfig(interaction);
     expect(interaction.reply).toHaveBeenCalledWith('config.valid');
   });
 
   test('handleCheckConfig reports missing config', async () => {
     jest.resetModules();
-    jest.dontMock('../config');
+    jest.dontMock('@/config');
     const interaction = createInteraction();
-    const config = await import('../config');
+    const config = await import('@/config');
     config.updateServerConfig({
       guildId: '',
       channelId: '',
@@ -562,7 +562,7 @@ describe('handlers', () => {
       token: '',
       dateFormat: 'YYYY-MM-DD'
     });
-    const { handleCheckConfig } = await import('../handlers');
+    const { handleCheckConfig } = await import('@/handlers');
     await handleCheckConfig(interaction);
     expect(interaction.reply).toHaveBeenCalledWith('config.invalid');
   });
@@ -571,17 +571,17 @@ describe('handlers', () => {
     jest.resetModules();
     const saveServerConfig = jest.fn();
     const updateServerConfig = jest.fn();
-    jest.doMock('../serverConfig', () => ({
+    jest.doMock('@/serverConfig', () => ({
       saveServerConfig,
       loadServerConfig: jest.fn()
     }));
-    jest.doMock('../config', () => ({
+    jest.doMock('@/config', () => ({
       CHANNEL_ID: 'c',
       MUSIC_CHANNEL_ID: 'm',
       DATE_FORMAT: 'YYYY-MM-DD',
       updateServerConfig
     }));
-    const { handleDisable } = await import('../handlers');
+    const { handleDisable } = await import('@/handlers');
     const interaction = {
       guildId: 'g',
       options: { getString: jest.fn() },
@@ -600,17 +600,17 @@ describe('handlers', () => {
   test('handleDisableUntil validates date', async () => {
     jest.resetModules();
     const saveServerConfig = jest.fn();
-    jest.doMock('../serverConfig', () => ({
+    jest.doMock('@/serverConfig', () => ({
       saveServerConfig,
       loadServerConfig: jest.fn()
     }));
-    jest.doMock('../config', () => ({
+    jest.doMock('@/config', () => ({
       CHANNEL_ID: 'c',
       MUSIC_CHANNEL_ID: 'm',
       DATE_FORMAT: 'YYYY-MM-DD',
       updateServerConfig: jest.fn()
     }));
-    const { handleDisableUntil } = await import('../handlers');
+    const { handleDisableUntil } = await import('@/handlers');
     const interaction = {
       guildId: 'g',
       options: { getString: jest.fn(() => 'bad') },
@@ -625,17 +625,17 @@ describe('handlers', () => {
     jest.resetModules();
     const saveServerConfig = jest.fn();
     const updateServerConfig = jest.fn();
-    jest.doMock('../serverConfig', () => ({
+    jest.doMock('@/serverConfig', () => ({
       saveServerConfig,
       loadServerConfig: jest.fn()
     }));
-    jest.doMock('../config', () => ({
+    jest.doMock('@/config', () => ({
       CHANNEL_ID: 'c',
       MUSIC_CHANNEL_ID: 'm',
       DATE_FORMAT: 'YYYY-MM-DD',
       updateServerConfig
     }));
-    const { handleDisableUntil } = await import('../handlers');
+    const { handleDisableUntil } = await import('@/handlers');
     const interaction = {
       guildId: 'g',
       options: { getString: jest.fn(() => '2099-12-31') },

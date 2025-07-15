@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as https from 'https';
 import { ChatInputCommandInteraction } from 'discord.js';
-import { i18n } from './i18n';
+import { i18n } from '@/i18n';
 import {
   UserEntry,
   UserData,
@@ -10,14 +10,14 @@ import {
   selectUser,
   formatUsers,
   findUser
-} from './users';
+} from '@/users';
 import {
   parseDateString,
   todayISO,
   isDateFormatValid,
   formatDateString
-} from './date';
-import * as config from './config';
+} from '@/date';
+import * as config from '@/config';
 const {
   DATE_FORMAT,
   updateServerConfig,
@@ -35,12 +35,12 @@ const {
   PLAYER_FORWARD_COMMAND,
   
 } = config;
-import { scheduleDailySelection } from './scheduler';
+import { scheduleDailySelection } from '@/scheduler';
 import {
   saveServerConfig,
   loadServerConfig,
   ServerConfig
-} from './serverConfig';
+} from '@/serverConfig';
 
 async function fetchText(url: string): Promise<string> {
   return new Promise((resolve, reject) => {

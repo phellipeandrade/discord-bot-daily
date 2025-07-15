@@ -1,7 +1,7 @@
 import * as fs from 'fs';
-import { USERS_FILE } from './config';
-import { i18n } from './i18n';
-import { todayISO } from './date';
+import { USERS_FILE } from '@/config';
+import { i18n } from '@/i18n';
+import { todayISO } from '@/date';
 
 export interface UserEntry {
   name: string;

@@ -2,7 +2,7 @@ import {
   handleNextSong,
   handlePlayButton,
   handleClearReactions
-} from '../index';
+} from '@/index';
 import {
   Client,
   GatewayIntentBits,
@@ -17,12 +17,12 @@ import {
   ApplicationCommandType,
   ComponentType
 } from 'discord.js';
-import { MockCollection } from './__mocks__/MockCollection';
-import { mockChannel, mockMessageTemplate } from './__mocks__/discord.js';
+import { MockCollection } from '@/__tests__/__mocks__/MockCollection';
+import { mockChannel, mockMessageTemplate } from '@/__tests__/__mocks__/discord.js';
 
 // Mock do i18n
 var mockTranslations: Record<string, string>;
-jest.mock('../i18n', () => {
+jest.mock('@/i18n', () => {
   mockTranslations = {
     'list.empty': '(none)',
     'music.noValidMusic': '✅ No valid music found.',
@@ -158,7 +158,7 @@ describe('Comandos de Música', () => {
 
     jest.clearAllMocks();
 
-    const config = await import('../config');
+    const config = await import('@/config');
     config.MUSIC_CHANNEL_ID = 'requests';
     config.DAILY_VOICE_CHANNEL_ID = 'dailyVoice';
     config.PLAYER_FORWARD_COMMAND = '';
@@ -355,7 +355,7 @@ describe('Comandos de Música', () => {
     });
 
     it('deve orientar a usar outro bot quando configurado', async () => {
-      const config = await import('../config');
+      const config = await import('@/config');
       config.PLAYER_FORWARD_COMMAND = '/play';
 
       (
@@ -438,7 +438,7 @@ describe('Comandos de Música', () => {
 
   describe('handleStopMusic', () => {
     it('deve parar a reprodução e responder', async () => {
-      const music = await import('../music');
+      const music = await import('@/music');
       const queue = { delete: jest.fn() } as any;
       music.musicPlayer.instance = {
         extractors: { register: jest.fn() },

@@ -1,6 +1,6 @@
-import { createAdminCommands } from '../commands';
+import { createAdminCommands } from '@/commands';
 
-jest.mock('../i18n', () => ({
+jest.mock('@/i18n', () => ({
   i18n: {
     getCommandName: (c: string) => c,
     getCommandDescription: jest.fn(),
