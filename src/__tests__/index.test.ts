@@ -288,5 +288,16 @@ describe('Funções Utilitárias', () => {
       expect(resultado).toBeDefined();
       expect(fs.promises.writeFile).toHaveBeenCalledTimes(1);
     });
+
+    it('deve reinserir usuários elegíveis quando todos restantes estão pulados', async () => {
+      const dados = JSON.parse(JSON.stringify(mockData));
+      dados.remaining = [{ name: 'User1', id: '1' }];
+      dados.skips = { '1': '2999-01-01' };
+
+      const resultado = await selectUser(dados);
+
+      expect(resultado.id).not.toBe('1');
+      expect(dados.remaining.length).toBe(5);
+    });
   });
 });
