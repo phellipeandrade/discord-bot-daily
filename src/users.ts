@@ -60,7 +60,7 @@ export async function selectUser(data: UserData): Promise<UserEntry> {
     return today <= until;
   };
 
-  const eligible = data.remaining.filter(u => !isSkipped(u));
+  let eligible = data.remaining.filter(u => !isSkipped(u));
   
   // Salva os dados se houver skips expirados removidos
   if (hasExpiredSkips) {
@@ -68,7 +68,12 @@ export async function selectUser(data: UserData): Promise<UserEntry> {
   }
 
   if (eligible.length === 0) {
-    throw new Error(i18n.t('selection.noEligibleUsers'));
+    const allEligible = data.all.filter(u => !isSkipped(u));
+    if (allEligible.length === 0) {
+      throw new Error(i18n.t('selection.noEligibleUsers'));
+    }
+    data.remaining = [...allEligible];
+    eligible = [...allEligible];
   }
 
   const index = Math.floor(Math.random() * eligible.length);
