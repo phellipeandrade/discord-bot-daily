@@ -2,7 +2,8 @@ import { Client, Message } from 'discord.js';
 import { GoogleGenAI } from '@google/genai';
 import { i18n } from '@/i18n';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+const apiKey = process.env.GEMINI_API_KEY || '';
+const ai = new GoogleGenAI({ apiKey });
 
 interface ChatResult {
   reply: string;
@@ -38,6 +39,9 @@ async function chatResponse(content: string): Promise<ChatResult | null> {
   const prompt =
     `The user may speak ${lang}. The "reply" value should be in ${lang}. Message: ` +
     JSON.stringify(content);
+  if (!apiKey) {
+    return { reply: i18n.t('reminder.defaultReply') };
+  }
   try {
     const res = await ai.models.generateContent({
       model: 'gemini-2.0-flash-001',
@@ -47,29 +51,45 @@ async function chatResponse(content: string): Promise<ChatResult | null> {
         responseSchema: schema
       }
     });
-    return JSON.parse(res.text || '') as ChatResult;
+    try {
+      return JSON.parse(res.text || '') as ChatResult;
+    } catch {
+      return null;
+    }
   } catch {
-    return null;
+    return { reply: i18n.t('reminder.defaultReply') };
   }
 }
 
 export async function handleReminderMessage(message: Message): Promise<void> {
   const result = await chatResponse(message.content);
   if (!result) {
-    await message.reply(i18n.t('reminder.parseError'));
+    try {
+      await message.reply(i18n.t('reminder.parseError'));
+    } catch {
+      /* ignore */
+    }
     return;
   }
 
   const dateStr = result.intent?.setReminder?.date;
   if (!dateStr) {
-    await message.reply(result.reply || i18n.t('reminder.defaultReply'));
+    try {
+      await message.reply(result.reply || i18n.t('reminder.defaultReply'));
+    } catch {
+      /* ignore */
+    }
     return;
   }
 
   const date = new Date(dateStr);
   const delay = date.getTime() - Date.now();
   if (isNaN(date.getTime()) || delay <= 0) {
-    await message.reply(i18n.t('reminder.invalidTime'));
+    try {
+      await message.reply(i18n.t('reminder.invalidTime'));
+    } catch {
+      /* ignore */
+    }
     return;
   }
   setTimeout(() => {
@@ -81,7 +101,11 @@ export async function handleReminderMessage(message: Message): Promise<void> {
       /* ignore */
     });
   }, delay);
-  await message.reply(result.reply || i18n.t('reminder.set', { date: date.toISOString() }));
+  try {
+    await message.reply(result.reply || i18n.t('reminder.set', { date: date.toISOString() }));
+  } catch {
+    /* ignore */
+  }
 }
 
 export function setupReminderListener(client: Client): void {
