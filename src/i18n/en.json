@@ -78,10 +78,6 @@
       "name": "next-song",
       "description": "Show the next unplayed song"
     },
-    "stop-music": {
-      "name": "stop-music",
-      "description": "Stop the music playback"
-    },
     "clear-bunnies": {
       "name": "clear-bunnies",
       "description": "Remove bunny reactions made by the bot"

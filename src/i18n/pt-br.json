@@ -83,10 +83,6 @@
       "name": "proxima-musica",
       "description": "Mostra a próxima música não tocada"
     },
-    "stop-music": {
-      "name": "parar-musica",
-      "description": "Para a reprodução da música"
-    },
     "clear-bunnies": {
       "name": "limpar-coelhos",
       "description": "Remove as reações de coelho feitas pelo bot"

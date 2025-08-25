@@ -43,8 +43,7 @@ import {
   handleNextSong,
   findNextSong,
   handlePlayButton,
-  handleClearReactions,
-  handleStopMusic
+  handleClearReactions
 } from '@/music';
 import { scheduleDailySelection } from '@/scheduler';
 import { setupReminderListener } from '@/reminders';
@@ -59,6 +58,11 @@ if (missingCfg.length === 0) {
   console.warn(`⚠️ Missing configuration: ${missingCfg.join(', ')}`);
 }
 
+if (process.env.GEMINI_API_KEY) {
+  console.info('Gemini API key found');
+} else {
+  console.warn('Gemini API key not found');
+}
 
 let commands = createCommands();
 let adminCommands = createAdminCommands();
@@ -167,7 +171,6 @@ export {
   findNextSong,
   handlePlayButton,
   handleClearReactions,
-  handleStopMusic,
   handleSkipToday,
   handleSkipUntil,
   handleSetup,

@@ -33,8 +33,7 @@ import {
 } from '@/handlers';
 import {
   handleNextSong,
-  handleClearReactions,
-  handleStopMusic
+  handleClearReactions
 } from '@/music';
 import { UserData } from '@/users';
 
@@ -73,9 +72,6 @@ export function createCommands(): RESTPostAPIApplicationCommandsJSONBody[] {
     new SlashCommandBuilder()
       .setName(i18n.getCommandName('next-song'))
       .setDescription(i18n.getCommandDescription('next-song')),
-    new SlashCommandBuilder()
-      .setName(i18n.getCommandName('stop-music'))
-      .setDescription(i18n.getCommandDescription('stop-music')),
     new SlashCommandBuilder()
       .setName(i18n.getCommandName('clear-bunnies'))
       .setDescription(i18n.getCommandDescription('clear-bunnies')),
@@ -302,9 +298,6 @@ export function createCommandHandlers(): Record<string, CommandHandler> {
     [i18n.getCommandName('reset')]: handleReset,
     [i18n.getCommandName('next-song')]: async (interaction) => {
       await handleNextSong(interaction);
-    },
-    [i18n.getCommandName('stop-music')]: async (interaction) => {
-      await handleStopMusic(interaction);
     },
     [i18n.getCommandName('clear-bunnies')]: async (interaction) => {
       await handleClearReactions(interaction);

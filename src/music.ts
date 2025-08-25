@@ -7,69 +7,16 @@ import {
   Client,
   TextChannel,
   Message,
-  ChannelType
 } from 'discord.js';
-import { Player } from 'discord-player';
-import { YoutubeiExtractor } from 'discord-player-youtubei';
-import ffmpegPath from 'ffmpeg-static';
+
 import { i18n } from '@/i18n';
 import {
   MUSIC_CHANNEL_ID,
-  DAILY_VOICE_CHANNEL_ID,
   PLAYER_FORWARD_COMMAND
 } from '@/config';
 
-if (ffmpegPath) {
-  process.env.FFMPEG_PATH = ffmpegPath;
-}
 
-// centraliza instância do player
-export const musicPlayer = { instance: null as Player | null };
 
-function getPlayer(client: Client): Player {
-  if (!musicPlayer.instance) {
-    let DefaultExtractors: typeof import('@discord-player/extractor')['DefaultExtractors'];
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      ({ DefaultExtractors } = require('@discord-player/extractor') as {
-        DefaultExtractors: typeof import('@discord-player/extractor')['DefaultExtractors'];
-      });
-    } catch (err) {
-      console.error('❌ Failed to load default extractors:', err);
-      DefaultExtractors = [] as unknown as typeof import('@discord-player/extractor')['DefaultExtractors'];
-    }
-    const player = new Player(client);
-    // carrega todos extractors padrão (Spotify, SoundCloud, etc)
-    if (Array.isArray(DefaultExtractors) && DefaultExtractors.length > 0) {
-      player.extractors.loadMulti(DefaultExtractors);
-    }
-    // adiciona suporte ao YouTube
-    player.extractors.register(YoutubeiExtractor, {});
-    musicPlayer.instance = player;
-  }
-  return musicPlayer.instance;
-}
-
-// Função de reprodução na voz
-async function playUrl(client: Client, url: string): Promise<void> {
-  console.log('🔊 Entrando em playUrl com URL:', url);
-  if (!DAILY_VOICE_CHANNEL_ID) {
-    console.warn('⚠️ DAILY_VOICE_CHANNEL_ID não configurado');
-    return;
-  }
-  const channel = await client.channels.fetch(DAILY_VOICE_CHANNEL_ID);
-  if (!channel || channel.type !== ChannelType.GuildVoice) {
-    console.warn('⚠️ Canal não é um canal de voz guild ou não encontrado');
-    return;
-  }
-  const player = getPlayer(client);
-  await player.play(channel, url, {
-    nodeOptions: {
-      leaveOnEnd: true,
-      leaveOnStop: true
-    }
-  });
-}
 
 export async function findNextSong(
   client: Client
@@ -142,12 +89,7 @@ export async function handleClearReactions(interaction: ChatInputCommandInteract
   });
 }
 
-export async function handleStopMusic(interaction: ChatInputCommandInteraction): Promise<void> {
-  const player = getPlayer(interaction.client);
-  const queue = interaction.guildId ? player.nodes.get(interaction.guildId) : null;
-  if (queue) queue.delete();
-  await interaction.reply(i18n.t('music.stopped'));
-}
+
 
 export async function handlePlayButton(interaction: ButtonInteraction): Promise<void> {
   if (!interaction.customId.startsWith('play_')) return;
@@ -180,40 +122,23 @@ export async function handlePlayButton(interaction: ButtonInteraction): Promise<
   }
 
   await originalMsg.react('🐰');
-  if (PLAYER_FORWARD_COMMAND) {
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setLabel('🔗 Open song link')
-        .setStyle(ButtonStyle.Link)
-        .setURL(linkToPlay)
-    );
-    await interaction.reply({
-      content: i18n.t('music.marked', {
-        command: PLAYER_FORWARD_COMMAND,
-        link: linkToPlay
-      }),
-      components: [row],
-      flags: 1 << 6
-    });
-  } else {
-    try {
-      await playUrl(interaction.client, linkToPlay);
-      console.log('✅ playUrl finalizado com sucesso');
-    } catch (err) {
-      console.error('❌ erro em playUrl:', err);
-    }
-
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setLabel('🔗 Open song link')
-        .setStyle(ButtonStyle.Link)
-        .setURL(linkToPlay)
-    );
-
-    await interaction.reply({
-      content: i18n.t('music.markedPlaying', { link: linkToPlay }),
-      components: [row],
-      flags: 1 << 6
-    });
-  }
+  
+  // Define o comando padrão se não estiver configurado
+  const commandToUse = PLAYER_FORWARD_COMMAND || '/play';
+  
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setLabel('🔗 Open song link')
+      .setStyle(ButtonStyle.Link)
+      .setURL(linkToPlay)
+  );
+  
+  await interaction.reply({
+    content: i18n.t('music.marked', {
+      command: commandToUse,
+      link: linkToPlay
+    }),
+    components: [row],
+    flags: 1 << 6
+  });
 }

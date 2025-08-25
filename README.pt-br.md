@@ -96,7 +96,6 @@ npm run build-zip
 
 Esse arquivo inclui `serverConfig.json` usado pelo comando `/setup` para armazenar informações de guild e canal.
 
-O arquivo `xhr-sync-worker.js` necessário pelo jsdom também é incluído para evitar erros em tempo de execução.
 
 ### Comandos
 
@@ -106,7 +105,6 @@ O arquivo `xhr-sync-worker.js` necessário pelo jsdom também é incluído para 
 - `listar` – mostra usuários registrados, pendentes e já selecionados
 - `selecionar` – seleciona manualmente um usuário aleatório
 - `proxima-musica` – mostra a próxima música não tocada do canal de pedidos
-- `parar-musica` – interrompe a reprodução atual
 
 **Admin**
 
@@ -133,7 +131,7 @@ Dois papéis estão disponíveis: **admin** e **user**. Todos os membros listado
 
 A lista inicial de administradores deve ser definida no campo `admins` do arquivo `serverConfig.json`.
 
-Somente administradores podem executar comandos privilegiados como `/registrar`, `/limpar-coelhos`, `/verificar-config`, `/configurar`, `/importar`, `/exportar`, `/pular-*` e o próprio `/role`. Usuários comuns ainda podem usar comandos básicos como `/entrar`, `/listar`, `/selecionar`, `/proxima-musica` e `/parar-musica`.
+Somente administradores podem executar comandos privilegiados como `/registrar`, `/limpar-coelhos`, `/verificar-config`, `/configurar`, `/importar`, `/exportar`, `/pular-*` e o próprio `/role`. Usuários comuns ainda podem usar comandos básicos como `/entrar`, `/listar`, `/selecionar` e `/proxima-musica`.
 
 Use o comando `/role` para conceder ou revogar acesso de administrador:
 
@@ -148,14 +146,14 @@ O controle de permissões é feito pela [`@rbac/rbac`](https://www.npmjs.com/pac
 
 O bot busca músicas no canal definido por `MUSIC_CHANNEL_ID`. O comando `/proxima-musica`
 responde com a próxima mensagem que contenha um link, anexo ou embed e que ainda
-não possua a reação 🐰, acompanhada de um botão **Play**. Se `DAILY_VOICE_CHANNEL_ID`
-estiver configurado, ao pressionar o botão o bot entrará nesse canal de voz e tocará
-o áudio. Se `PLAYER_FORWARD_COMMAND` estiver configurado, em vez de tocar diretamente,
-o bot responderá com um comando para você copiar e colar em outro bot player. A
-mensagem original recebe a reação 🐰 para que não seja reproduzida novamente.
+não possua a reação 🐰, acompanhada de um botão **Play**. Ao pressionar o botão,
+o bot responderá com um comando para você copiar e colar em outro bot player (como
+Groovy, Rythm, etc.). A mensagem original recebe a reação 🐰 para que não seja
+reproduzida novamente.
 
-Use `/parar-musica` para interromper a reprodução atual. Administradores podem
-remover todas as reações de coelho com `/limpar-coelhos` se necessário.
+O comando padrão é `/play`, mas pode ser configurado através de `PLAYER_FORWARD_COMMAND`
+no arquivo `serverConfig.json`. Administradores podem remover todas as reações
+de coelho com `/limpar-coelhos` se necessário.
 
 
 

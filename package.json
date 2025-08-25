@@ -7,7 +7,7 @@
     "test:watch": "NODE_ENV=test jest --watch",
     "test:coverage": "NODE_ENV=test jest --coverage && jest-coverage-badges",
     "clean": "rm -rf dist build bot.zip",
-    "copy-assets": "mkdir -p build && if [ -f src/users.json ]; then cp src/users.json build/users.json; else cp src/users.sample.json build/users.json; fi && cp -r src/i18n build/ && if [ -f src/serverConfig.json ]; then cp src/serverConfig.json build/serverConfig.json; else cp src/serverConfig.sample.json build/serverConfig.json; fi && cp node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js build/",
+    "copy-assets": "mkdir -p build && if [ -f src/users.json ]; then cp src/users.json build/users.json; else cp src/users.sample.json build/users.json; fi && cp -r src/i18n build/ && if [ -f src/serverConfig.json ]; then cp src/serverConfig.json build/serverConfig.json; else cp src/serverConfig.sample.json build/serverConfig.json; fi",
     "compile": "tsc",
 "bundle": "esbuild dist/index.js --bundle --platform=node --outfile=build/index.js --external:play-opus --external:opusscript --external:unfetch --external:mediaplex-linux-* --external:./xhr-sync-worker.js",
     "build": "npm run copy-assets && npm run compile && npm run bundle",

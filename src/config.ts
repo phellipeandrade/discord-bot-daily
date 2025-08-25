@@ -74,7 +74,6 @@ export function logConfig(): void {
       `HOLIDAYS=${HOLIDAY_COUNTRIES.join(',')}`,
       `VOICE=${DAILY_VOICE_CHANNEL_ID || 'N/A'}`,
       `PLAYER_CMD=${PLAYER_FORWARD_COMMAND || 'N/A'}`,
-
       `ADMINS=${ADMINS.length}`,
       `USERS=${USERS_FILE}`,
       `DATE_FMT=${DATE_FORMAT}`,

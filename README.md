@@ -103,8 +103,6 @@ npm run build-zip
 
 This archive includes a `serverConfig.json` file used by the `/setup` command to
 store guild and channel information. The bot searches for this file in `src/`
-first and falls back to the repository root if not found. The `xhr-sync-worker.js` file required
-by jsdom is also packaged to avoid runtime errors.
 
 ### Commands
 
@@ -114,7 +112,6 @@ by jsdom is also packaged to avoid runtime errors.
 - `list` – display registered, pending and already selected users
 - `select` – manually select a random user
 - `next-song` – show the next unplayed song from the request channel
-- `stop-music` – stop the current music playback
 
 **Admin**
 
@@ -144,8 +141,8 @@ The initial admin list can be defined in the `admins` field of `serverConfig.jso
 
 Only admins may run privileged commands such as `/register`, `/clear-bunnies`,
 `/check-config`, `/setup`, `/import`, `/export`, `/skip-*` and `/role` itself.
-Regular users can still use basic commands like `/join`, `/list`, `/select`,
-`/next-song` and `/stop-music`.
+Regular users can still use basic commands like `/join`, `/list`, `/select`
+and `/next-song`.
 
 Use the `/role` command to grant or revoke admin access:
 
@@ -161,15 +158,14 @@ library.
 
 The bot fetches songs from the text channel defined by `MUSIC_CHANNEL_ID`.
 Running `/next-song` replies with the next unplayed message containing a link,
-attachment or embed along with a **Play** button. If `DAILY_VOICE_CHANNEL_ID`
-is set, pressing the button will make the bot join that voice channel and stream
-the audio. If `PLAYER_FORWARD_COMMAND` is configured, instead of playing the
-music directly, the bot will reply with a command you can copy and paste in
-another player bot. The original request message receives a 🐰 reaction so it
-won't be selected again.
+attachment or embed along with a **Play** button. When pressing the button,
+the bot will reply with a command you can copy and paste in another player bot
+(such as Groovy, Rythm, etc.). The original request message receives a 🐰 reaction
+so it won't be selected again.
 
-Use `/stop-music` to stop the current playback. Admins can remove all bunny
-reactions from the request channel with `/clear-bunnies` if needed.
+The default command is `/play`, but it can be configured through `PLAYER_FORWARD_COMMAND`
+in the `serverConfig.json` file. Admins can remove all bunny reactions from the
+request channel with `/clear-bunnies` if needed.
 
 ## Testing
 
