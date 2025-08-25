@@ -39,6 +39,14 @@
   "reminder.set": "Lembrete definido para {{date}}.",
   "reminder.notify": "⏰ Lembrete: {{text}}",
   "reminder.defaultReply": "Estou aqui para ajudar! Como posso te auxiliar hoje?",
+  "reminder.error": "Erro ao criar o lembrete. Tente novamente.",
+  "reminder.list.empty": "Você não tem lembretes agendados.",
+  "reminder.list.title": "📋 Seus Lembretes",
+  "reminder.delete.success": "Lembrete removido com sucesso.",
+  "reminder.delete.error": "Erro ao remover o lembrete.",
+  "reminder.stats": "📊 **Estatísticas dos Lembretes**\nTotal: {{total}}\nPendentes: {{pending}}\nEnviados: {{sent}}",
+  "reminder.list.noReminders": "Você não tem lembretes agendados no momento.",
+  "reminder.delete.notFound": "Lembrete não encontrado ou você não tem permissão para removê-lo.",
 
   "export.success": "✅ Arquivos de dados anexados.",
   "export.noFiles": "❌ Nenhum arquivo de dados encontrado.",
@@ -118,6 +126,20 @@
       "date": {
         "name": "data",
           "description": "Data ({{format}})"
+        }
+      }
+    },
+    "reminders": {
+      "name": "lembretes",
+      "description": "Listar seus lembretes agendados"
+    },
+    "delete-reminder": {
+      "name": "remover-lembrete",
+      "description": "Remover um lembrete específico",
+      "options": {
+        "id": {
+          "name": "id",
+          "description": "ID do lembrete"
         }
       }
     },

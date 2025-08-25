@@ -34,6 +34,14 @@
   "reminder.set": "Reminder set for {{date}}.",
   "reminder.notify": "⏰ Reminder: {{text}}",
   "reminder.defaultReply": "I'm here to help! How can I assist you today?",
+  "reminder.error": "Error creating reminder. Please try again.",
+  "reminder.list.empty": "You have no scheduled reminders.",
+  "reminder.list.title": "📋 Your Reminders",
+  "reminder.delete.success": "Reminder removed successfully.",
+  "reminder.delete.error": "Error removing reminder.",
+  "reminder.stats": "📊 **Reminder Statistics**\nTotal: {{total}}\nPending: {{pending}}\nSent: {{sent}}",
+  "reminder.list.noReminders": "You have no scheduled reminders at the moment.",
+  "reminder.delete.notFound": "Reminder not found or you don't have permission to remove it.",
 
   "export.success": "✅ Attached data files.",
   "export.noFiles": "❌ No data files found.",
@@ -113,6 +121,20 @@
       "date": {
         "name": "date",
           "description": "Date ({{format}})"
+        }
+      }
+    },
+    "reminders": {
+      "name": "reminders",
+      "description": "List your scheduled reminders"
+    },
+    "delete-reminder": {
+      "name": "delete-reminder",
+      "description": "Remove a specific reminder",
+      "options": {
+        "id": {
+          "name": "id",
+          "description": "Reminder ID"
         }
       }
     },

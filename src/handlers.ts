@@ -11,6 +11,7 @@ import {
   formatUsers,
   findUser
 } from '@/users';
+import { reminderService } from '@/reminderService';
 import {
   parseDateString,
   todayISO,
@@ -571,6 +572,57 @@ export async function handleEnable(
     updateServerConfig(existing);
   }
   await interaction.reply(i18n.t('bot.enabled'));
+}
+
+export async function handleReminders(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  try {
+    const reminders = await reminderService.getRemindersByUser(interaction.user.id);
+    const formattedList = reminderService.formatReminderList(reminders);
+    
+    await interaction.reply({
+      content: `${i18n.t('reminder.list.title')}\n\n${formattedList}`,
+      ephemeral: true
+    });
+  } catch (error) {
+    console.error('Error handling reminders command:', error);
+    await interaction.reply({
+      content: i18n.t('reminder.error'),
+      ephemeral: true
+    });
+  }
+}
+
+export async function handleDeleteReminder(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  try {
+    const reminderId = interaction.options.getInteger(
+      i18n.getOptionName('delete-reminder', 'id'),
+      true
+    );
+
+    const success = await reminderService.deleteReminder(reminderId, interaction.user.id);
+    
+    if (success) {
+      await interaction.reply({
+        content: i18n.t('reminder.delete.success'),
+        ephemeral: true
+      });
+    } else {
+      await interaction.reply({
+        content: i18n.t('reminder.delete.notFound'),
+        ephemeral: true
+      });
+    }
+  } catch (error) {
+    console.error('Error handling delete reminder command:', error);
+    await interaction.reply({
+      content: i18n.t('reminder.delete.error'),
+      ephemeral: true
+    });
+  }
 }
 
 

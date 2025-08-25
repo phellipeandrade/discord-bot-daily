@@ -47,6 +47,7 @@ import {
 } from '@/music';
 import { scheduleDailySelection } from '@/scheduler';
 import { setupChatListener } from '@/chatHandler';
+import { reminderService } from '@/reminderService';
 
 i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
 logConfig();
@@ -99,6 +100,10 @@ if (process.env.NODE_ENV !== 'test') {
     console.log('✅ Commands registered');
 
     scheduleDailySelection(client);
+    
+    // Inicializar serviço de lembretes
+    reminderService.setClient(client);
+    reminderService.start();
   });
 
   client.on('guildCreate', (guild) => {
