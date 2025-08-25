@@ -75,6 +75,29 @@ export async function handleChatMessage(message: Message): Promise<void> {
     return;
   }
 
+  // Processar intenção de deletar todos os lembretes
+  if (result.intent?.deleteAllReminders) {
+    try {
+      const deletedCount = await reminderService.deleteAllRemindersByUser(userId);
+      
+      if (deletedCount > 0) {
+        await message.reply(
+          result.reply || i18n.t('reminder.deleteAll.success', { count: deletedCount })
+        );
+      } else {
+        await message.reply(i18n.t('reminder.deleteAll.noReminders'));
+      }
+    } catch (error) {
+      console.error('Error deleting all reminders:', error);
+      try {
+        await message.reply(i18n.t('reminder.deleteAll.error'));
+      } catch {
+        /* ignore */
+      }
+    }
+    return;
+  }
+
   // Processar intenção de criar lembrete
   const dateStr = result.intent?.setReminder?.date;
   if (!dateStr) {

@@ -99,6 +99,14 @@ class ReminderDatabase {
     this.saveData();
   }
 
+  async deleteAllRemindersByUser(userId: string): Promise<number> {
+    const initialCount = this.reminders.length;
+    this.reminders = this.reminders.filter(r => r.userId !== userId);
+    const deletedCount = initialCount - this.reminders.length;
+    this.saveData();
+    return deletedCount;
+  }
+
   async deleteOldReminders(daysOld: number = 30): Promise<void> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysOld);

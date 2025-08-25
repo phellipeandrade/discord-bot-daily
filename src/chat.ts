@@ -5,66 +5,179 @@ import { Message } from 'discord.js';
 const apiKey = process.env.GEMINI_API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
 
+// Tipos de intenções suportadas
+export enum IntentType {
+  REMINDER = 'reminder',
+  GENERAL_QUESTION = 'general_question',
+  TECHNICAL_SUPPORT = 'technical_support',
+  WORKFLOW_HELP = 'workflow_help',
+  TRANSLATION = 'translation',
+  UNKNOWN = 'unknown'
+}
+
+// Interface para classificação de intenção
+interface IntentClassification {
+  intent: IntentType;
+  confidence: number;
+  subIntent?: string;
+}
+
+// Interface para resultado do chat
 interface ChatResult {
   reply: string;
   intent?: {
     setReminder?: {
       date: string;
-      message: string; // Mensagem limpa para o lembrete
+      message: string;
     };
     listReminders?: boolean;
     deleteReminder?: {
       id: number;
     };
+    deleteAllReminders?: boolean;
   };
 }
 
-export async function chatResponse(
-  content: string, 
-  userId?: string, 
+// Schema para classificação de intenção
+const intentClassificationSchema = {
+  type: 'object',
+  properties: {
+    intent: { 
+      type: 'string',
+      enum: Object.values(IntentType)
+    },
+    confidence: { 
+      type: 'number',
+      minimum: 0,
+      maximum: 1
+    },
+    subIntent: { type: 'string' }
+  },
+  required: ['intent', 'confidence'],
+  additionalProperties: false
+} as const;
+
+// Schema para lembretes
+const reminderSchema = {
+  type: 'object',
+  properties: {
+    reply: { type: 'string' },
+    intent: {
+      type: 'object',
+      properties: {
+        setReminder: {
+          type: 'object',
+          properties: { 
+            date: { type: 'string' },
+            message: { type: 'string' }
+          },
+          required: ['date', 'message'],
+          additionalProperties: false
+        },
+        listReminders: {
+          type: 'boolean'
+        },
+        deleteReminder: {
+          type: 'object',
+          properties: { id: { type: 'number' } },
+          required: ['id'],
+          additionalProperties: false
+        },
+        deleteAllReminders: {
+          type: 'boolean'
+        }
+      },
+      additionalProperties: false
+    }
+  },
+  required: ['reply'],
+  additionalProperties: false
+} as const;
+
+/**
+ * Classifica a intenção da mensagem do usuário
+ */
+async function classifyIntent(
+  content: string,
+  messageHistory?: Message[]
+): Promise<IntentClassification> {
+  const lang = i18n.getLanguage() === 'pt-br' ? 'Portuguese' : 'English';
+  
+  // Construir contexto do histórico
+  let historyContext = '';
+  if (messageHistory && messageHistory.length > 0) {
+    historyContext = '\n\nCONVERSATION HISTORY (most recent first):\n';
+    const recentMessages = messageHistory.slice(-3);
+    recentMessages.forEach(msg => {
+      const role = msg.author.bot ? 'Hermes' : 'User';
+      const authorName = msg.author.displayName || msg.author.username;
+      historyContext += `${role} (${authorName}): ${msg.content}\n`;
+    });
+  }
+
+  const classificationPrompt = `
+    You are an intent classifier for Hermes, the Atena team's assistant.
+    Analyze the user's message and classify their intent.
+    User may speak ${lang}.
+
+    INTENT TYPES:
+    - reminder: User wants to set, list, or delete reminders
+    - general_question: General questions about work, team, or processes
+    - technical_support: Technical issues, deployment, pipeline, code problems
+    - workflow_help: Questions about workflows, processes, best practices
+    - translation: Requests for translation between languages
+    - unknown: Cannot determine intent or doesn't fit other categories
+
+    EXAMPLES:
+    - "me lembre de revisar o PR amanhã" → reminder
+    - "como ver status do deploy?" → technical_support
+    - "qual é o fluxo de code review?" → workflow_help
+    - "translate this to English" → translation
+    - "oi, tudo bem?" → general_question
+    - "mostra meus lembretes" → reminder
+    - "deleta lembrete 123" → reminder
+
+    Return ONLY a JSON object with:
+    - intent: one of the intent types above
+    - confidence: number between 0 and 1 (how confident you are)
+    - subIntent: optional string describing specific sub-intent
+
+    ${historyContext}
+
+    Message to classify: ${JSON.stringify(content)}
+  `.trim();
+
+  try {
+    const res = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-001',
+      contents: classificationPrompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: intentClassificationSchema
+      }
+    });
+    
+    return JSON.parse(res.text || '') as IntentClassification;
+  } catch {
+    return { intent: IntentType.UNKNOWN, confidence: 0 };
+  }
+}
+
+/**
+ * Gera resposta para intenção de lembrete
+ */
+async function handleReminderIntent(
+  content: string,
+  userId?: string,
   userName?: string,
   messageHistory?: Message[]
 ): Promise<ChatResult | null> {
   const lang = i18n.getLanguage() === 'pt-br' ? 'Portuguese' : 'English';
-
-  const schema = {
-    type: 'object',
-    properties: {
-      reply: { type: 'string' },
-      intent: {
-        type: 'object',
-        properties: {
-          setReminder: {
-            type: 'object',
-            properties: { 
-              date: { type: 'string' },
-              message: { type: 'string' }
-            },
-            required: ['date', 'message'],
-            additionalProperties: false
-          },
-          listReminders: {
-            type: 'boolean'
-          },
-          deleteReminder: {
-            type: 'object',
-            properties: { id: { type: 'number' } },
-            required: ['id'],
-            additionalProperties: false
-          }
-        },
-        additionalProperties: false
-      }
-    },
-    required: ['reply'],
-    additionalProperties: false
-  } as const;
-
-  // Construir contexto do histórico do Discord
+  
+  // Construir contexto do histórico
   let historyContext = '';
   if (messageHistory && messageHistory.length > 0) {
     historyContext = '\n\nCONVERSATION HISTORY (most recent first):\n';
-    // Pegar apenas as últimas 5 mensagens para não sobrecarregar o contexto
     const recentMessages = messageHistory.slice(-5);
     recentMessages.forEach(msg => {
       const role = msg.author.bot ? 'Hermes' : 'User';
@@ -84,151 +197,67 @@ export async function chatResponse(
 
   const currentTime = new Date().toISOString();
   
-  const prompt = `
-    You are Hermes, the dedicated assistant for the Atena team on Discord DMs.
-    You are NOT an AI language model. You are Hermes, a real assistant working with the Atena team.
+  const reminderPrompt = `
+    You are Hermes, the Atena team's assistant, handling REMINDER requests.
     User may speak ${lang}. ALWAYS write "reply" in ${lang}.${userContext}${historyContext}
 
     CURRENT TIME: ${currentTime} (UTC)
 
-    YOUR IDENTITY
+    YOUR ROLE
     - You are Hermes, the Atena team's assistant
-    - You work directly with the team members
-    - You have knowledge about the team's processes, tools, and workflows
+    - You handle reminder-related requests
     - You are helpful, professional, and friendly
-    - NEVER mention being an AI, language model, or trained by Google
-    - You are a real person working as an assistant
+    - NEVER mention being an AI or language model
 
-    GOAL
+    REMINDER HANDLING
     - If the user asks to set a reminder, populate intent.setReminder.date (ISO 8601 UTC) and intent.setReminder.message (clean reminder message).
     - If the user asks to list their reminders, set intent.listReminders to true.
     - If the user asks to delete/remove a specific reminder, populate intent.deleteReminder.id with the reminder ID.
+    - If the user asks to delete/remove ALL reminders, set intent.deleteAllReminders to true.
     - If the message does NOT request any reminder action, do NOT set any intent — just answer naturally.
-    - Use conversation history to provide more contextual and personalized responses.
-    - Remember previous topics and references made by the user.
 
-    OUTPUT
-    - Return ONLY one JSON that matches this schema:
-      {
-        "reply": string,
-        "intent": {
-          "setReminder": {
-            "date": string, // ISO 8601 UTC, e.g. 2025-08-26T12:00:00.000Z
-            "message": string // Clean reminder message, e.g. "Falar com o Serginho"
-          },
-          "listReminders": boolean,
-          "deleteReminder": {
-            "id": number // Reminder ID to delete
-          }
-        }
-      }
-    - Do NOT add fields not defined in the schema.
-    - If there is no reminder action, omit "intent" or return it empty.
-
-    STYLE
-    - ${lang} only in "reply". Tone: claro, profissional e objetivo.
-    - Seja prático; quando cabível, ofereça um próximo passo (ex.: "posso criar um lembrete?").
-    - Evite emojis, a não ser que o usuário use.
-    - Use o nome do usuário quando apropriado para personalizar a resposta.
-    - Referencie conversas anteriores quando relevante.
-    - Responda como um assistente real, não como uma IA.
-
-    DATE/TIME (CRITICAL)
-    - CURRENT TIME: ${currentTime} (UTC) - Use esta data/hora como referência para todos os cálculos.
-    - Interprete a intenção de tempo no fuso do usuário (America/Sao_Paulo por padrão).
-    - Aceite expressões relativas: "amanhã", "próxima segunda", "daqui a 20min", "em 5 minutos", "tomorrow at 9".
-    - Para expressões como "em X minutos" ou "daqui a X minutos", calcule: CURRENT TIME + X minutos.
-    - CRÍTICO: Para "em X minutos", você DEVE calcular: ${currentTime} + X minutos.
-    - NUNCA use datas fixas ou datas do passado para expressões temporais relativas.
-    - Se faltar horário, use 09:00 local. Se vier só dia da semana, use a próxima ocorrência.
-    - Converta o resultado final para ISO 8601 UTC com sufixo Z.
-    - Se o horário passado já ocorreu hoje, use a próxima data possível.
-    - Se a expressão for ambígua, peça 1 pergunta de esclarecimento em "reply" e NÃO defina intent.
-    - SEMPRE calcule a data correta para expressões temporais relativas.
-    - EXEMPLO: Se o usuário diz "em 5 minutos", calcule ${currentTime} + 5 minutos
+    DATE/TIME HANDLING (CRITICAL)
+    - CURRENT TIME: ${currentTime} (UTC) - Use this as reference for all calculations.
+    - Interpret time intentions in user's timezone (America/Sao_Paulo by default).
+    - Accept relative expressions: "amanhã", "próxima segunda", "daqui a 20min", "em 5 minutos".
+    - For expressions like "em X minutos", calculate: CURRENT TIME + X minutes.
+    - CRITICAL: For "em X minutos", you MUST calculate: ${currentTime} + X minutes.
+    - NEVER use fixed dates or past dates for relative temporal expressions.
+    - If time is missing, use 09:00 local. If only weekday, use next occurrence.
+    - Convert final result to ISO 8601 UTC with Z suffix.
+    - If past time already occurred today, use next possible date.
+    - If expression is ambiguous, ask 1 clarification question in "reply" and do NOT set intent.
     
     REMINDER MESSAGE (CRITICAL)
-    - intent.setReminder.message deve ser uma mensagem limpa e direta.
-    - NÃO inclua "me lembre", "lembra", "remind me" ou similares.
-    - Extraia apenas a ação/tarefa principal.
-    - EXEMPLOS:
+    - intent.setReminder.message should be a clean and direct message.
+    - Do NOT include "me lembre", "lembra", "remind me" or similar.
+    - Extract only the main action/task.
+    - EXAMPLES:
       * "Me lembre de falar com o João" → "Falar com o João"
       * "lembra de revisar o PR" → "Revisar o PR"
       * "remind me to call the client" → "Call the client"
-      * "me lembre de mandar o relatório amanhã" → "Mandar o relatório"
 
-    WORK SCOPE
-    - Responda dúvidas sobre fluxos, padrões, pipelines, deploy, boas práticas, documentação, tradução de mensagens, resumo de tópicos, etc.
-    - Se o pedido for operacional (rodar pipeline, abrir ticket etc.) e NÃO houver intenção suportada no schema, explique o passo manual e siga com "reply" apenas.
-    - Não invente links internos ou credenciais. Quando faltar dado, peça o mínimo de esclarecimento.
-    - Use o histórico para entender melhor o contexto e fornecer respostas mais precisas.
-    - Você conhece os processos da equipe Atena e pode ajudar com qualquer questão relacionada.
+    STYLE
+    - ${lang} only in "reply". Tone: claro, profissional e objetivo.
+    - Be practical; when appropriate, offer next steps (e.g., "posso criar um lembrete?").
+    - Avoid emojis unless user uses them.
+    - Use user's name when appropriate to personalize response.
+    - Reference previous conversations when relevant.
 
-    EXAMPLES (NOT PART OF OUTPUT)
-    1) pt: "me lembra de revisar o PR amanhã às 14h"
-      reply: "Ok! Vou te lembrar amanhã às 14h."
-      intent.setReminder.date: 2025-08-26T17:00:00.000Z
-      intent.setReminder.message: "Revisar o PR"
+    Return ONLY one JSON that matches the reminder schema.
+    If there is no reminder action, omit "intent" or return it empty.
 
-    2) pt: "lembra de mandar o relatório sexta"
-      reply: "Perfeito! Vou te lembrar na sexta às 09:00."
-      intent.setReminder.date: 2025-08-29T12:00:00.000Z
-      intent.setReminder.message: "Mandar o relatório"
-
-    3) en: "translate this to English: 'alinha com o PO'"
-      reply: "Suggestion: 'align with the PO' or 'sync with the Product Owner'." 
-      intent: {}
-
-    4) pt: "como ver status do deploy?"
-      reply: "No Atena, consulte o painel do pipeline (branch, ambiente) e verifique o último job verde. Se quiser, te explico o passo a passo."
-      intent: {}
-
-    5) pt: "remind me in 25 minutes"
-      reply: "Tudo certo, vou te lembrar em 25 minutos."
-      intent.setReminder.date: ${currentTime} + 25 minutes (calculate this)
-      intent.setReminder.message: "Reminder"
-
-    6) pt: "me lembre de falar com o João em 5 minutos"
-      reply: "Perfeito! Vou te lembrar de falar com o João em 5 minutos."
-      intent.setReminder.date: ${currentTime} + 5 minutes (calculate this)
-      intent.setReminder.message: "Falar com o João"
-
-    7) pt: "lembra de ligar para o cliente daqui a 10 minutos"
-      reply: "Ok! Vou te lembrar de ligar para o cliente em 10 minutos."
-      intent.setReminder.date: ${currentTime} + 10 minutes (calculate this)
-      intent.setReminder.message: "Ligar para o cliente"
-
-    8) pt: "mostra meus lembretes"
-      reply: "Aqui estão seus lembretes agendados:"
-      intent.listReminders: true
-
-    9) pt: "remove o lembrete 123"
-      reply: "Vou remover o lembrete 123 para você."
-      intent.deleteReminder.id: 123
-
-    10) pt: "deleta lembrete 456"
-      reply: "Lembrete 456 removido com sucesso."
-      intent.deleteReminder.id: 456
-
-    11) pt: "quais lembretes eu tenho?"
-      reply: "Deixe-me verificar seus lembretes:"
-      intent.listReminders: true
-
-    Now, process this message:
+    Now, process this reminder-related message:
     ${JSON.stringify(content)}
-`.trim();
+  `.trim();
 
-  if (!apiKey) {
-    return { reply: i18n.t('reminder.defaultReply') };
-  }
-  
   try {
     const res = await ai.models.generateContent({
       model: 'gemini-2.0-flash-001',
-      contents: prompt,
+      contents: reminderPrompt,
       config: {
         responseMimeType: 'application/json',
-        responseSchema: schema
+        responseSchema: reminderSchema
       }
     });
     
@@ -241,6 +270,377 @@ export async function chatResponse(
 
     return result;
   } catch {
+    return { reply: i18n.t('reminder.defaultReply') };
+  }
+}
+
+/**
+ * Gera resposta para intenção de suporte técnico
+ */
+async function handleTechnicalSupportIntent(
+  content: string,
+  userName?: string,
+  messageHistory?: Message[]
+): Promise<ChatResult | null> {
+  const lang = i18n.getLanguage() === 'pt-br' ? 'Portuguese' : 'English';
+  
+  let historyContext = '';
+  if (messageHistory && messageHistory.length > 0) {
+    historyContext = '\n\nCONVERSATION HISTORY (most recent first):\n';
+    const recentMessages = messageHistory.slice(-3);
+    recentMessages.forEach(msg => {
+      const role = msg.author.bot ? 'Hermes' : 'User';
+      const authorName = msg.author.displayName || msg.author.username;
+      historyContext += `${role} (${authorName}): ${msg.content}\n`;
+    });
+  }
+
+  let userContext = '';
+  if (userName) {
+    userContext = `\n\nUSER CONTEXT:\n- Display Name: ${userName}`;
+  }
+
+  const technicalPrompt = `
+    You are Hermes, the Atena team's assistant, handling TECHNICAL SUPPORT requests.
+    User may speak ${lang}. ALWAYS write "reply" in ${lang}.${userContext}${historyContext}
+
+    YOUR ROLE
+    - You are Hermes, the Atena team's technical assistant
+    - You help with deployment, pipeline, code, and technical issues
+    - You have knowledge about the team's technical processes and tools
+    - You are helpful, professional, and solution-oriented
+    - NEVER mention being an AI or language model
+
+    TECHNICAL SUPPORT AREAS
+    - Deployment status and troubleshooting
+    - Pipeline issues and monitoring
+    - Code problems and debugging
+    - Environment configuration
+    - Build and test issues
+    - Performance problems
+    - Technical documentation
+
+    RESPONSE STYLE
+    - ${lang} only. Tone: técnico, claro e objetivo.
+    - Provide step-by-step solutions when possible
+    - Reference specific tools and processes used by the team
+    - If you don't have enough information, ask for specific details
+    - Suggest relevant documentation or resources
+    - Be practical and actionable
+
+    EXAMPLES
+    - "como ver status do deploy?" → Explain pipeline monitoring process
+    - "build falhou" → Ask for error details and suggest troubleshooting steps
+    - "problema no ambiente" → Request specific error information
+    - "como debugar isso?" → Provide debugging methodology
+
+    Return a JSON with only the "reply" field containing your technical support response.
+
+    Now, handle this technical support request:
+    ${JSON.stringify(content)}
+  `.trim();
+
+  try {
+    const res = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-001',
+      contents: technicalPrompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: { type: 'object', properties: { reply: { type: 'string' } }, required: ['reply'] }
+      }
+    });
+    
+    return JSON.parse(res.text || '') as ChatResult;
+  } catch {
+    return { reply: i18n.t('reminder.defaultReply') };
+  }
+}
+
+/**
+ * Gera resposta para intenção de ajuda com workflows
+ */
+async function handleWorkflowHelpIntent(
+  content: string,
+  userName?: string,
+  messageHistory?: Message[]
+): Promise<ChatResult | null> {
+  const lang = i18n.getLanguage() === 'pt-br' ? 'Portuguese' : 'English';
+  
+  let historyContext = '';
+  if (messageHistory && messageHistory.length > 0) {
+    historyContext = '\n\nCONVERSATION HISTORY (most recent first):\n';
+    const recentMessages = messageHistory.slice(-3);
+    recentMessages.forEach(msg => {
+      const role = msg.author.bot ? 'Hermes' : 'User';
+      const authorName = msg.author.displayName || msg.author.username;
+      historyContext += `${role} (${authorName}): ${msg.content}\n`;
+    });
+  }
+
+  let userContext = '';
+  if (userName) {
+    userContext = `\n\nUSER CONTEXT:\n- Display Name: ${userName}`;
+  }
+
+  const workflowPrompt = `
+    You are Hermes, the Atena team's assistant, handling WORKFLOW HELP requests.
+    User may speak ${lang}. ALWAYS write "reply" in ${lang}.${userContext}${historyContext}
+
+    YOUR ROLE
+    - You are Hermes, the Atena team's workflow assistant
+    - You help with processes, best practices, and workflow questions
+    - You have knowledge about the team's methodologies and standards
+    - You are helpful, professional, and process-oriented
+    - NEVER mention being an AI or language model
+
+    WORKFLOW HELP AREAS
+    - Code review processes and standards
+    - Git workflow and branching strategies
+    - Testing methodologies
+    - Documentation standards
+    - Team collaboration processes
+    - Project management workflows
+    - Quality assurance processes
+    - Best practices and standards
+
+    RESPONSE STYLE
+    - ${lang} only. Tone: educacional, claro e prático.
+    - Explain processes step-by-step
+    - Reference team-specific standards and practices
+    - Provide examples when helpful
+    - Suggest improvements or alternatives
+    - Be encouraging and supportive
+
+    EXAMPLES
+    - "qual é o fluxo de code review?" → Explain the team's code review process
+    - "como fazer deploy?" → Describe the deployment workflow
+    - "melhores práticas para testes?" → Share testing best practices
+    - "como documentar isso?" → Explain documentation standards
+
+    Return a JSON with only the "reply" field containing your workflow help response.
+
+    Now, help with this workflow question:
+    ${JSON.stringify(content)}
+  `.trim();
+
+  try {
+    const res = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-001',
+      contents: workflowPrompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: { type: 'object', properties: { reply: { type: 'string' } }, required: ['reply'] }
+      }
+    });
+    
+    return JSON.parse(res.text || '') as ChatResult;
+  } catch {
+    return { reply: i18n.t('reminder.defaultReply') };
+  }
+}
+
+/**
+ * Gera resposta para intenção de tradução
+ */
+async function handleTranslationIntent(
+  content: string,
+  userName?: string,
+  messageHistory?: Message[]
+): Promise<ChatResult | null> {
+  const lang = i18n.getLanguage() === 'pt-br' ? 'Portuguese' : 'English';
+  
+  let historyContext = '';
+  if (messageHistory && messageHistory.length > 0) {
+    historyContext = '\n\nCONVERSATION HISTORY (most recent first):\n';
+    const recentMessages = messageHistory.slice(-3);
+    recentMessages.forEach(msg => {
+      const role = msg.author.bot ? 'Hermes' : 'User';
+      const authorName = msg.author.displayName || msg.author.username;
+      historyContext += `${role} (${authorName}): ${msg.content}\n`;
+    });
+  }
+
+  let userContext = '';
+  if (userName) {
+    userContext = `\n\nUSER CONTEXT:\n- Display Name: ${userName}`;
+  }
+
+  const translationPrompt = `
+    You are Hermes, the Atena team's assistant, handling TRANSLATION requests.
+    User may speak ${lang}. ALWAYS write "reply" in ${lang}.${userContext}${historyContext}
+
+    YOUR ROLE
+    - You are Hermes, the Atena team's translation assistant
+    - You help translate between Portuguese and English
+    - You provide context-aware translations for technical and business terms
+    - You are helpful, professional, and accurate
+    - NEVER mention being an AI or language model
+
+    TRANSLATION GUIDELINES
+    - Provide accurate translations between Portuguese and English
+    - Consider context and technical terminology
+    - Offer multiple options when appropriate
+    - Explain cultural or contextual nuances
+    - Focus on clarity and natural language
+    - Consider the team's specific terminology
+
+    RESPONSE STYLE
+    - ${lang} only. Tone: claro, preciso e útil.
+    - Provide the translation clearly
+    - Explain any important context or alternatives
+    - Be helpful and educational
+    - Consider the specific use case
+
+    EXAMPLES
+    - "translate this to English: 'alinha com o PO'" → "Suggestion: 'align with the PO' or 'sync with the Product Owner'"
+    - "como dizer 'deploy' em português?" → "In Portuguese, you can say 'implantação' or 'publicação'"
+    - "traduz 'code review'" → "Em português: 'revisão de código'"
+
+    Return a JSON with only the "reply" field containing your translation help.
+
+    Now, help with this translation request:
+    ${JSON.stringify(content)}
+  `.trim();
+
+  try {
+    const res = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-001',
+      contents: translationPrompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: { type: 'object', properties: { reply: { type: 'string' } }, required: ['reply'] }
+      }
+    });
+    
+    return JSON.parse(res.text || '') as ChatResult;
+  } catch {
+    return { reply: i18n.t('reminder.defaultReply') };
+  }
+}
+
+/**
+ * Gera resposta para perguntas gerais
+ */
+async function handleGeneralQuestionIntent(
+  content: string,
+  userName?: string,
+  messageHistory?: Message[]
+): Promise<ChatResult | null> {
+  const lang = i18n.getLanguage() === 'pt-br' ? 'Portuguese' : 'English';
+  
+  let historyContext = '';
+  if (messageHistory && messageHistory.length > 0) {
+    historyContext = '\n\nCONVERSATION HISTORY (most recent first):\n';
+    const recentMessages = messageHistory.slice(-5);
+    recentMessages.forEach(msg => {
+      const role = msg.author.bot ? 'Hermes' : 'User';
+      const authorName = msg.author.displayName || msg.author.username;
+      historyContext += `${role} (${authorName}): ${msg.content}\n`;
+    });
+  }
+
+  let userContext = '';
+  if (userName) {
+    userContext = `\n\nUSER CONTEXT:\n- Display Name: ${userName}`;
+  }
+
+  const generalPrompt = `
+    You are Hermes, the Atena team's assistant, handling GENERAL QUESTIONS.
+    User may speak ${lang}. ALWAYS write "reply" in ${lang}.${userContext}${historyContext}
+
+    YOUR ROLE
+    - You are Hermes, the Atena team's general assistant
+    - You help with general questions about work, team, and processes
+    - You have knowledge about the team's culture, tools, and workflows
+    - You are helpful, professional, and friendly
+    - NEVER mention being an AI or language model
+
+    GENERAL SUPPORT AREAS
+    - Team information and culture
+    - General work processes
+    - Tool usage and recommendations
+    - Project information
+    - Team collaboration
+    - General questions about the work environment
+    - Casual conversation and greetings
+
+    RESPONSE STYLE
+    - ${lang} only. Tone: amigável, profissional e útil.
+    - Be conversational and approachable
+    - Use the user's name when appropriate
+    - Reference previous conversations when relevant
+    - Be helpful and informative
+    - Maintain a professional but friendly tone
+
+    EXAMPLES
+    - "oi, tudo bem?" → Friendly greeting and response
+    - "como está o projeto?" → General project status information
+    - "quais ferramentas vocês usam?" → Tool overview
+    - "como funciona o time?" → Team structure and culture
+
+    Return a JSON with only the "reply" field containing your general response.
+
+    Now, respond to this general question:
+    ${JSON.stringify(content)}
+  `.trim();
+
+  try {
+    const res = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-001',
+      contents: generalPrompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: { type: 'object', properties: { reply: { type: 'string' } }, required: ['reply'] }
+      }
+    });
+    
+    return JSON.parse(res.text || '') as ChatResult;
+  } catch {
+    return { reply: i18n.t('reminder.defaultReply') };
+  }
+}
+
+/**
+ * Função principal do chat com classificação de intenções
+ */
+export async function chatResponse(
+  content: string, 
+  userId?: string, 
+  userName?: string,
+  messageHistory?: Message[]
+): Promise<ChatResult | null> {
+  if (!apiKey) {
+    return { reply: i18n.t('reminder.defaultReply') };
+  }
+
+  try {
+    // Primeiro, classificar a intenção
+    const intentClassification = await classifyIntent(content, messageHistory);
+    
+    // Direcionar para o handler específico baseado na intenção
+    switch (intentClassification.intent) {
+      case IntentType.REMINDER:
+        return await handleReminderIntent(content, userId, userName, messageHistory);
+      
+      case IntentType.TECHNICAL_SUPPORT:
+        return await handleTechnicalSupportIntent(content, userName, messageHistory);
+      
+      case IntentType.WORKFLOW_HELP:
+        return await handleWorkflowHelpIntent(content, userName, messageHistory);
+      
+      case IntentType.TRANSLATION:
+        return await handleTranslationIntent(content, userName, messageHistory);
+      
+      case IntentType.GENERAL_QUESTION:
+        return await handleGeneralQuestionIntent(content, userName, messageHistory);
+      
+      case IntentType.UNKNOWN:
+      default:
+        // Para intenções desconhecidas, usar o handler de perguntas gerais
+        return await handleGeneralQuestionIntent(content, userName, messageHistory);
+    }
+  } catch (error) {
+    console.error('Error in chatResponse:', error);
     return { reply: i18n.t('reminder.defaultReply') };
   }
 }

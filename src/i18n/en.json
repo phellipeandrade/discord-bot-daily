@@ -39,9 +39,12 @@
   "reminder.list.title": "📋 Your Reminders",
   "reminder.delete.success": "Reminder removed successfully.",
   "reminder.delete.error": "Error removing reminder.",
+  "reminder.delete.notFound": "Reminder not found or you don't have permission to remove it.",
+  "reminder.deleteAll.success": "{{count}} reminders removed successfully.",
+  "reminder.deleteAll.error": "Error removing reminders.",
+  "reminder.deleteAll.noReminders": "You have no reminders to remove.",
   "reminder.stats": "📊 **Reminder Statistics**\nTotal: {{total}}\nPending: {{pending}}\nSent: {{sent}}",
   "reminder.list.noReminders": "You have no scheduled reminders at the moment.",
-  "reminder.delete.notFound": "Reminder not found or you don't have permission to remove it.",
 
   "export.success": "✅ Attached data files.",
   "export.noFiles": "❌ No data files found.",

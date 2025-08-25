@@ -47,6 +47,9 @@
   "reminder.stats": "📊 **Estatísticas dos Lembretes**\nTotal: {{total}}\nPendentes: {{pending}}\nEnviados: {{sent}}",
   "reminder.list.noReminders": "Você não tem lembretes agendados no momento.",
   "reminder.delete.notFound": "Lembrete não encontrado ou você não tem permissão para removê-lo.",
+  "reminder.deleteAll.success": "{{count}} lembretes removidos com sucesso.",
+  "reminder.deleteAll.error": "Erro ao remover os lembretes.",
+  "reminder.deleteAll.noReminders": "Você não tem lembretes para remover.",
 
   "export.success": "✅ Arquivos de dados anexados.",
   "export.noFiles": "❌ Nenhum arquivo de dados encontrado.",

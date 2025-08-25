@@ -81,6 +81,17 @@ class ReminderService {
     }
   }
 
+  async deleteAllRemindersByUser(userId: string): Promise<number> {
+    try {
+      const deletedCount = await database.deleteAllRemindersByUser(userId);
+      console.log(`🗑️ Deleted ${deletedCount} reminders for user ${userId}`);
+      return deletedCount;
+    } catch (error) {
+      console.error('Error deleting all reminders for user:', error);
+      return 0;
+    }
+  }
+
   async getStats(): Promise<{ total: number; pending: number; sent: number }> {
     try {
       return await database.getReminderStats();
