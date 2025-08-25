@@ -12,20 +12,31 @@ describe('reminders', () => {
 
   test('schedules reminder from DM', async () => {
     const future = new Date(Date.now() + 1000).toISOString();
+    const generateContent = jest
+      .fn()
+      .mockResolvedValueOnce({
+        text: JSON.stringify({
+          reply: 'ok',
+          intent: { setReminder: { date: future } }
+        })
+      });
+    const i18nMock = {
+      t: jest.fn((key: string, params: Record<string, string> = {}) => {
+        const map: Record<string, string> = {
+          'reminder.notify': `notify ${params.text}`,
+          'reminder.set': `set ${params.date}`
+        };
+        return map[key] || key;
+      }),
+      getLanguage: jest.fn(() => 'en')
+    };
+    jest.doMock('@/i18n', () => ({ i18n: i18nMock }));
     jest.doMock('@google/genai', () => ({
       GoogleGenAI: jest.fn().mockImplementation(() => ({
-        models: {
-          generateContent: jest
-            .fn()
-            .mockResolvedValueOnce({ text: JSON.stringify({ isReminder: true }) })
-            .mockResolvedValueOnce(
-              { text: JSON.stringify({ datetime: future, text: 'talk' }) }
-            )
-        }
+        models: { generateContent }
       }))
     }));
     const { handleReminderMessage } = await import('@/reminders');
-    const { i18n } = await import('@/i18n');
     const send = jest.fn();
     const reply = jest.fn();
     const message = {
@@ -35,28 +46,37 @@ describe('reminders', () => {
       reply
     } as unknown as Message;
     await handleReminderMessage(message);
-    expect(reply).toHaveBeenCalledWith(
-      i18n.t('reminder.set', { date: future })
+    expect(generateContent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        config: expect.objectContaining({
+          responseMimeType: 'application/json',
+          responseSchema: expect.any(Object)
+        })
+      })
     );
+    expect(reply).toHaveBeenCalledWith('ok');
     jest.runAllTimers();
     expect(send).toHaveBeenCalledWith(
-      i18n.t('reminder.notify', { text: 'talk' })
+      i18nMock.t('reminder.notify', { text: 'remind me' })
     );
   });
 
   test('handles parse failure', async () => {
+    const i18nMock = {
+      t: jest.fn((key: string) => ({
+        'reminder.parseError': 'parse-error'
+      }[key] || key)),
+      getLanguage: jest.fn(() => 'en')
+    };
+    jest.doMock('@/i18n', () => ({ i18n: i18nMock }));
     jest.doMock('@google/genai', () => ({
       GoogleGenAI: jest.fn().mockImplementation(() => ({
         models: {
-          generateContent: jest
-            .fn()
-            .mockResolvedValueOnce({ text: JSON.stringify({ isReminder: true }) })
-            .mockResolvedValueOnce({ text: 'invalid' })
+          generateContent: jest.fn().mockResolvedValueOnce({ text: 'invalid' })
         }
       }))
     }));
     const { handleReminderMessage } = await import('@/reminders');
-    const { i18n } = await import('@/i18n');
     const reply = jest.fn();
     const message = {
       content: 'hi',
@@ -66,18 +86,24 @@ describe('reminders', () => {
     } as unknown as Message;
     await handleReminderMessage(message);
     expect(reply).toHaveBeenCalledWith(
-      i18n.t('reminder.parseError')
+      i18nMock.t('reminder.parseError')
     );
   });
 
   test('chats when no reminder intent', async () => {
+    const i18nMock = {
+      t: jest.fn((key: string) => ({
+        'reminder.defaultReply': 'default'
+      }[key] || key)),
+      getLanguage: jest.fn(() => 'en')
+    };
+    jest.doMock('@/i18n', () => ({ i18n: i18nMock }));
     jest.doMock('@google/genai', () => ({
       GoogleGenAI: jest.fn().mockImplementation(() => ({
         models: {
-          generateContent: jest
-            .fn()
-            .mockResolvedValueOnce({ text: JSON.stringify({ isReminder: false }) })
-            .mockResolvedValueOnce({ text: 'Hello there!' })
+          generateContent: jest.fn().mockResolvedValueOnce({
+            text: JSON.stringify({ reply: 'Hello there!' })
+          })
         }
       }))
     }));
