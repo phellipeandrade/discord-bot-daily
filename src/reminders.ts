@@ -1,5 +1,6 @@
 import { Client, Message } from 'discord.js';
 import { GoogleGenAI } from '@google/genai';
+import { i18n } from '@/i18n';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
@@ -10,7 +11,7 @@ interface ParsedReminder {
 
 async function detectReminderIntent(content: string): Promise<boolean> {
   const prompt =
-    'Does the following message ask to set a reminder? Respond in JSON with property "isReminder" as true or false. Message: ' +
+    'Does the following message ask to set a reminder? The user may speak Portuguese. Respond in JSON with property "isReminder" as true or false. Message: ' +
     JSON.stringify(content);
   try {
     const res = await ai.models.generateContent({
@@ -28,7 +29,7 @@ export async function parseReminder(
   content: string
 ): Promise<ParsedReminder | null> {
   const prompt =
-    'Extract a future ISO 8601 datetime and the reminder text from the following reminder request. ' +
+    'Extract a future ISO 8601 datetime and the reminder text from the following reminder request. The user may speak Portuguese. ' +
     'Respond in JSON with properties "datetime" and "text". Message: ' +
     JSON.stringify(content);
 
@@ -49,17 +50,18 @@ export async function parseReminder(
 }
 
 async function chatResponse(content: string): Promise<string> {
+  const lang = i18n.getLanguage() === 'pt-br' ? 'Portuguese' : 'English';
   const prompt =
-    'You are a friendly reminder bot. Reply conversationally to the following message: ' +
+    `You are a friendly reminder bot. Reply conversationally in ${lang} to the following message: ` +
     JSON.stringify(content);
   try {
     const res = await ai.models.generateContent({
       model: 'gemini-2.0-flash-001',
       contents: prompt
     });
-    return res.text || "I'm here to help with reminders!";
+    return res.text || i18n.t('reminder.defaultReply');
   } catch {
-    return "I'm here to help with reminders!";
+    return i18n.t('reminder.defaultReply');
   }
 }
 
@@ -74,24 +76,24 @@ export async function handleReminderMessage(message: Message): Promise<void> {
   const parsed = await parseReminder(message.content);
   if (!parsed) {
     await message.reply(
-      'I could not understand your reminder. Try something like "Remind me to call Amir tomorrow at 3 PM".'
+      i18n.t('reminder.parseError')
     );
     return;
   }
   const date = new Date(parsed.datetime);
   const delay = date.getTime() - Date.now();
   if (isNaN(date.getTime()) || delay <= 0) {
-    await message.reply('The reminder time is invalid or in the past.');
+    await message.reply(i18n.t('reminder.invalidTime'));
     return;
   }
   setTimeout(() => {
     Promise.resolve(
-      message.author.send(`\u23f0 Reminder: ${parsed.text}`)
+      message.author.send(i18n.t('reminder.notify', { text: parsed.text }))
     ).catch(() => {
       /* ignore */
     });
   }, delay);
-  await message.reply(`Reminder set for ${date.toISOString()}.`);
+  await message.reply(i18n.t('reminder.set', { date: date.toISOString() }));
 }
 
 export function setupReminderListener(client: Client): void {

@@ -25,6 +25,7 @@ describe('reminders', () => {
       }))
     }));
     const { handleReminderMessage } = await import('@/reminders');
+    const { i18n } = await import('@/i18n');
     const send = jest.fn();
     const reply = jest.fn();
     const message = {
@@ -34,9 +35,13 @@ describe('reminders', () => {
       reply
     } as unknown as Message;
     await handleReminderMessage(message);
-    expect(reply).toHaveBeenCalledWith(`Reminder set for ${future}.`);
+    expect(reply).toHaveBeenCalledWith(
+      i18n.t('reminder.set', { date: future })
+    );
     jest.runAllTimers();
-    expect(send).toHaveBeenCalledWith('⏰ Reminder: talk');
+    expect(send).toHaveBeenCalledWith(
+      i18n.t('reminder.notify', { text: 'talk' })
+    );
   });
 
   test('handles parse failure', async () => {
@@ -51,6 +56,7 @@ describe('reminders', () => {
       }))
     }));
     const { handleReminderMessage } = await import('@/reminders');
+    const { i18n } = await import('@/i18n');
     const reply = jest.fn();
     const message = {
       content: 'hi',
@@ -60,7 +66,7 @@ describe('reminders', () => {
     } as unknown as Message;
     await handleReminderMessage(message);
     expect(reply).toHaveBeenCalledWith(
-      'I could not understand your reminder. Try something like "Remind me to call Amir tomorrow at 3 PM".'
+      i18n.t('reminder.parseError')
     );
   });
 

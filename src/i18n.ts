@@ -70,6 +70,10 @@ export const i18n = {
     i18next.changeLanguage(lang);
   },
 
+  getLanguage: (): Language => {
+    return i18next.language as Language;
+  },
+
   getCommandName: (command: string): string => {
     return i18next.t(`commands.${command}.name`, { defaultValue: command });
   },
