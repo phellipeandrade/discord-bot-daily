@@ -5,7 +5,7 @@ import { chatResponse } from '@/chat';
 export async function handleChatMessage(message: Message): Promise<void> {
   // Extrair informações do usuário
   const userId = message.author.id;
-  const userName = message.author.username;
+  const userName = message.author.displayName || message.author.username;
   
   // Buscar histórico de mensagens do canal DM
   let messageHistory: Message[] = [];
