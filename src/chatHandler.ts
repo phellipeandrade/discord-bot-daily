@@ -2,8 +2,25 @@ import { Client, Message } from 'discord.js';
 import { i18n } from '@/i18n';
 import { chatResponse } from '@/chat';
 
-export async function handleReminderMessage(message: Message): Promise<void> {
-  const result = await chatResponse(message.content);
+export async function handleChatMessage(message: Message): Promise<void> {
+  // Extrair informações do usuário
+  const userId = message.author.id;
+  const userName = message.author.username;
+  
+  // Buscar histórico de mensagens do canal DM
+  let messageHistory: Message[] = [];
+  try {
+    if (message.channel.type === 1) { // 1 = DMChannel
+      // Buscar as últimas 10 mensagens do canal DM
+      const messages = await message.channel.messages.fetch({ limit: 10 });
+      messageHistory = Array.from(messages.values()).reverse(); // Ordenar do mais antigo para o mais recente
+    }
+  } catch (error) {
+    console.error('Error fetching message history:', error);
+    // Continuar sem histórico se houver erro
+  }
+  
+  const result = await chatResponse(message.content, userId, userName, messageHistory);
   if (!result) {
     try {
       await message.reply(i18n.t('reminder.parseError'));
@@ -49,9 +66,9 @@ export async function handleReminderMessage(message: Message): Promise<void> {
   }
 }
 
-export function setupReminderListener(client: Client): void {
+export function setupChatListener(client: Client): void {
   client.on('messageCreate', (msg) => {
     if (msg.guildId || msg.author.bot) return;
-    void handleReminderMessage(msg);
+    void handleChatMessage(msg);
   });
 }

@@ -1,5 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 import { i18n } from '@/i18n';
+import { Message } from 'discord.js';
 
 const apiKey = process.env.GEMINI_API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
@@ -13,8 +14,14 @@ interface ChatResult {
   };
 }
 
-export async function chatResponse(content: string): Promise<ChatResult | null> {
+export async function chatResponse(
+  content: string, 
+  userId?: string, 
+  userName?: string,
+  messageHistory?: Message[]
+): Promise<ChatResult | null> {
   const lang = i18n.getLanguage() === 'pt-br' ? 'Portuguese' : 'English';
+
   const schema = {
     type: 'object',
     properties: {
@@ -35,13 +42,38 @@ export async function chatResponse(content: string): Promise<ChatResult | null> 
     required: ['reply'],
     additionalProperties: false
   } as const;
+
+  // Construir contexto do histórico do Discord
+  let historyContext = '';
+  if (messageHistory && messageHistory.length > 0) {
+    historyContext = '\n\nCONVERSATION HISTORY (most recent first):\n';
+    // Pegar apenas as últimas 5 mensagens para não sobrecarregar o contexto
+    const recentMessages = messageHistory.slice(-5);
+    recentMessages.forEach(msg => {
+      const role = msg.author.bot ? 'Hermes' : 'User';
+      const authorName = msg.author.username;
+      historyContext += `${role} (${authorName}): ${msg.content}\n`;
+    });
+  }
+
+  // Construir contexto do usuário
+  let userContext = '';
+  if (userName) {
+    userContext = `\n\nUSER CONTEXT:\n- User Name: ${userName}`;
+    if (userId) {
+      userContext += `\n- User ID: ${userId}`;
+    }
+  }
+
   const prompt = `
     You are "Hermes", the assistant for the Atena team on Discord DMs.
-    User may speak ${lang}. ALWAYS write "reply" in ${lang}.
+    User may speak ${lang}. ALWAYS write "reply" in ${lang}.${userContext}${historyContext}
 
     GOAL
     - If the user asks to set a reminder, populate intent.setReminder.date (ISO 8601 UTC).
     - If the message does NOT request a reminder, do NOT set any intent — just answer concisely.
+    - Use conversation history to provide more contextual and personalized responses.
+    - Remember previous topics and references made by the user.
 
     OUTPUT
     - Return ONLY one JSON that matches this schema:
@@ -60,6 +92,8 @@ export async function chatResponse(content: string): Promise<ChatResult | null> 
     - ${lang} only in "reply". Tone: claro, profissional e objetivo.
     - Seja prático; quando cabível, ofereça um próximo passo (ex.: "posso criar um lembrete?").
     - Evite emojis, a não ser que o usuário use.
+    - Use o nome do usuário quando apropriado para personalizar a resposta.
+    - Referencie conversas anteriores quando relevante.
 
     DATE/TIME (CRITICAL)
     - Interprete a intenção de tempo no fuso do usuário (America/Sao_Paulo por padrão).
@@ -73,6 +107,7 @@ export async function chatResponse(content: string): Promise<ChatResult | null> 
     - Responda dúvidas sobre fluxos, padrões, pipelines, deploy, boas práticas, documentação, tradução de mensagens, resumo de tópicos, etc.
     - Se o pedido for operacional (rodar pipeline, abrir ticket etc.) e NÃO houver intenção suportada no schema, explique o passo manual e siga com "reply" apenas.
     - Não invente links internos ou credenciais. Quando faltar dado, peça o mínimo de esclarecimento.
+    - Use o histórico para entender melhor o contexto e fornecer respostas mais precisas.
 
     EXAMPLES (NOT PART OF OUTPUT)
     1) pt: "me lembra de revisar o PR amanhã às 14h"
@@ -102,6 +137,7 @@ export async function chatResponse(content: string): Promise<ChatResult | null> 
   if (!apiKey) {
     return { reply: i18n.t('reminder.defaultReply') };
   }
+  
   try {
     const res = await ai.models.generateContent({
       model: 'gemini-2.0-flash-001',
@@ -111,11 +147,15 @@ export async function chatResponse(content: string): Promise<ChatResult | null> 
         responseSchema: schema
       }
     });
+    
+    let result: ChatResult | null = null;
     try {
-      return JSON.parse(res.text || '') as ChatResult;
+      result = JSON.parse(res.text || '') as ChatResult;
     } catch {
       return null;
     }
+
+    return result;
   } catch {
     return { reply: i18n.t('reminder.defaultReply') };
   }

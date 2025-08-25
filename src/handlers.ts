@@ -42,6 +42,7 @@ import {
   ServerConfig
 } from '@/serverConfig';
 
+
 async function fetchText(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
     https
@@ -571,3 +572,5 @@ export async function handleEnable(
   }
   await interaction.reply(i18n.t('bot.enabled'));
 }
+
+

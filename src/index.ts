@@ -46,7 +46,7 @@ import {
   handleClearReactions
 } from '@/music';
 import { scheduleDailySelection } from '@/scheduler';
-import { setupReminderListener } from '@/reminders';
+import { setupChatListener } from '@/chatHandler';
 
 i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
 logConfig();
@@ -148,7 +148,7 @@ if (process.env.NODE_ENV !== 'test') {
     }
   });
 
-  setupReminderListener(client);
+  setupChatListener(client);
 
   client.login(TOKEN);
 }
