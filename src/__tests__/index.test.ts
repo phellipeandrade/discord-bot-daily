@@ -289,6 +289,16 @@ describe('Funções Utilitárias', () => {
       expect(fs.promises.writeFile).toHaveBeenCalledTimes(1);
     });
 
+    it('deve reiniciar ciclo ao selecionar último usuário elegível', async () => {
+      const dados = JSON.parse(JSON.stringify(mockData));
+      dados.remaining = [{ name: 'User1', id: '1' }];
+
+      const resultado = await selectUser(dados);
+
+      expect(resultado.id).toBe('1');
+      expect(dados.remaining.length).toBe(mockData.all.length);
+    });
+
     it('deve reinserir usuários elegíveis quando todos restantes estão pulados', async () => {
       const dados = JSON.parse(JSON.stringify(mockData));
       dados.remaining = [{ name: 'User1', id: '1' }];
