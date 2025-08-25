@@ -76,9 +76,14 @@ export async function selectUser(data: UserData): Promise<UserEntry> {
     eligible = [...allEligible];
   }
 
+  const isLastEligible = eligible.length === 1;
+
   const index = Math.floor(Math.random() * eligible.length);
   const selected = eligible[index];
   data.remaining = data.remaining.filter(u => u.id !== selected.id);
+  if (isLastEligible) {
+    data.remaining = [...data.all];
+  }
   data.lastSelected = selected;
   data.lastSelectionDate = todayISO();
   await saveUsers(data);
