@@ -47,6 +47,7 @@ import {
   handleStopMusic
 } from '@/music';
 import { scheduleDailySelection } from '@/scheduler';
+import { setupReminderListener } from '@/reminders';
 
 i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
 logConfig();
@@ -68,7 +69,8 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMessageReactions,
-    GatewayIntentBits.GuildVoiceStates
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.DirectMessages
   ],
   partials: [Partials.Message, Partials.Reaction, Partials.Channel]
 });
@@ -141,6 +143,8 @@ if (process.env.NODE_ENV !== 'test') {
       await handlePlayButton(interaction);
     }
   });
+
+  setupReminderListener(client);
 
   client.login(TOKEN);
 }
