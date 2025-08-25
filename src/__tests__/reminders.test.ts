@@ -17,7 +17,10 @@ describe('reminders', () => {
         models: {
           generateContent: jest
             .fn()
-            .mockResolvedValue({ text: JSON.stringify({ datetime: future, text: 'talk' }) })
+            .mockResolvedValueOnce({ text: JSON.stringify({ isReminder: true }) })
+            .mockResolvedValueOnce(
+              { text: JSON.stringify({ datetime: future, text: 'talk' }) }
+            )
         }
       }))
     }));
@@ -40,7 +43,10 @@ describe('reminders', () => {
     jest.doMock('@google/genai', () => ({
       GoogleGenAI: jest.fn().mockImplementation(() => ({
         models: {
-          generateContent: jest.fn().mockResolvedValue({ text: 'invalid' })
+          generateContent: jest
+            .fn()
+            .mockResolvedValueOnce({ text: JSON.stringify({ isReminder: true }) })
+            .mockResolvedValueOnce({ text: 'invalid' })
         }
       }))
     }));
@@ -53,6 +59,31 @@ describe('reminders', () => {
       reply
     } as unknown as Message;
     await handleReminderMessage(message);
-    expect(reply).toHaveBeenCalledWith('Sorry, I could not understand the reminder.');
+    expect(reply).toHaveBeenCalledWith(
+      'I could not understand your reminder. Try something like "Remind me to call Amir tomorrow at 3 PM".'
+    );
+  });
+
+  test('chats when no reminder intent', async () => {
+    jest.doMock('@google/genai', () => ({
+      GoogleGenAI: jest.fn().mockImplementation(() => ({
+        models: {
+          generateContent: jest
+            .fn()
+            .mockResolvedValueOnce({ text: JSON.stringify({ isReminder: false }) })
+            .mockResolvedValueOnce({ text: 'Hello there!' })
+        }
+      }))
+    }));
+    const { handleReminderMessage } = await import('@/reminders');
+    const reply = jest.fn();
+    const message = {
+      content: 'hi',
+      author: { bot: false },
+      guildId: null,
+      reply
+    } as unknown as Message;
+    await handleReminderMessage(message);
+    expect(reply).toHaveBeenCalledWith('Hello there!');
   });
 });
