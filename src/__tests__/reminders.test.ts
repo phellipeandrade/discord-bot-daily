@@ -4,6 +4,7 @@ describe('reminders', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.resetModules();
+    process.env.GEMINI_API_KEY = 'test';
   });
 
   afterEach(() => {
@@ -117,5 +118,31 @@ describe('reminders', () => {
     } as unknown as Message;
     await handleReminderMessage(message);
     expect(reply).toHaveBeenCalledWith('Hello there!');
+  });
+
+  test('falls back when API key is missing', async () => {
+    process.env.GEMINI_API_KEY = '';
+    const i18nMock = {
+      t: jest.fn((key: string) => ({
+        'reminder.defaultReply': 'default'
+      }[key] || key)),
+      getLanguage: jest.fn(() => 'en')
+    };
+    jest.doMock('@/i18n', () => ({ i18n: i18nMock }));
+    jest.doMock('@google/genai', () => ({
+      GoogleGenAI: jest.fn().mockImplementation(() => ({
+        models: { generateContent: jest.fn() }
+      }))
+    }));
+    const { handleReminderMessage } = await import('@/reminders');
+    const reply = jest.fn();
+    const message = {
+      content: 'hi',
+      author: { bot: false },
+      guildId: null,
+      reply
+    } as unknown as Message;
+    await handleReminderMessage(message);
+    expect(reply).toHaveBeenCalledWith('default');
   });
 });
