@@ -28,7 +28,13 @@
   "setup.savedNoChanges": "✅ Configuration saved! No changes detected.",
   "setup.instructions": "Use /setup to configure channels and token.",
   "setup.invalidDateFormat": "❌ Invalid date format. Use placeholders YYYY, MM and DD.",
-  
+
+  "reminder.parseError": "I could not understand your reminder. Try something like \"Remind me to call Amir tomorrow at 3 PM\".",
+  "reminder.invalidTime": "The reminder time is invalid or in the past.",
+  "reminder.set": "Reminder set for {{date}}.",
+  "reminder.notify": "⏰ Reminder: {{text}}",
+  "reminder.defaultReply": "I'm here to help with reminders!",
+
   "export.success": "✅ Attached data files.",
   "export.noFiles": "❌ No data files found.",
   "commands": {

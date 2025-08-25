@@ -33,7 +33,13 @@
   "setup.savedNoChanges": "✅ Configuração salva! Nenhuma alteração detectada.",
   "setup.instructions": "Use /configurar para definir canais e token.",
   "setup.invalidDateFormat": "❌ Formato de data inválido. Use YYYY, MM e DD.",
-  
+
+  "reminder.parseError": "Não consegui entender seu lembrete. Tente algo como \"Me lembre de ligar para o Amir amanhã às 15h\".",
+  "reminder.invalidTime": "O horário do lembrete é inválido ou está no passado.",
+  "reminder.set": "Lembrete definido para {{date}}.",
+  "reminder.notify": "⏰ Lembrete: {{text}}",
+  "reminder.defaultReply": "Estou aqui para ajudar com lembretes!",
+
   "export.success": "✅ Arquivos de dados anexados.",
   "export.noFiles": "❌ Nenhum arquivo de dados encontrado.",
   "commands": {

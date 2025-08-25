@@ -31,7 +31,8 @@
     "i18next": "^25.2.1",
     "node-cron": "^4.1.0",
     "discord-player": "^7.1.0",
-    "discord-player-youtubei": "^1.4.6"
+    "discord-player-youtubei": "^1.4.6",
+    "@google/genai": "^1.15.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^18.5.0",
