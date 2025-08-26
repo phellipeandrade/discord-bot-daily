@@ -121,9 +121,7 @@ export async function handleRemove(
   data.remaining = data.remaining.filter((u) => u.id !== user.id);
   
   // Remove o skip do usuário removido se existir
-  if (data.skips && data.skips[user.id]) {
-    delete data.skips[user.id];
-  }
+  delete data.skips?.[user.id];
   
   await saveUsers(data);
   await interaction.reply(i18n.t('user.removed', { name: userName }));
@@ -263,16 +261,9 @@ export async function handleSkipUntil(
   );
 }
 
-export async function handleSetup(
-  interaction: ChatInputCommandInteraction
-): Promise<boolean> {
-  const guildIdOption = interaction.options.getString(
-    i18n.getOptionName('setup', 'guild'),
-    false
-  );
-  if (!interaction.guildId && !guildIdOption) return false;
-  const existing = loadServerConfig() || {
-    guildId: guildIdOption ?? interaction.guildId!,
+function getDefaultServerConfig(guildId: string): ServerConfig {
+  return {
+    guildId,
     channelId: CHANNEL_ID,
     musicChannelId: MUSIC_CHANNEL_ID,
     dailyVoiceChannelId: DAILY_VOICE_CHANNEL_ID,
@@ -286,77 +277,51 @@ export async function handleSetup(
     dateFormat: DATE_FORMAT,
     admins: []
   };
+}
 
-  const daily = interaction.options.getChannel(
-    i18n.getOptionName('setup', 'daily'),
-    false
-  );
-  const music = interaction.options.getChannel(
-    i18n.getOptionName('setup', 'music'),
-    false
-  );
-  const voice = interaction.options.getChannel(
-    i18n.getOptionName('setup', 'voice'),
-    false
-  );
-  const playerCmd =
-    interaction.options.getString(i18n.getOptionName('setup', 'player')) ??
-    existing.playerForwardCommand;
-  const token =
-    interaction.options.getString(i18n.getOptionName('setup', 'token')) ??
-    existing.token;
-  const timezone =
-    interaction.options.getString(i18n.getOptionName('setup', 'timezone')) ??
-    existing.timezone;
-  const language =
-    interaction.options.getString(i18n.getOptionName('setup', 'language')) ??
-    existing.language;
-  const dailyTime =
-    interaction.options.getString(i18n.getOptionName('setup', 'dailyTime')) ??
-    existing.dailyTime;
-  const dailyDays =
-    interaction.options.getString(i18n.getOptionName('setup', 'dailyDays')) ??
-    existing.dailyDays;
-  const holidays = interaction.options.getString(
-    i18n.getOptionName('setup', 'holidayCountries')
-  );
-  const dateFormat =
-    interaction.options.getString(i18n.getOptionName('setup', 'dateFormat')) ??
-    existing.dateFormat;
+function extractSetupOptions(interaction: ChatInputCommandInteraction) {
+  return {
+    daily: interaction.options.getChannel(i18n.getOptionName('setup', 'daily'), false),
+    music: interaction.options.getChannel(i18n.getOptionName('setup', 'music'), false),
+    voice: interaction.options.getChannel(i18n.getOptionName('setup', 'voice'), false),
+    playerCmd: interaction.options.getString(i18n.getOptionName('setup', 'player')),
+    token: interaction.options.getString(i18n.getOptionName('setup', 'token')),
+    timezone: interaction.options.getString(i18n.getOptionName('setup', 'timezone')),
+    language: interaction.options.getString(i18n.getOptionName('setup', 'language')),
+    dailyTime: interaction.options.getString(i18n.getOptionName('setup', 'dailyTime')),
+    dailyDays: interaction.options.getString(i18n.getOptionName('setup', 'dailyDays')),
+    holidays: interaction.options.getString(i18n.getOptionName('setup', 'holidayCountries')),
+    dateFormat: interaction.options.getString(i18n.getOptionName('setup', 'dateFormat'))
+  };
+}
 
-
-  const guildId = guildIdOption ?? interaction.guildId ?? existing.guildId;
-
-  if (dateFormat && !isDateFormatValid(dateFormat)) {
-    await interaction.reply(i18n.t('setup.invalidDateFormat'));
-    return false;
-  }
-
-  const cfg: ServerConfig = {
+function buildServerConfig(
+  existing: ServerConfig,
+  options: ReturnType<typeof extractSetupOptions>,
+  guildId: string
+): ServerConfig {
+  return {
     guildId,
-    channelId: daily?.id ?? existing.channelId,
-    musicChannelId: music?.id ?? existing.musicChannelId,
-    dailyVoiceChannelId: voice?.id ?? existing.dailyVoiceChannelId,
-    playerForwardCommand: playerCmd,
-    token,
-    timezone,
-    language,
-    dailyTime,
-    dailyDays,
-    holidayCountries: holidays
-      ? holidays.split(',').map((c) => c.trim().toUpperCase())
+    channelId: options.daily?.id ?? existing.channelId,
+    musicChannelId: options.music?.id ?? existing.musicChannelId,
+    dailyVoiceChannelId: options.voice?.id ?? existing.dailyVoiceChannelId,
+    playerForwardCommand: options.playerCmd ?? existing.playerForwardCommand,
+    token: options.token ?? existing.token,
+    timezone: options.timezone ?? existing.timezone,
+    language: options.language ?? existing.language,
+    dailyTime: options.dailyTime ?? existing.dailyTime,
+    dailyDays: options.dailyDays ?? existing.dailyDays,
+    holidayCountries: options.holidays
+      ? options.holidays.split(',').map((c) => c.trim().toUpperCase())
       : existing.holidayCountries,
-    dateFormat,
+    dateFormat: options.dateFormat ?? existing.dateFormat,
     admins: existing.admins
   };
+}
 
-
-
-  await saveServerConfig(cfg);
-  updateServerConfig(cfg);
-  scheduleDailySelection(interaction.client);
-
+function detectChanges(cfg: ServerConfig, existing: ServerConfig): string[] {
   const changes: string[] = [];
+  
   if (cfg.channelId !== existing.channelId)
     changes.push(i18n.getOptionName('setup', 'daily'));
   if (cfg.musicChannelId !== existing.musicChannelId)
@@ -384,8 +349,38 @@ export async function handleSetup(
     changes.push(i18n.getOptionName('setup', 'holidayCountries'));
   if (cfg.dateFormat !== existing.dateFormat)
     changes.push(i18n.getOptionName('setup', 'dateFormat'));
+    
+  return changes;
+}
 
+export async function handleSetup(
+  interaction: ChatInputCommandInteraction
+): Promise<boolean> {
+  const guildIdOption = interaction.options.getString(
+    i18n.getOptionName('setup', 'guild'),
+    false
+  );
+  
+  if (!interaction.guildId && !guildIdOption) return false;
+  
+  const guildId = guildIdOption ?? interaction.guildId ?? '';
+  const existing = loadServerConfig() || getDefaultServerConfig(guildId);
+  const options = extractSetupOptions(interaction);
+  
+  if (options.dateFormat && !isDateFormatValid(options.dateFormat)) {
+    await interaction.reply(i18n.t('setup.invalidDateFormat'));
+    return false;
+  }
+
+  const cfg = buildServerConfig(existing, options, guildId);
+  
+  await saveServerConfig(cfg);
+  updateServerConfig(cfg);
+  scheduleDailySelection(interaction.client);
+
+  const changes = detectChanges(cfg, existing);
   const changedFields = changes.join(', ');
+  
   if (changes.length > 0) {
     await interaction.reply(
       i18n.t('setup.savedDetailed', { fields: changedFields })
@@ -393,7 +388,8 @@ export async function handleSetup(
   } else {
     await interaction.reply(i18n.t('setup.savedNoChanges'));
   }
-  return language !== existing.language || guildId !== existing.guildId;
+  
+  return options.language !== existing.language || guildId !== existing.guildId;
 }
 
 export async function handleExport(
