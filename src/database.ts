@@ -12,6 +12,20 @@ export interface Reminder {
   sentAt?: string; // ISO 8601 UTC
 }
 
+export interface UserEntry {
+  name: string;
+  id: string;
+}
+
+export interface UserData {
+  all: UserEntry[];
+  remaining: UserEntry[];
+  lastSelected?: UserEntry;
+  /** ISO date string of the last selection */
+  lastSelectionDate?: string;
+  skips?: Record<string, string>;
+}
+
 interface ReminderRow {
   id: number;
   userId: string;
@@ -21,6 +35,18 @@ interface ReminderRow {
   createdAt: string;
   sent: number;
   sentAt?: string;
+}
+
+interface UserRow {
+  id: string;
+  name: string;
+  inRemaining: number;
+  lastSelected: number;
+}
+
+interface SkipRow {
+  userId: string;
+  skipUntil: string;
 }
 
 interface StatsRow {
@@ -41,7 +67,7 @@ class ReminderDatabase {
     if (!this.db) {
       this.db = new Database(this.dbPath);
       
-      // Criar tabela se não existir
+      // Criar tabela de lembretes se não existir
       this.db.exec(`
         CREATE TABLE IF NOT EXISTS reminders (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,6 +80,33 @@ class ReminderDatabase {
           sentAt TEXT
         )
       `);
+
+      // Criar tabela de usuários se não existir
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          inRemaining INTEGER DEFAULT 1,
+          lastSelected INTEGER DEFAULT 0
+        )
+      `);
+
+      // Criar tabela de skips se não existir
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS skips (
+          userId TEXT PRIMARY KEY,
+          skipUntil TEXT NOT NULL,
+          FOREIGN KEY (userId) REFERENCES users(id)
+        )
+      `);
+
+      // Criar tabela de configurações se não existir
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS config (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL
+        )
+      `);
     }
   }
 
@@ -63,6 +116,8 @@ class ReminderDatabase {
     }
     return this.db!;
   }
+
+  // ===== REMINDERS =====
 
   async addReminder(
     userId: string,
@@ -200,6 +255,88 @@ class ReminderDatabase {
       pending: row.pending || 0,
       sent: row.sent || 0
     };
+  }
+
+  // ===== USERS =====
+
+  async loadUsers(): Promise<UserData> {
+    const db = this.getDatabase();
+    
+    // Carregar todos os usuários
+    const allUsersStmt = db.prepare('SELECT id, name FROM users ORDER BY name');
+    const allUsers = allUsersStmt.all() as UserRow[];
+    
+    // Carregar usuários restantes
+    const remainingUsersStmt = db.prepare('SELECT id, name FROM users WHERE inRemaining = 1 ORDER BY name');
+    const remainingUsers = remainingUsersStmt.all() as UserRow[];
+    
+    // Carregar último usuário selecionado
+    const lastSelectedStmt = db.prepare('SELECT id, name FROM users WHERE lastSelected = 1 LIMIT 1');
+    const lastSelected = lastSelectedStmt.get() as UserRow | undefined;
+    
+    // Carregar configurações
+    const configStmt = db.prepare('SELECT key, value FROM config WHERE key IN (?, ?)');
+    const configRows = configStmt.all('lastSelectionDate', 'skips') as { key: string; value: string }[];
+    
+    const config: Record<string, string> = {};
+    configRows.forEach(row => {
+      config[row.key] = row.value;
+    });
+    
+    // Carregar skips
+    const skipsStmt = db.prepare('SELECT userId, skipUntil FROM skips');
+    const skipsRows = skipsStmt.all() as SkipRow[];
+    const skips: Record<string, string> = {};
+    skipsRows.forEach(row => {
+      skips[row.userId] = row.skipUntil;
+    });
+    
+    return {
+      all: allUsers.map(u => ({ id: u.id, name: u.name })),
+      remaining: remainingUsers.map(u => ({ id: u.id, name: u.name })),
+      lastSelected: lastSelected ? { id: lastSelected.id, name: lastSelected.name } : undefined,
+      lastSelectionDate: config.lastSelectionDate,
+      skips
+    };
+  }
+
+  async saveUsers(data: UserData): Promise<void> {
+    const db = this.getDatabase();
+    
+    // Iniciar transação
+    const transaction = db.transaction(() => {
+      // Limpar tabelas
+      db.prepare('DELETE FROM users').run();
+      db.prepare('DELETE FROM skips').run();
+      db.prepare('DELETE FROM config WHERE key IN (?, ?)').run('lastSelectionDate', 'skips');
+      
+      // Inserir usuários
+      const insertUserStmt = db.prepare(`
+        INSERT INTO users (id, name, inRemaining, lastSelected)
+        VALUES (?, ?, ?, ?)
+      `);
+      
+      data.all.forEach(user => {
+        const inRemaining = data.remaining.some(r => r.id === user.id) ? 1 : 0;
+        const lastSelected = data.lastSelected?.id === user.id ? 1 : 0;
+        insertUserStmt.run(user.id, user.name, inRemaining, lastSelected);
+      });
+      
+      // Inserir skips
+      if (data.skips) {
+        const insertSkipStmt = db.prepare('INSERT INTO skips (userId, skipUntil) VALUES (?, ?)');
+        Object.entries(data.skips).forEach(([userId, skipUntil]) => {
+          insertSkipStmt.run(userId, skipUntil);
+        });
+      }
+      
+      // Inserir configurações
+      if (data.lastSelectionDate) {
+        db.prepare('INSERT INTO config (key, value) VALUES (?, ?)').run('lastSelectionDate', data.lastSelectionDate);
+      }
+    });
+    
+    transaction();
   }
 
   async close(): Promise<void> {

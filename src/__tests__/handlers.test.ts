@@ -481,7 +481,6 @@ describe('handlers', () => {
       ServerConfig: {}
     }));
     jest.doMock('@/config', () => ({
-      USERS_FILE: 'users.json',
       updateServerConfig
     }));
     jest.doMock('@/scheduler', () => ({ scheduleDailySelection }));
@@ -491,7 +490,6 @@ describe('handlers', () => {
       options: {
         getAttachment: jest
           .fn()
-          .mockReturnValueOnce({ name: 'users.json', url: 'users' })
           .mockReturnValueOnce({ name: 'serverConfig.json', url: 'serverConfig' })
       },
       reply: jest.fn(),

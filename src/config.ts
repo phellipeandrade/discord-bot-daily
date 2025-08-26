@@ -1,5 +1,3 @@
-import * as path from 'path';
-
 import * as dotenv from 'dotenv';
 import { loadServerConfig, ServerConfig } from '@/serverConfig';
 import RBAC from '@rbac/rbac';
@@ -17,9 +15,8 @@ export let MUSIC_CHANNEL_ID = fileConfig?.musicChannelId || '';
 export let DAILY_VOICE_CHANNEL_ID = fileConfig?.dailyVoiceChannelId || '';
 export let PLAYER_FORWARD_COMMAND = fileConfig?.playerForwardCommand || '';
 
-export const USERS_FILE = process.env.USERS_FILE
-  ? path.resolve(process.env.USERS_FILE)
-  : path.join(__dirname, 'users.json');
+// Users are now stored in SQLite database
+export const USERS_FILE = 'database'; // For backward compatibility
 export let TIMEZONE = fileConfig?.timezone || 'America/Sao_Paulo';
 export let LANGUAGE = fileConfig?.language || 'pt-br';
 export let DAILY_TIME = fileConfig?.dailyTime || '09:00';

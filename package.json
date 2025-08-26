@@ -7,13 +7,13 @@
     "test:watch": "NODE_ENV=test jest --watch",
     "test:coverage": "NODE_ENV=test jest --coverage && jest-coverage-badges",
     "clean": "rm -rf dist build bot.zip",
-    "copy-assets": "mkdir -p build && if [ -f src/users.json ]; then cp src/users.json build/users.json; else cp src/users.sample.json build/users.json; fi && cp -r src/i18n build/ && if [ -f src/serverConfig.json ]; then cp src/serverConfig.json build/serverConfig.json; else cp src/serverConfig.sample.json build/serverConfig.json; fi",
+    "copy-assets": "mkdir -p build && cp -r src/i18n build/ && if [ -f src/serverConfig.json ]; then cp src/serverConfig.json build/serverConfig.json; else cp src/serverConfig.sample.json build/serverConfig.json; fi",
     "compile": "tsc",
     "bundle": "esbuild dist/index.js --bundle --platform=node --outfile=build/index.js",
     "build": "npm run copy-assets && npm run compile && npm run bundle",
     "start": "node build/index.js",
     "dev": "ts-node src/index.ts",
-    "generate-zip": "rm -f bot.zip && cd build && zip -r ../bot.zip index.js users.json serverConfig.json i18n/ && zip -j ../bot.zip ../package.json ../.env",
+    "generate-zip": "rm -f bot.zip && cd build && zip -r ../bot.zip index.js serverConfig.json i18n/ && zip -j ../bot.zip ../package.json ../.env",
     "build-zip": "npm run clean && npm run build && npm run generate-zip",
     "lint": "eslint \"src/**/*.ts\" && tsc --noEmit",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
@@ -54,7 +54,7 @@
     "prettier": "^3.1.1",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.3.3"
   },
   "optionalDependencies": {
     "@discordjs/opus": "^0.10.0",

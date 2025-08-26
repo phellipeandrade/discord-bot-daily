@@ -7,14 +7,17 @@ O sistema de chat do Hermes foi refatorado para implementar um fluxo de classifi
 ## Fluxo do Sistema
 
 ### 1. Classificação de Intenção
+
 A primeira etapa é classificar a intenção da mensagem do usuário usando um modelo de IA especializado. O classificador analisa o conteúdo e contexto para determinar a categoria mais apropriada.
 
 ### 2. Roteamento para Handler Específico
+
 Baseado na intenção classificada, a mensagem é direcionada para um handler específico que possui um prompt otimizado para aquele tipo de solicitação.
 
 ## Tipos de Intenções
 
 ### `IntentType.REMINDER`
+
 **Descrição**: Solicitações relacionadas a lembretes
 **Exemplos**:
 - "me lembre de revisar o PR amanhã"

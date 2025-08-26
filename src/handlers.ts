@@ -30,7 +30,7 @@ const {
   DAILY_TIME,
   DAILY_DAYS,
   HOLIDAY_COUNTRIES,
-  USERS_FILE,
+  // USERS_FILE removed - users now stored in SQLite
   checkRequiredConfig,
   DAILY_VOICE_CHANNEL_ID,
   PLAYER_FORWARD_COMMAND,
@@ -167,26 +167,14 @@ export async function handleSelect(
 
 export async function handleReset(
   interaction: ChatInputCommandInteraction,
-  data: UserData
+  _data: UserData
 ): Promise<void> {
-  try {
-    const originalData = JSON.parse(
-      await fs.promises.readFile(
-        path.join(__dirname, 'users.sample.json'),
-        'utf-8'
-      )
-    );
-    await saveUsers(originalData);
-    await interaction.reply(
-      i18n.t('selection.resetOriginal', { count: originalData.all.length })
-    );
-  } catch {
-    data.remaining = [...data.all];
-    await saveUsers(data);
-    await interaction.reply(
-      i18n.t('selection.resetAll', { count: data.all.length })
-    );
-  }
+  // Reset para dados originais (lista vazia)
+  const originalData: UserData = { all: [], remaining: [], skips: {} };
+  await saveUsers(originalData);
+  await interaction.reply(
+    i18n.t('selection.resetOriginal', { count: 0 })
+  );
 }
 
 export async function handleReadd(
@@ -411,13 +399,9 @@ export async function handleSetup(
 export async function handleExport(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
-  const usersPath = USERS_FILE;
   const configPath = path.join(__dirname, 'serverConfig.json');
 
   const files: Array<{ attachment: string; name: string }> = [];
-  if (fs.existsSync(usersPath)) {
-    files.push({ attachment: usersPath, name: 'users.json' });
-  }
   if (fs.existsSync(configPath)) {
     files.push({ attachment: configPath, name: 'serverConfig.json' });
   }
@@ -435,27 +419,17 @@ export async function handleExport(
 export async function handleImport(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
-  const usersFile = interaction.options.getAttachment(
-    i18n.getOptionName('import', 'users'),
-    false
-  );
   const configFile = interaction.options.getAttachment(
     i18n.getOptionName('import', 'config'),
     false
   );
 
-  if (!usersFile && !configFile) {
+  if (!configFile) {
     await interaction.reply(i18n.t('import.invalid'));
     return;
   }
 
   try {
-    if (usersFile) {
-      if (!usersFile.name.endsWith('.json')) throw new Error('invalid');
-      const text = await fetchText(usersFile.url);
-      await fs.promises.writeFile(USERS_FILE, text, 'utf-8');
-    }
-
     if (configFile) {
       if (!configFile.name.endsWith('.json')) throw new Error('invalid');
       const text = await fetchText(configFile.url);
