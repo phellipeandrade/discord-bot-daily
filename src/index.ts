@@ -48,6 +48,7 @@ import {
 import { scheduleDailySelection } from '@/scheduler';
 import { setupChatListener } from '@/chatHandler';
 import { reminderService } from '@/reminderService';
+import { database } from '@/database';
 
 i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
 logConfig();
@@ -157,6 +158,21 @@ if (process.env.NODE_ENV !== 'test') {
 
   client.login(TOKEN);
 }
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('\n🔄 Shutting down gracefully...');
+  reminderService.stop();
+  await database.close();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\n🔄 Shutting down gracefully...');
+  reminderService.stop();
+  await database.close();
+  process.exit(0);
+});
 
 export {
   UserData,

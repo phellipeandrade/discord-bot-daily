@@ -27,7 +27,6 @@
     "@google/genai": "^1.15.0",
     "@rbac/rbac": "^2.1.0",
     "@types/better-sqlite3": "^7.6.13",
-    "@types/sqlite3": "^3.1.11",
     "better-sqlite3": "^12.2.0",
     "discord-player": "^7.1.0",
     "discord-player-youtubei": "^1.4.6",
@@ -35,8 +34,7 @@
     "dotenv": "^16.5.0",
     "ffmpeg-static": "^5.1.0",
     "i18next": "^25.2.1",
-    "node-cron": "^4.1.0",
-    "sqlite3": "^5.1.7"
+    "node-cron": "^4.1.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^18.5.0",

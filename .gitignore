@@ -42,5 +42,9 @@ src/users.json
 src/serverConfig.json
 bot.zip
 
+# Database files
+*.db
+*.sqlite
+*.sqlite3
 
 src/serverConfig.test..json
