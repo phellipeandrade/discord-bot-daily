@@ -649,3 +649,115 @@ describe('handlers', () => {
     expect(interaction.reply).toHaveBeenCalledWith('bot.disabledUntil');
   });
 });
+
+describe('handleSetup refactored functions', () => {
+  test('getDefaultServerConfig returns correct default config', () => {
+    const { getDefaultServerConfig } = require('../handlers');
+    const config = getDefaultServerConfig('test-guild-id');
+    
+    expect(config.guildId).toBe('test-guild-id');
+    expect(config.channelId).toBeDefined();
+    expect(config.musicChannelId).toBeDefined();
+    expect(config.dailyVoiceChannelId).toBeDefined();
+    expect(config.admins).toEqual([]);
+  });
+
+  test('extractSetupOptions extracts all options correctly', () => {
+    const { extractSetupOptions } = require('../handlers');
+    const mockInteraction = {
+      options: {
+        getChannel: jest.fn().mockReturnValue({ id: 'channel-123' }),
+        getString: jest.fn().mockReturnValue('test-value')
+      }
+    };
+    
+    const options = extractSetupOptions(mockInteraction);
+    
+    expect(options.daily).toEqual({ id: 'channel-123' });
+    expect(options.music).toEqual({ id: 'channel-123' });
+    expect(options.voice).toEqual({ id: 'channel-123' });
+    expect(options.playerCmd).toBe('test-value');
+    expect(options.token).toBe('test-value');
+  });
+
+  test('buildServerConfig merges options with existing config', () => {
+    const { buildServerConfig } = require('../handlers');
+    const existing = {
+      guildId: 'existing-guild',
+      channelId: 'existing-channel',
+      musicChannelId: 'existing-music',
+      dailyVoiceChannelId: 'existing-voice',
+      playerForwardCommand: 'existing-player',
+      token: 'existing-token',
+      timezone: 'existing-tz',
+      language: 'existing-lang',
+      dailyTime: 'existing-time',
+      dailyDays: 'existing-days',
+      holidayCountries: ['BR'],
+      dateFormat: 'existing-format',
+      admins: ['admin1']
+    };
+    
+    const options = {
+      daily: { id: 'new-daily' },
+      music: { id: 'new-music' },
+      voice: { id: 'new-voice' },
+      playerCmd: 'new-player',
+      token: 'new-token',
+      timezone: 'new-tz',
+      language: 'new-lang',
+      dailyTime: 'new-time',
+      dailyDays: 'new-days',
+      holidays: 'US,CA',
+      dateFormat: 'new-format'
+    };
+    
+    const config = buildServerConfig(existing, options, 'new-guild');
+    
+    expect(config.guildId).toBe('new-guild');
+    expect(config.channelId).toBe('new-daily');
+    expect(config.musicChannelId).toBe('new-music');
+    expect(config.dailyVoiceChannelId).toBe('new-voice');
+    expect(config.playerForwardCommand).toBe('new-player');
+    expect(config.token).toBe('new-token');
+    expect(config.timezone).toBe('new-tz');
+    expect(config.language).toBe('new-lang');
+    expect(config.dailyTime).toBe('new-time');
+    expect(config.dailyDays).toBe('new-days');
+    expect(config.holidayCountries).toEqual(['US', 'CA']);
+    expect(config.dateFormat).toBe('new-format');
+    expect(config.admins).toEqual(['admin1']);
+  });
+
+  test('detectChanges identifies changed fields', () => {
+    const { detectChanges } = require('../handlers');
+    const existing = {
+      channelId: 'old-channel',
+      musicChannelId: 'old-music',
+      dailyVoiceChannelId: 'old-voice',
+      playerForwardCommand: 'old-player',
+      token: 'old-token',
+      guildId: 'old-guild',
+      timezone: 'old-tz',
+      language: 'old-lang',
+      dailyTime: 'old-time',
+      dailyDays: 'old-days',
+      holidayCountries: ['BR'],
+      dateFormat: 'old-format'
+    };
+    
+    const cfg = {
+      ...existing,
+      channelId: 'new-channel',
+      language: 'new-lang',
+      holidayCountries: ['US']
+    };
+    
+    const changes = detectChanges(cfg, existing);
+    
+    expect(changes).toContain('daily');
+    expect(changes).toContain('language');
+    expect(changes).toContain('holidayCountries');
+    expect(changes).not.toContain('musicChannelId');
+  });
+});

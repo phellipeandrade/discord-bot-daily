@@ -1,17 +1,11 @@
-import { Message } from 'discord.js';
-import { i18n } from '@/i18n';
 import { reminderService } from '@/reminderService';
 
 // Mock do i18n
 jest.mock('@/i18n', () => ({
   i18n: {
     t: jest.fn((key: string) => ({
-      'reminder.notify': 'Reminder: {text}',
-      'reminder.parseError': 'parse-error',
-      'reminder.defaultReply': 'default',
       'reminder.list.noReminders': 'No reminders found'
-    }[key] || key)),
-    getLanguage: jest.fn(() => 'en')
+    }[key] || key))
   }
 }));
 
@@ -26,18 +20,12 @@ jest.mock('@/database', () => ({
     getPendingReminders: jest.fn(),
     markReminderAsSent: jest.fn(),
     deleteOldReminders: jest.fn()
-  },
-  Reminder: jest.fn()
+  }
 }));
 
 describe('reminderService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.useFakeTimers();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
   });
 
   test('adds reminder successfully', async () => {
@@ -63,8 +51,8 @@ describe('reminderService', () => {
   test('gets reminders by user', async () => {
     const { database } = await import('@/database');
     const mockReminders = [
-      { id: 1, userId: 'user123', message: 'Test 1', scheduledFor: '2025-08-26T10:00:00.000Z', sent: false },
-      { id: 2, userId: 'user123', message: 'Test 2', scheduledFor: '2025-08-26T11:00:00.000Z', sent: true }
+      { id: 1, userId: 'user123', message: 'Test 1', scheduledFor: '2025-08-26T10:00:00.000Z', sent: false, createdAt: '2025-08-25T10:00:00.000Z', userName: 'TestUser' },
+      { id: 2, userId: 'user123', message: 'Test 2', scheduledFor: '2025-08-26T11:00:00.000Z', sent: true, createdAt: '2025-08-25T11:00:00.000Z', userName: 'TestUser' }
     ];
     (database.getRemindersByUser as jest.Mock).mockResolvedValue(mockReminders);
 
@@ -77,7 +65,7 @@ describe('reminderService', () => {
   test('deletes reminder successfully', async () => {
     const { database } = await import('@/database');
     (database.getRemindersByUser as jest.Mock).mockResolvedValue([
-      { id: 1, userId: 'user123', message: 'Test', scheduledFor: '2025-08-26T10:00:00.000Z', sent: false }
+      { id: 1, userId: 'user123', message: 'Test', scheduledFor: '2025-08-26T10:00:00.000Z', sent: false, createdAt: '2025-08-25T10:00:00.000Z', userName: 'TestUser' }
     ]);
     (database.deleteReminder as jest.Mock).mockResolvedValue(undefined);
 
