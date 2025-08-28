@@ -1,8 +1,8 @@
-import { database, UserData, UserEntry } from '@/database';
+import { database, UserData, UserEntry } from '@/supabase';
 import { i18n } from '@/i18n';
 import { todayISO } from '@/date';
 
-export { UserData, UserEntry } from '@/database';
+export { UserData, UserEntry } from '@/supabase';
 
 export async function loadUsers(): Promise<UserData> {
   try {

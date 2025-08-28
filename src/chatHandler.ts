@@ -146,16 +146,25 @@ export async function handleChatMessage(message: Message): Promise<void> {
       dateStr
     );
     
+    // Formatar data no padrão brasileiro dd/mm/aaaa
+    const formattedDate = date.toLocaleDateString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    
+    const formattedTime = date.toLocaleTimeString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    const dateTimeStr = `${formattedDate} às ${formattedTime}`;
+    
     await message.reply(
       result.reply || i18n.t('reminder.set', { 
-        date: date.toLocaleString('pt-BR', {
-          timeZone: 'America/Sao_Paulo',
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        })
+        date: dateTimeStr
       })
     );
   } catch (error) {

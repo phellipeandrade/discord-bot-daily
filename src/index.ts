@@ -48,7 +48,7 @@ import {
 import { scheduleDailySelection } from '@/scheduler';
 import { setupChatListener } from '@/chatHandler';
 import { reminderService } from '@/reminderService';
-import { database } from '@/database';
+import { database } from '@/supabase';
 
 i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
 logConfig();

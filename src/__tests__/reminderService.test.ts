@@ -10,7 +10,7 @@ jest.mock('@/i18n', () => ({
 }));
 
 // Mock do database
-jest.mock('@/database', () => ({
+jest.mock('@/supabase', () => ({
   database: {
     addReminder: jest.fn(),
     getRemindersByUser: jest.fn(),
@@ -29,7 +29,7 @@ describe('reminderService', () => {
   });
 
   test('adds reminder successfully', async () => {
-    const { database } = await import('@/database');
+    const { database } = await import('@/supabase');
     (database.addReminder as jest.Mock).mockResolvedValue(1);
 
     const result = await reminderService.addReminder(
@@ -49,7 +49,7 @@ describe('reminderService', () => {
   });
 
   test('gets reminders by user', async () => {
-    const { database } = await import('@/database');
+    const { database } = await import('@/supabase');
     const mockReminders = [
       { id: 1, userId: 'user123', message: 'Test 1', scheduledFor: '2025-08-26T10:00:00.000Z', sent: false, createdAt: '2025-08-25T10:00:00.000Z', userName: 'TestUser' },
       { id: 2, userId: 'user123', message: 'Test 2', scheduledFor: '2025-08-26T11:00:00.000Z', sent: true, createdAt: '2025-08-25T11:00:00.000Z', userName: 'TestUser' }
@@ -63,7 +63,7 @@ describe('reminderService', () => {
   });
 
   test('deletes reminder successfully', async () => {
-    const { database } = await import('@/database');
+    const { database } = await import('@/supabase');
     (database.getRemindersByUser as jest.Mock).mockResolvedValue([
       { id: 1, userId: 'user123', message: 'Test', scheduledFor: '2025-08-26T10:00:00.000Z', sent: false, createdAt: '2025-08-25T10:00:00.000Z', userName: 'TestUser' }
     ]);
@@ -76,7 +76,7 @@ describe('reminderService', () => {
   });
 
   test('fails to delete non-existent reminder', async () => {
-    const { database } = await import('@/database');
+    const { database } = await import('@/supabase');
     (database.getRemindersByUser as jest.Mock).mockResolvedValue([]);
 
     const result = await reminderService.deleteReminder(999, 'user123');
@@ -86,7 +86,7 @@ describe('reminderService', () => {
   });
 
   test('deletes all reminders by user', async () => {
-    const { database } = await import('@/database');
+    const { database } = await import('@/supabase');
     (database.deleteAllRemindersByUser as jest.Mock).mockResolvedValue(3);
 
     const result = await reminderService.deleteAllRemindersByUser('user123');
@@ -96,7 +96,7 @@ describe('reminderService', () => {
   });
 
   test('gets reminder stats', async () => {
-    const { database } = await import('@/database');
+    const { database } = await import('@/supabase');
     const mockStats = { total: 10, pending: 5, sent: 5 };
     (database.getReminderStats as jest.Mock).mockResolvedValue(mockStats);
 
@@ -127,7 +127,7 @@ describe('reminderService', () => {
   });
 
   test('handles errors gracefully', async () => {
-    const { database } = await import('@/database');
+    const { database } = await import('@/supabase');
     (database.addReminder as jest.Mock).mockRejectedValue(new Error('Database error'));
 
     await expect(reminderService.addReminder(

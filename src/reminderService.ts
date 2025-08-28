@@ -1,6 +1,6 @@
 import { Client } from 'discord.js';
 import { i18n } from '@/i18n';
-import { database, Reminder } from '@/database';
+import { database, Reminder } from '@/supabase';
 
 class ReminderService {
   private client: Client | null = null;
@@ -153,20 +153,39 @@ class ReminderService {
     }
 
     const now = new Date();
-    return reminders.map(reminder => {
+    
+    // Deduplicar lembretes baseado na mensagem e data/hora
+    const uniqueReminders = reminders.reduce((acc, reminder) => {
+      const key = `${reminder.message}-${reminder.scheduledFor}`;
+      if (!acc.has(key)) {
+        acc.set(key, reminder);
+      }
+      return acc;
+    }, new Map<string, Reminder>());
+
+    const uniqueRemindersList = Array.from(uniqueReminders.values());
+    
+    return uniqueRemindersList.map(reminder => {
       const scheduledDate = new Date(reminder.scheduledFor);
       const isPast = scheduledDate < now;
       const status = reminder.sent ? '✅' : isPast ? '⏰' : '⏳';
-      const dateStr = scheduledDate.toLocaleString('pt-BR', {
+      // Formatar data no padrão brasileiro dd/mm/aaaa
+      const formattedDate = scheduledDate.toLocaleDateString('pt-BR', {
         timeZone: 'America/Sao_Paulo',
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric',
+        year: 'numeric'
+      });
+      
+      const formattedTime = scheduledDate.toLocaleTimeString('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
         hour: '2-digit',
         minute: '2-digit'
       });
+      
+      const dateStr = `${formattedDate} às ${formattedTime}`;
 
-      return `${status} **ID: ${reminder.id}** - ${dateStr}\n   📝 ${reminder.message}`;
+      return `${status} ${dateStr}\n   📝 ${reminder.message}`;
     }).join('\n\n');
   }
 }

@@ -196,7 +196,7 @@
         },
         "dateFormat": {
           "name": "formato",
-          "description": "Formato da data (ex.: YYYY-MM-DD)"
+          "description": "Formato da data (ex.: DD/MM/AAAA)"
         }
 
       }
