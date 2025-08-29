@@ -51,7 +51,13 @@ export async function handleReminderIntent(
     - If the message does NOT request any reminder action, do NOT set any intent — just answer naturally.
 
     LISTING REMINDERS (CRITICAL)
-    - When user asks to list reminders (e.g., "quais são meus lembretes?", "mostra meus lembretes", "listar lembretes"), ONLY set intent.listReminders to true.
+    - When user asks to list reminders (e.g., "quais são meus lembretes?", "mostra meus lembretes", "listar lembretes"), set intent.listReminders to true.
+    - When user asks to list reminders with filters, populate intent.listReminders with the appropriate filters:
+      * "lembretes de hoje" → listReminders.date: "2024-08-29" (current date)
+      * "lembretes de amanhã" → listReminders.date: "2024-08-30" (tomorrow)
+      * "lembretes sobre reunião" → listReminders.description: "reunião"
+      * "lembretes de email" → listReminders.description: "email"
+      * "lembretes de código" → listReminders.description: "código"
     - DO NOT create or list any reminder data in the "reply" field.
     - The system will fetch the actual reminders from the database and display them.
     - Provide a simple acknowledgment like "Aqui estão seus lembretes:" or "Vou buscar seus lembretes para você."

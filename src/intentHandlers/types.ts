@@ -32,7 +32,11 @@ export interface IntentActions {
     date: string;
     message: string;
   };
-  listReminders?: boolean;
+  listReminders?: {
+    date?: string;
+    message?: string;
+    description?: string;
+  };
   deleteReminders?: {
     ids?: number[];
     message?: string;
@@ -184,7 +188,15 @@ export const genericResponseSchema = {
       type: 'object',
       properties: {
         // Reminder intents
-        listReminders: { type: 'boolean' },
+        listReminders: {
+          type: 'object',
+          properties: {
+            date: { type: 'string' },
+            message: { type: 'string' },
+            description: { type: 'string' }
+          },
+          additionalProperties: false
+        },
         deleteAllReminders: { type: 'boolean' },
         deleteReminders: {
           type: 'object',
@@ -238,7 +250,15 @@ export const reminderResponseSchema = {
       type: 'object',
       properties: {
         // Reminder intents
-        listReminders: { type: 'boolean' },
+        listReminders: {
+          type: 'object',
+          properties: {
+            date: { type: 'string' },
+            message: { type: 'string' },
+            description: { type: 'string' }
+          },
+          additionalProperties: false
+        },
         deleteAllReminders: { type: 'boolean' },
         deleteReminders: {
           type: 'object',

@@ -69,6 +69,52 @@ class ReminderService {
   }
 
   /**
+   * Busca lembretes de um usuário específico com filtros opcionais usando IA
+   */
+  async getRemindersByUserWithFilters(
+    userId: string,
+    filters?: { message?: string; date?: string; description?: string }
+  ): Promise<Reminder[]> {
+    try {
+      const allReminders = await database.getRemindersByUser(userId);
+      
+      if (!filters || (!filters.message && !filters.date && !filters.description)) {
+        return allReminders;
+      }
+
+      // Se há filtros, usar IA para encontrar lembretes relevantes
+      let filteredReminders: Reminder[] = [];
+      
+      if (filters.message) {
+        filteredReminders = await this.findRemindersBySemanticSimilarity(
+          allReminders, 
+          filters.message, 
+          'message'
+        );
+      } else if (filters.date) {
+        // Buscar por data aproximada
+        const targetDate = new Date(filters.date);
+        filteredReminders = allReminders.filter(r => {
+          const reminderDate = new Date(r.scheduledFor);
+          const timeDiff = Math.abs(reminderDate.getTime() - targetDate.getTime());
+          return timeDiff < 24 * 60 * 60 * 1000; // Dentro de 24 horas
+        });
+      } else if (filters.description) {
+        filteredReminders = await this.findRemindersBySemanticSimilarity(
+          allReminders, 
+          filters.description, 
+          'description'
+        );
+      }
+      
+      return filteredReminders;
+    } catch (error) {
+      console.error('Error getting user reminders with filters:', error);
+      return [];
+    }
+  }
+
+  /**
    * Deleta um lembrete específico
    * 🔒 SEGURANÇA: userId é OBRIGATÓRIO para garantir que usuários só deletem seus próprios lembretes
    */

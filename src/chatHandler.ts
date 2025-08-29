@@ -34,7 +34,22 @@ export async function handleChatMessage(message: Message): Promise<void> {
   // Processar intenção de listar lembretes
   if (result.intent?.listReminders) {
     try {
-      const reminders = await reminderService.getRemindersByUser(userId);
+      let reminders;
+      
+      // Se há filtros na listagem, usar o método com filtros
+      if (result.intent.listReminders.date || 
+          result.intent.listReminders.message || 
+          result.intent.listReminders.description) {
+        reminders = await reminderService.getRemindersByUserWithFilters(userId, {
+          date: result.intent.listReminders.date,
+          message: result.intent.listReminders.message,
+          description: result.intent.listReminders.description
+        });
+      } else {
+        // Listagem sem filtros
+        reminders = await reminderService.getRemindersByUser(userId);
+      }
+      
       const formattedList = reminderService.formatReminderList(reminders);
       
       await message.reply(
