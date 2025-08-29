@@ -50,11 +50,11 @@ ALTER TABLE config DISABLE ROW LEVEL SECURITY;
 CREATE OR REPLACE FUNCTION cleanup_old_reminders()
 RETURNS void AS $$
 BEGIN
-  DELETE FROM reminders 
+  DELETE FROM public.reminders 
   WHERE sent = TRUE 
   AND sent_at < NOW() - INTERVAL '30 days';
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Comentários para documentação
 COMMENT ON TABLE reminders IS 'Lembretes agendados pelos usuários';

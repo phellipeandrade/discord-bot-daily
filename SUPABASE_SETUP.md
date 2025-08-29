@@ -97,22 +97,49 @@ Armazena configurações gerais.
 
 ### Políticas de Acesso (RLS)
 
-Por padrão, o RLS está desabilitado para simplificar a configuração. Para habilitar:
+**Recomendação**: Habilitar RLS para produção para maior segurança.
 
-1. Vá para **Authentication** → **Policies**
-2. Habilite RLS nas tabelas
-3. Configure políticas específicas
+#### **Opção 1: RLS Desabilitado (Desenvolvimento)**
+- ✅ Mais simples de configurar
+- ✅ Fácil debugging
+- ⚠️ Dados publicamente acessíveis via API
 
-### Exemplo de Política Básica:
+#### **Opção 2: RLS Habilitado (Produção)**
+- ✅ Máxima segurança
+- ✅ Logs de acesso detalhados
+- ✅ Controle granular de acesso
+- ⚠️ Requer configuração de políticas
+
+### Habilitar RLS:
+
+1. Execute o script `enable-rls.sql` no SQL Editor do Supabase
+2. Ou configure manualmente no dashboard:
+   - Vá para **Authentication** → **Policies**
+   - Habilite RLS nas tabelas
+   - Configure políticas específicas
+
+### Políticas Configuradas:
 
 ```sql
--- Permitir apenas leitura para usuários autenticados
-CREATE POLICY "Allow read access" ON reminders
-FOR SELECT USING (auth.role() = 'authenticated');
+-- Exemplo de políticas para reminders
+CREATE POLICY "Allow read access to reminders" ON reminders
+FOR SELECT USING (true);
 
--- Permitir inserção para usuários autenticados
-CREATE POLICY "Allow insert access" ON reminders
-FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Allow insert access to reminders" ON reminders
+FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow update access to reminders" ON reminders
+FOR UPDATE USING (true);
+
+CREATE POLICY "Allow delete access to reminders" ON reminders
+FOR DELETE USING (true);
+```
+
+### Testar RLS:
+
+Execute o script de teste:
+```bash
+node test-rls.js
 ```
 
 ## 📈 Monitoramento
@@ -146,6 +173,10 @@ sqlite3 src/reminders.db ".dump" > backup.sql
 ### Erro de Permissão
 - Verifique se a chave anon está correta
 - Confirme se as políticas RLS estão configuradas
+
+### Erro de Segurança de Função
+- Execute `fix-function-security.sql` para corrigir funções
+- Verifique se `search_path` está definido explicitamente
 
 ### Performance
 - Monitore os índices criados
