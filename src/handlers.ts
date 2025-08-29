@@ -11,6 +11,7 @@ import {
   formatUsers,
   findUser
 } from '@/users';
+import { reminderService } from '@/reminderService';
 import {
   parseDateString,
   todayISO,
@@ -29,7 +30,7 @@ const {
   DAILY_TIME,
   DAILY_DAYS,
   HOLIDAY_COUNTRIES,
-  USERS_FILE,
+  // USERS_FILE removed - users now stored in SQLite
   checkRequiredConfig,
   DAILY_VOICE_CHANNEL_ID,
   PLAYER_FORWARD_COMMAND,
@@ -120,9 +121,7 @@ export async function handleRemove(
   data.remaining = data.remaining.filter((u) => u.id !== user.id);
   
   // Remove o skip do usuário removido se existir
-  if (data.skips && data.skips[user.id]) {
-    delete data.skips[user.id];
-  }
+  delete data.skips?.[user.id];
   
   await saveUsers(data);
   await interaction.reply(i18n.t('user.removed', { name: userName }));
@@ -166,26 +165,14 @@ export async function handleSelect(
 
 export async function handleReset(
   interaction: ChatInputCommandInteraction,
-  data: UserData
+  _data: UserData
 ): Promise<void> {
-  try {
-    const originalData = JSON.parse(
-      await fs.promises.readFile(
-        path.join(__dirname, 'users.sample.json'),
-        'utf-8'
-      )
-    );
-    await saveUsers(originalData);
-    await interaction.reply(
-      i18n.t('selection.resetOriginal', { count: originalData.all.length })
-    );
-  } catch {
-    data.remaining = [...data.all];
-    await saveUsers(data);
-    await interaction.reply(
-      i18n.t('selection.resetAll', { count: data.all.length })
-    );
-  }
+  // Reset para dados originais (lista vazia)
+  const originalData: UserData = { all: [], remaining: [], skips: {} };
+  await saveUsers(originalData);
+  await interaction.reply(
+    i18n.t('selection.resetOriginal', { count: 0 })
+  );
 }
 
 export async function handleReadd(
@@ -274,16 +261,61 @@ export async function handleSkipUntil(
   );
 }
 
-export async function handleSetup(
-  interaction: ChatInputCommandInteraction
-): Promise<boolean> {
-  const guildIdOption = interaction.options.getString(
-    i18n.getOptionName('setup', 'guild'),
-    false
+export async function handleSubstitute(
+  interaction: ChatInputCommandInteraction,
+  data: UserData
+): Promise<void> {
+  // Verificar se há alguém selecionado hoje
+  if (!data.lastSelected || data.lastSelectionDate !== todayISO()) {
+    await interaction.reply(i18n.t('selection.noCurrentSelection'));
+    return;
+  }
+
+  const substituteIdentifier = interaction.options.getString(
+    i18n.getOptionName('substitute', 'substitute'),
+    true
   );
-  if (!interaction.guildId && !guildIdOption) return false;
-  const existing = loadServerConfig() || {
-    guildId: guildIdOption ?? interaction.guildId!,
+  const substituteUser = findUser(data, substituteIdentifier);
+
+  if (!substituteUser) {
+    await interaction.reply(i18n.t('user.notFound', { name: substituteIdentifier }));
+    return;
+  }
+
+  // Verificar se o substituto está na lista de remaining
+  if (!data.remaining.some((u) => u.id === substituteUser.id)) {
+    await interaction.reply(i18n.t('selection.substituteNotInRemaining', { name: substituteUser.name }));
+    return;
+  }
+
+  const originalUser = data.lastSelected;
+  const originalUserName = originalUser.name;
+  const substituteUserName = substituteUser.name;
+
+  // Remover o substituto da lista de remaining
+  data.remaining = data.remaining.filter(u => u.id !== substituteUser.id);
+
+  // Adicionar a pessoa original de volta à lista de remaining
+  if (!data.remaining.some((u) => u.id === originalUser.id)) {
+    data.remaining.push(originalUser);
+  }
+
+  // Atualizar o último selecionado para o substituto
+  data.lastSelected = substituteUser;
+
+  await saveUsers(data);
+
+  await interaction.reply(
+    i18n.t('selection.substituted', {
+      originalName: originalUserName,
+      substituteName: substituteUserName
+    })
+  );
+}
+
+function getDefaultServerConfig(guildId: string): ServerConfig {
+  return {
+    guildId,
     channelId: CHANNEL_ID,
     musicChannelId: MUSIC_CHANNEL_ID,
     dailyVoiceChannelId: DAILY_VOICE_CHANNEL_ID,
@@ -297,77 +329,51 @@ export async function handleSetup(
     dateFormat: DATE_FORMAT,
     admins: []
   };
+}
 
-  const daily = interaction.options.getChannel(
-    i18n.getOptionName('setup', 'daily'),
-    false
-  );
-  const music = interaction.options.getChannel(
-    i18n.getOptionName('setup', 'music'),
-    false
-  );
-  const voice = interaction.options.getChannel(
-    i18n.getOptionName('setup', 'voice'),
-    false
-  );
-  const playerCmd =
-    interaction.options.getString(i18n.getOptionName('setup', 'player')) ??
-    existing.playerForwardCommand;
-  const token =
-    interaction.options.getString(i18n.getOptionName('setup', 'token')) ??
-    existing.token;
-  const timezone =
-    interaction.options.getString(i18n.getOptionName('setup', 'timezone')) ??
-    existing.timezone;
-  const language =
-    interaction.options.getString(i18n.getOptionName('setup', 'language')) ??
-    existing.language;
-  const dailyTime =
-    interaction.options.getString(i18n.getOptionName('setup', 'dailyTime')) ??
-    existing.dailyTime;
-  const dailyDays =
-    interaction.options.getString(i18n.getOptionName('setup', 'dailyDays')) ??
-    existing.dailyDays;
-  const holidays = interaction.options.getString(
-    i18n.getOptionName('setup', 'holidayCountries')
-  );
-  const dateFormat =
-    interaction.options.getString(i18n.getOptionName('setup', 'dateFormat')) ??
-    existing.dateFormat;
+function extractSetupOptions(interaction: ChatInputCommandInteraction) {
+  return {
+    daily: interaction.options.getChannel(i18n.getOptionName('setup', 'daily'), false),
+    music: interaction.options.getChannel(i18n.getOptionName('setup', 'music'), false),
+    voice: interaction.options.getChannel(i18n.getOptionName('setup', 'voice'), false),
+    playerCmd: interaction.options.getString(i18n.getOptionName('setup', 'player')),
+    token: interaction.options.getString(i18n.getOptionName('setup', 'token')),
+    timezone: interaction.options.getString(i18n.getOptionName('setup', 'timezone')),
+    language: interaction.options.getString(i18n.getOptionName('setup', 'language')),
+    dailyTime: interaction.options.getString(i18n.getOptionName('setup', 'dailyTime')),
+    dailyDays: interaction.options.getString(i18n.getOptionName('setup', 'dailyDays')),
+    holidays: interaction.options.getString(i18n.getOptionName('setup', 'holidayCountries')),
+    dateFormat: interaction.options.getString(i18n.getOptionName('setup', 'dateFormat'))
+  };
+}
 
-
-  const guildId = guildIdOption ?? interaction.guildId ?? existing.guildId;
-
-  if (dateFormat && !isDateFormatValid(dateFormat)) {
-    await interaction.reply(i18n.t('setup.invalidDateFormat'));
-    return false;
-  }
-
-  const cfg: ServerConfig = {
+function buildServerConfig(
+  existing: ServerConfig,
+  options: ReturnType<typeof extractSetupOptions>,
+  guildId: string
+): ServerConfig {
+  return {
     guildId,
-    channelId: daily?.id ?? existing.channelId,
-    musicChannelId: music?.id ?? existing.musicChannelId,
-    dailyVoiceChannelId: voice?.id ?? existing.dailyVoiceChannelId,
-    playerForwardCommand: playerCmd,
-    token,
-    timezone,
-    language,
-    dailyTime,
-    dailyDays,
-    holidayCountries: holidays
-      ? holidays.split(',').map((c) => c.trim().toUpperCase())
+    channelId: options.daily?.id ?? existing.channelId,
+    musicChannelId: options.music?.id ?? existing.musicChannelId,
+    dailyVoiceChannelId: options.voice?.id ?? existing.dailyVoiceChannelId,
+    playerForwardCommand: options.playerCmd ?? existing.playerForwardCommand,
+    token: options.token ?? existing.token,
+    timezone: options.timezone ?? existing.timezone,
+    language: options.language ?? existing.language,
+    dailyTime: options.dailyTime ?? existing.dailyTime,
+    dailyDays: options.dailyDays ?? existing.dailyDays,
+    holidayCountries: options.holidays
+      ? options.holidays.split(',').map((c) => c.trim().toUpperCase())
       : existing.holidayCountries,
-    dateFormat,
+    dateFormat: options.dateFormat ?? existing.dateFormat,
     admins: existing.admins
   };
+}
 
-
-
-  await saveServerConfig(cfg);
-  updateServerConfig(cfg);
-  scheduleDailySelection(interaction.client);
-
+function detectChanges(cfg: ServerConfig, existing: ServerConfig): string[] {
   const changes: string[] = [];
+  
   if (cfg.channelId !== existing.channelId)
     changes.push(i18n.getOptionName('setup', 'daily'));
   if (cfg.musicChannelId !== existing.musicChannelId)
@@ -395,8 +401,38 @@ export async function handleSetup(
     changes.push(i18n.getOptionName('setup', 'holidayCountries'));
   if (cfg.dateFormat !== existing.dateFormat)
     changes.push(i18n.getOptionName('setup', 'dateFormat'));
+    
+  return changes;
+}
 
+export async function handleSetup(
+  interaction: ChatInputCommandInteraction
+): Promise<boolean> {
+  const guildIdOption = interaction.options.getString(
+    i18n.getOptionName('setup', 'guild'),
+    false
+  );
+  
+  if (!interaction.guildId && !guildIdOption) return false;
+  
+  const guildId = guildIdOption ?? interaction.guildId ?? '';
+  const existing = loadServerConfig() || getDefaultServerConfig(guildId);
+  const options = extractSetupOptions(interaction);
+  
+  if (options.dateFormat && !isDateFormatValid(options.dateFormat)) {
+    await interaction.reply(i18n.t('setup.invalidDateFormat'));
+    return false;
+  }
+
+  const cfg = buildServerConfig(existing, options, guildId);
+  
+  await saveServerConfig(cfg);
+  updateServerConfig(cfg);
+  scheduleDailySelection(interaction.client);
+
+  const changes = detectChanges(cfg, existing);
   const changedFields = changes.join(', ');
+  
   if (changes.length > 0) {
     await interaction.reply(
       i18n.t('setup.savedDetailed', { fields: changedFields })
@@ -404,19 +440,16 @@ export async function handleSetup(
   } else {
     await interaction.reply(i18n.t('setup.savedNoChanges'));
   }
-  return language !== existing.language || guildId !== existing.guildId;
+  
+  return options.language !== existing.language || guildId !== existing.guildId;
 }
 
 export async function handleExport(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
-  const usersPath = USERS_FILE;
   const configPath = path.join(__dirname, 'serverConfig.json');
 
   const files: Array<{ attachment: string; name: string }> = [];
-  if (fs.existsSync(usersPath)) {
-    files.push({ attachment: usersPath, name: 'users.json' });
-  }
   if (fs.existsSync(configPath)) {
     files.push({ attachment: configPath, name: 'serverConfig.json' });
   }
@@ -434,27 +467,17 @@ export async function handleExport(
 export async function handleImport(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
-  const usersFile = interaction.options.getAttachment(
-    i18n.getOptionName('import', 'users'),
-    false
-  );
   const configFile = interaction.options.getAttachment(
     i18n.getOptionName('import', 'config'),
     false
   );
 
-  if (!usersFile && !configFile) {
+  if (!configFile) {
     await interaction.reply(i18n.t('import.invalid'));
     return;
   }
 
   try {
-    if (usersFile) {
-      if (!usersFile.name.endsWith('.json')) throw new Error('invalid');
-      const text = await fetchText(usersFile.url);
-      await fs.promises.writeFile(USERS_FILE, text, 'utf-8');
-    }
-
     if (configFile) {
       if (!configFile.name.endsWith('.json')) throw new Error('invalid');
       const text = await fetchText(configFile.url);
@@ -571,6 +594,57 @@ export async function handleEnable(
     updateServerConfig(existing);
   }
   await interaction.reply(i18n.t('bot.enabled'));
+}
+
+export async function handleReminders(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  try {
+    const reminders = await reminderService.getRemindersByUser(interaction.user.id);
+    const formattedList = reminderService.formatReminderList(reminders);
+    
+    await interaction.reply({
+      content: `${i18n.t('reminder.list.title')}\n\n${formattedList}`,
+      ephemeral: true
+    });
+  } catch (error) {
+    console.error('Error handling reminders command:', error);
+    await interaction.reply({
+      content: i18n.t('reminder.error'),
+      ephemeral: true
+    });
+  }
+}
+
+export async function handleDeleteReminder(
+  interaction: ChatInputCommandInteraction
+): Promise<void> {
+  try {
+    const reminderId = interaction.options.getInteger(
+      i18n.getOptionName('delete-reminder', 'id'),
+      true
+    );
+
+    const success = await reminderService.deleteReminder(reminderId, interaction.user.id);
+    
+    if (success) {
+      await interaction.reply({
+        content: i18n.t('reminder.delete.success'),
+        ephemeral: true
+      });
+    } else {
+      await interaction.reply({
+        content: i18n.t('reminder.delete.notFound'),
+        ephemeral: true
+      });
+    }
+  } catch (error) {
+    console.error('Error handling delete reminder command:', error);
+    await interaction.reply({
+      content: i18n.t('reminder.delete.error'),
+      ephemeral: true
+    });
+  }
 }
 
 

@@ -22,6 +22,7 @@ import {
   handleReadd,
   handleSkipToday,
   handleSkipUntil,
+  handleSubstitute,
   handleSetup,
   handleExport,
   handleImport,
@@ -29,7 +30,9 @@ import {
   handleRole,
   handleDisable,
   handleDisableUntil,
-  handleEnable
+  handleEnable,
+  handleReminders,
+  handleDeleteReminder
 } from '@/handlers';
 import {
   handleNextSong,
@@ -110,6 +113,27 @@ export function createCommands(): RESTPostAPIApplicationCommandsJSONBody[] {
               format: DATE_FORMAT
             })
           )
+          .setRequired(true)
+      ),
+    new SlashCommandBuilder()
+      .setName(i18n.getCommandName('substitute'))
+      .setDescription(i18n.getCommandDescription('substitute'))
+      .addStringOption((option) =>
+        option
+          .setName(i18n.getOptionName('substitute', 'substitute'))
+          .setDescription(i18n.getOptionDescription('substitute', 'substitute'))
+          .setRequired(true)
+      ),
+    new SlashCommandBuilder()
+      .setName(i18n.getCommandName('reminders'))
+      .setDescription(i18n.getCommandDescription('reminders')),
+    new SlashCommandBuilder()
+      .setName(i18n.getCommandName('delete-reminder'))
+      .setDescription(i18n.getCommandDescription('delete-reminder'))
+      .addIntegerOption((option) =>
+        option
+          .setName(i18n.getOptionName('delete-reminder', 'id'))
+          .setDescription(i18n.getOptionDescription('delete-reminder', 'id'))
           .setRequired(true)
       ),
     new SlashCommandBuilder()
@@ -270,6 +294,7 @@ export function createAdminCommands(): Set<string> {
     i18n.getCommandName('readd'),
     i18n.getCommandName('skip-today'),
     i18n.getCommandName('skip-until'),
+    i18n.getCommandName('substitute'),
     i18n.getCommandName('setup'),
     i18n.getCommandName('export'),
     i18n.getCommandName('import'),
@@ -305,6 +330,7 @@ export function createCommandHandlers(): Record<string, CommandHandler> {
     [i18n.getCommandName('readd')]: handleReadd,
     [i18n.getCommandName('skip-today')]: handleSkipToday,
     [i18n.getCommandName('skip-until')]: handleSkipUntil,
+    [i18n.getCommandName('substitute')]: handleSubstitute,
     [i18n.getCommandName('setup')]: async (interaction) => {
       return await handleSetup(interaction);
     },
@@ -328,6 +354,12 @@ export function createCommandHandlers(): Record<string, CommandHandler> {
     },
     [i18n.getCommandName('enable')]: async (interaction) => {
       await handleEnable(interaction);
+    },
+    [i18n.getCommandName('reminders')]: async (interaction) => {
+      await handleReminders(interaction);
+    },
+    [i18n.getCommandName('delete-reminder')]: async (interaction) => {
+      await handleDeleteReminder(interaction);
     }
   };
 }

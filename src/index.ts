@@ -47,6 +47,8 @@ import {
 } from '@/music';
 import { scheduleDailySelection } from '@/scheduler';
 import { setupChatListener } from '@/chatHandler';
+import { reminderService } from '@/reminderService';
+import { database } from '@/supabase';
 
 i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
 logConfig();
@@ -99,6 +101,10 @@ if (process.env.NODE_ENV !== 'test') {
     console.log('✅ Commands registered');
 
     scheduleDailySelection(client);
+    
+    // Inicializar serviço de lembretes
+    reminderService.setClient(client);
+    reminderService.start();
   });
 
   client.on('guildCreate', (guild) => {
@@ -152,6 +158,21 @@ if (process.env.NODE_ENV !== 'test') {
 
   client.login(TOKEN);
 }
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('\n🔄 Shutting down gracefully...');
+  reminderService.stop();
+  await database.close();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\n🔄 Shutting down gracefully...');
+  reminderService.stop();
+  await database.close();
+  process.exit(0);
+});
 
 export {
   UserData,

@@ -34,6 +34,17 @@
   "reminder.set": "Reminder set for {{date}}.",
   "reminder.notify": "⏰ Reminder: {{text}}",
   "reminder.defaultReply": "I'm here to help! How can I assist you today?",
+  "reminder.error": "Error creating reminder. Please try again.",
+  "reminder.list.empty": "You have no scheduled reminders.",
+  "reminder.list.title": "📋 Your Reminders",
+  "reminder.delete.success": "Reminder removed successfully.",
+  "reminder.delete.error": "Error removing reminder.",
+  "reminder.delete.notFound": "Reminder not found or you don't have permission to remove it.",
+  "reminder.deleteAll.success": "{{count}} reminders removed successfully.",
+  "reminder.deleteAll.error": "Error removing reminders.",
+  "reminder.deleteAll.noReminders": "You have no reminders to remove.",
+  "reminder.stats": "📊 **Reminder Statistics**\nTotal: {{total}}\nPending: {{pending}}\nSent: {{sent}}",
+  "reminder.list.noReminders": "You have no scheduled reminders at the moment.",
 
   "export.success": "✅ Attached data files.",
   "export.noFiles": "❌ No data files found.",
@@ -113,6 +124,30 @@
       "date": {
         "name": "date",
           "description": "Date ({{format}})"
+        }
+      }
+    },
+    "substitute": {
+      "name": "substitute",
+      "description": "Substitute the current selected person with another person",
+      "options": {
+        "substitute": {
+          "name": "substitute",
+          "description": "Person who will substitute (mention, id or name)"
+        }
+      }
+    },
+    "reminders": {
+      "name": "reminders",
+      "description": "List your scheduled reminders"
+    },
+    "delete-reminder": {
+      "name": "delete-reminder",
+      "description": "Remove a specific reminder",
+      "options": {
+        "id": {
+          "name": "id",
+          "description": "Reminder ID"
         }
       }
     },
@@ -231,8 +266,11 @@
   "user.removed": "✅ User {{name}} has been removed!",
   "selection.nextUser": "➡️ Selected user: <@{{id}}> ({{name}})",
   "selection.resetOriginal": "✅ Selection list has been reset to original state.",
-  "selection.resetAll": "✅ {{count}} users have been readded to the selection list.",
-    "errors.unauthorized": "❌ You do not have permission to use this command.",
+    "selection.resetAll": "✅ {{count}} users have been readded to the selection list.",
+  "selection.substituted": "✅ {{originalName}} has been substituted by {{substituteName}} for today's daily.",
+  "selection.noCurrentSelection": "❌ No one is currently selected for today's daily.",
+  "selection.substituteNotInRemaining": "❌ {{name}} is not in the remaining list to be selected.",
+  "errors.unauthorized": "❌ You do not have permission to use this command.",
     "role.updated": "✅ {{name}} is now {{role}}.",
     "bot.disabled": "⏸️ Daily announcements disabled.",
     "bot.disabledUntil": "⏸️ Daily announcements disabled until {{date}}.",

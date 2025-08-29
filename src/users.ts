@@ -1,33 +1,14 @@
-import * as fs from 'fs';
-import { USERS_FILE } from '@/config';
+import { database, UserData, UserEntry } from '@/supabase';
 import { i18n } from '@/i18n';
 import { todayISO } from '@/date';
 
-export interface UserEntry {
-  name: string;
-  id: string;
-}
-
-export interface UserData {
-  all: UserEntry[];
-  remaining: UserEntry[];
-  lastSelected?: UserEntry;
-  /** ISO date string of the last selection */
-  lastSelectionDate?: string;
-  skips?: Record<string, string>;
-}
+export { UserData, UserEntry } from '@/supabase';
 
 export async function loadUsers(): Promise<UserData> {
   try {
-    if (!fs.existsSync(USERS_FILE)) {
-      const emptyData: UserData = { all: [], remaining: [], skips: {} };
-      await saveUsers(emptyData);
-      return emptyData;
-    }
-    const data = await fs.promises.readFile(USERS_FILE, 'utf-8');
-    const parsed = JSON.parse(data);
-    return { skips: {}, ...parsed } as UserData;
-  } catch {
+    return await database.loadUsers();
+  } catch (error) {
+    console.error('Error loading users from database:', error);
     const emptyData: UserData = { all: [], remaining: [], skips: {} };
     await saveUsers(emptyData);
     return emptyData;
@@ -35,7 +16,7 @@ export async function loadUsers(): Promise<UserData> {
 }
 
 export async function saveUsers(data: UserData): Promise<void> {
-  await fs.promises.writeFile(USERS_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  await database.saveUsers(data);
 }
 
 export async function selectUser(data: UserData): Promise<UserEntry> {

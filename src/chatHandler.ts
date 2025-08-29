@@ -1,6 +1,7 @@
 import { Client, Message } from 'discord.js';
 import { i18n } from '@/i18n';
 import { chatResponse } from '@/chat';
+import { reminderService } from '@/reminderService';
 
 export async function handleChatMessage(message: Message): Promise<void> {
   // Extrair informações do usuário
@@ -30,6 +31,74 @@ export async function handleChatMessage(message: Message): Promise<void> {
     return;
   }
 
+  // Processar intenção de listar lembretes
+  if (result.intent?.listReminders) {
+    try {
+      const reminders = await reminderService.getRemindersByUser(userId);
+      const formattedList = reminderService.formatReminderList(reminders);
+      
+      await message.reply(
+        `${result.reply || i18n.t('reminder.list.title')}\n\n${formattedList}`
+      );
+    } catch (error) {
+      console.error('Error listing reminders:', error);
+      try {
+        await message.reply(i18n.t('reminder.error'));
+      } catch {
+        /* ignore */
+      }
+    }
+    return;
+  }
+
+  // Processar intenção de deletar lembrete
+  if (result.intent?.deleteReminder?.id) {
+    try {
+      const reminderId = result.intent.deleteReminder.id;
+      const success = await reminderService.deleteReminder(reminderId, userId);
+      
+      if (success) {
+        await message.reply(
+          result.reply || i18n.t('reminder.delete.success')
+        );
+      } else {
+        await message.reply(i18n.t('reminder.delete.notFound'));
+      }
+    } catch (error) {
+      console.error('Error deleting reminder:', error);
+      try {
+        await message.reply(i18n.t('reminder.delete.error'));
+      } catch {
+        /* ignore */
+      }
+    }
+    return;
+  }
+
+  // Processar intenção de deletar todos os lembretes
+  if (result.intent?.deleteAllReminders) {
+    try {
+      const deletedCount = await reminderService.deleteAllRemindersByUser(userId);
+      
+      if (deletedCount > 0) {
+        await message.reply(
+          result.reply || i18n.t('reminder.deleteAll.success', { count: deletedCount })
+        );
+      } else {
+        await message.reply(i18n.t('reminder.deleteAll.noReminders'));
+      }
+    } catch (error) {
+      console.error('Error deleting all reminders:', error);
+      try {
+        await message.reply(i18n.t('reminder.deleteAll.error'));
+      } catch {
+        /* ignore */
+      }
+    }
+    return;
+  }
+
+  // Processar intenção de criar lembrete
   const dateStr = result.intent?.setReminder?.date;
   if (!dateStr) {
     try {
@@ -40,9 +109,26 @@ export async function handleChatMessage(message: Message): Promise<void> {
     return;
   }
 
+  console.log(`🔍 Processing reminder request:`, {
+    originalMessage: message.content,
+    dateStr,
+    userId,
+    userName
+  });
+
   const date = new Date(dateStr);
-  const delay = date.getTime() - Date.now();
-  if (isNaN(date.getTime()) || delay <= 0) {
+  const now = Date.now();
+  const minDelay = 10 * 1000; // 10 segundos de buffer
+  
+  console.log(`📅 Date validation:`, {
+    dateStr,
+    parsedDate: date.toISOString(),
+    now: new Date(now).toISOString(),
+    timeDiff: date.getTime() - now,
+    isValid: !isNaN(date.getTime()) && date.getTime() > now - minDelay
+  });
+  
+  if (isNaN(date.getTime()) || date.getTime() <= now - minDelay) {
     try {
       await message.reply(i18n.t('reminder.invalidTime'));
     } catch {
@@ -50,19 +136,44 @@ export async function handleChatMessage(message: Message): Promise<void> {
     }
     return;
   }
-  setTimeout(() => {
-    Promise.resolve(
-      message.author.send(i18n.t('reminder.notify', { text: message.content }))
-    ).catch(() => {
-      /* ignore */
-    });
-  }, delay);
+
   try {
-    await message.reply(
-      result.reply || i18n.t('reminder.set', { date: date.toISOString() })
+    const reminderMessage = result.intent?.setReminder?.message || message.content;
+    await reminderService.addReminder(
+      userId,
+      userName,
+      reminderMessage,
+      dateStr
     );
-  } catch {
-    /* ignore */
+    
+    // Formatar data no padrão brasileiro dd/mm/aaaa
+    const formattedDate = date.toLocaleDateString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    
+    const formattedTime = date.toLocaleTimeString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    const dateTimeStr = `${formattedDate} às ${formattedTime}`;
+    
+    await message.reply(
+      result.reply || i18n.t('reminder.set', { 
+        date: dateTimeStr
+      })
+    );
+  } catch (error) {
+    console.error('Error creating reminder:', error);
+    try {
+      await message.reply(i18n.t('reminder.error'));
+    } catch {
+      /* ignore */
+    }
   }
 }
 

@@ -1,0 +1,360 @@
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+// Interfaces mantidas da implementação anterior
+export interface Reminder {
+  id: number;
+  userId: string;
+  userName: string;
+  message: string;
+  scheduledFor: string; // ISO 8601 UTC
+  createdAt: string; // ISO 8601 UTC
+  sent: boolean;
+  sentAt?: string; // ISO 8601 UTC
+}
+
+export interface UserEntry {
+  name: string;
+  id: string;
+}
+
+export interface UserData {
+  all: UserEntry[];
+  remaining: UserEntry[];
+  lastSelected?: UserEntry;
+  /** ISO date string of the last selection */
+  lastSelectionDate?: string;
+  skips?: Record<string, string>;
+}
+
+class SupabaseDatabase {
+  private client: SupabaseClient;
+
+  constructor() {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('SUPABASE_URL and SUPABASE_ANON_KEY must be set in environment variables');
+    }
+
+    this.client = createClient(supabaseUrl, supabaseKey);
+  }
+
+  // ===== REMINDERS =====
+
+  async addReminder(
+    userId: string,
+    userName: string,
+    message: string,
+    scheduledFor: string
+  ): Promise<number> {
+    const { data, error } = await this.client
+      .from('reminders')
+      .insert({
+        user_id: userId,
+        user_name: userName,
+        message,
+        scheduled_for: scheduledFor,
+        created_at: new Date().toISOString(),
+        sent: false
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Error adding reminder:', error);
+      throw error;
+    }
+
+    console.log(`📝 Reminder ${data.id} scheduled for ${scheduledFor}`);
+    return data.id;
+  }
+
+  async getPendingReminders(): Promise<Reminder[]> {
+    const now = new Date().toISOString();
+    
+    const { data, error } = await this.client
+      .from('reminders')
+      .select('*')
+      .eq('sent', false)
+      .lte('scheduled_for', now)
+      .order('scheduled_for', { ascending: true });
+
+    if (error) {
+      console.error('Error getting pending reminders:', error);
+      throw error;
+    }
+
+    return data.map((row: any) => ({
+      id: row.id,
+      userId: row.user_id,
+      userName: row.user_name,
+      message: row.message,
+      scheduledFor: row.scheduled_for,
+      createdAt: row.created_at,
+      sent: row.sent,
+      sentAt: row.sent_at
+    }));
+  }
+
+  async getRemindersByUser(userId: string): Promise<Reminder[]> {
+    const { data, error } = await this.client
+      .from('reminders')
+      .select('*')
+      .eq('user_id', userId)
+      .order('scheduled_for', { ascending: false });
+
+    if (error) {
+      console.error('Error getting user reminders:', error);
+      throw error;
+    }
+
+    return data.map((row: any) => ({
+      id: row.id,
+      userId: row.user_id,
+      userName: row.user_name,
+      message: row.message,
+      scheduledFor: row.scheduled_for,
+      createdAt: row.created_at,
+      sent: row.sent,
+      sentAt: row.sent_at
+    }));
+  }
+
+  async markReminderAsSent(id: number): Promise<void> {
+    const { error } = await this.client
+      .from('reminders')
+      .update({
+        sent: true,
+        sent_at: new Date().toISOString()
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error marking reminder as sent:', error);
+      throw error;
+    }
+  }
+
+  async deleteReminder(id: number): Promise<void> {
+    const { error } = await this.client
+      .from('reminders')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting reminder:', error);
+      throw error;
+    }
+  }
+
+  async deleteAllRemindersByUser(userId: string): Promise<number> {
+    const { count, error } = await this.client
+      .from('reminders')
+      .delete()
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error deleting all reminders for user:', error);
+      throw error;
+    }
+
+    return count || 0;
+  }
+
+  async deleteOldReminders(daysOld: number = 30): Promise<void> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+    const cutoffISO = cutoffDate.toISOString();
+
+    const { error } = await this.client
+      .from('reminders')
+      .delete()
+      .eq('sent', true)
+      .lt('sent_at', cutoffISO);
+
+    if (error) {
+      console.error('Error deleting old reminders:', error);
+      throw error;
+    }
+  }
+
+  async getReminderStats(): Promise<{ total: number; pending: number; sent: number }> {
+    const { data, error } = await this.client
+      .from('reminders')
+      .select('sent');
+
+    if (error) {
+      console.error('Error getting reminder stats:', error);
+      throw error;
+    }
+
+    const total = data.length;
+    const sent = data.filter((r: any) => r.sent).length;
+    const pending = total - sent;
+
+    return { total, pending, sent };
+  }
+
+  // ===== USERS =====
+
+  async loadUsers(): Promise<UserData> {
+    try {
+      // Carregar todos os usuários
+      const { data: users, error: usersError } = await this.client
+        .from('users')
+        .select('*');
+
+      if (usersError) {
+        console.error('Error loading users:', usersError);
+        throw usersError;
+      }
+
+      // Carregar skips
+      const { data: skips, error: skipsError } = await this.client
+        .from('skips')
+        .select('*');
+
+      if (skipsError) {
+        console.error('Error loading skips:', skipsError);
+        throw skipsError;
+      }
+
+      // Carregar configurações
+      const { data: configs } = await this.client
+        .from('config')
+        .select('*')
+        .in('key', ['lastSelected', 'lastSelectionDate']);
+
+      const userEntries: UserEntry[] = users.map((user: any) => ({
+        id: user.id,
+        name: user.name
+      }));
+
+      const remainingUsers = users
+        .filter((user: any) => user.in_remaining)
+        .map((user: any) => ({
+          id: user.id,
+          name: user.name
+        }));
+
+      const skipMap: Record<string, string> = {};
+      skips.forEach((skip: any) => {
+        skipMap[skip.user_id] = skip.skip_until;
+      });
+
+      const result: UserData = {
+        all: userEntries,
+        remaining: remainingUsers,
+        skips: skipMap
+      };
+
+      // Processar configurações
+      if (configs) {
+        const configMap: Record<string, string> = {};
+        configs.forEach((cfg: any) => {
+          configMap[cfg.key] = cfg.value;
+        });
+
+        // Adicionar último selecionado se existir
+        if (configMap.lastSelected) {
+          const lastSelected = userEntries.find(u => u.id === configMap.lastSelected);
+          if (lastSelected) {
+            result.lastSelected = lastSelected;
+          }
+        }
+
+        // Adicionar data da última seleção se existir
+        if (configMap.lastSelectionDate) {
+          result.lastSelectionDate = configMap.lastSelectionDate;
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error loading users from Supabase:', error);
+      return { all: [], remaining: [], skips: {} };
+    }
+  }
+
+  async saveUsers(data: UserData): Promise<void> {
+    try {
+      // Salvar usuários
+      const { error: usersError } = await this.client
+        .from('users')
+        .upsert(
+          data.all.map(user => ({
+            id: user.id,
+            name: user.name,
+            in_remaining: data.remaining.some(r => r.id === user.id),
+            last_selected: data.lastSelected?.id === user.id
+          }))
+        );
+
+      if (usersError) {
+        console.error('Error saving users:', usersError);
+        throw usersError;
+      }
+
+      // Salvar skips
+      if (data.skips) {
+        const skipEntries = Object.entries(data.skips).map(([userId, skipUntil]) => ({
+          user_id: userId,
+          skip_until: skipUntil
+        }));
+
+        if (skipEntries.length > 0) {
+          const { error: skipsError } = await this.client
+            .from('skips')
+            .upsert(skipEntries);
+
+          if (skipsError) {
+            console.error('Error saving skips:', skipsError);
+            throw skipsError;
+          }
+        }
+      }
+
+      // Salvar configurações
+      const configsToSave = [];
+      
+      if (data.lastSelected) {
+        configsToSave.push({
+          key: 'lastSelected',
+          value: data.lastSelected.id
+        });
+      }
+      
+      if (data.lastSelectionDate) {
+        configsToSave.push({
+          key: 'lastSelectionDate',
+          value: data.lastSelectionDate
+        });
+      }
+      
+      if (configsToSave.length > 0) {
+        const { error: configError } = await this.client
+          .from('config')
+          .upsert(configsToSave);
+
+        if (configError) {
+          console.error('Error saving configs:', configError);
+          throw configError;
+        }
+      }
+    } catch (error) {
+      console.error('Error saving users to Supabase:', error);
+      throw error;
+    }
+  }
+
+  async close(): Promise<void> {
+    // Supabase não precisa de fechamento explícito
+    console.log('🔌 Supabase connection closed');
+  }
+}
+
+// Singleton instance
+export const database = new SupabaseDatabase();
