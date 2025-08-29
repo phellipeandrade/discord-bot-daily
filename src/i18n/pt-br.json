@@ -24,6 +24,9 @@
   "selection.noEligibleUsers": "❌ Nenhum usuário elegível para selecionar.",
   "selection.resetOriginal": "✅ Lista de seleção foi resetada para o estado original.",
   "selection.resetAll": "✅ {{count}} usuários foram readicionados à lista de seleção.",
+  "selection.substituted": "✅ {{originalName}} foi substituído(a) por {{substituteName}} para a daily de hoje.",
+  "selection.noCurrentSelection": "❌ Ninguém está atualmente selecionado para a daily de hoje.",
+  "selection.substituteNotInRemaining": "❌ {{name}} não está na lista de pessoas restantes para ser selecionado(a).",
   "user.notFound": "❌ Usuário {{name}} não encontrado.",
   "user.registered": "✅ Usuário {{name}} foi registrado com sucesso!",
   "user.selfRegistered": "✅ Você foi registrado(a) com sucesso!",
@@ -129,6 +132,16 @@
       "date": {
         "name": "data",
           "description": "Data ({{format}})"
+        }
+      }
+    },
+    "substitute": {
+      "name": "substituir",
+      "description": "Substitui a pessoa atualmente selecionada por outra pessoa",
+      "options": {
+        "substitute": {
+          "name": "substituto",
+          "description": "Pessoa que irá substituir (menção, id ou nome)"
         }
       }
     },

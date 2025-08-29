@@ -10,6 +10,7 @@ import {
   handleReadd,
   handleSkipToday,
   handleSkipUntil,
+  handleSubstitute,
   handleSetup,
   handleExport,
   handleImport,
@@ -21,12 +22,15 @@ jest.mock('@/i18n', () => ({
   i18n: {
     t: jest.fn((key: string, params: Record<string, string> = {}) => {
       const translations: Record<string, string> = {
-        'selection.readded': 'selection.readded',
-        'setup.invalidDateFormat': 'setup.invalidDateFormat',
-        'setup.savedDetailed': 'setup.savedDetailed',
-        'setup.savedNoChanges': 'setup.savedNoChanges',
-        'config.valid': 'config.valid',
-        'config.invalid': 'config.invalid'
+            'selection.readded': 'selection.readded',
+    'selection.substituted': 'selection.substituted',
+    'selection.noCurrentSelection': 'selection.noCurrentSelection',
+    'selection.substituteNotInRemaining': 'selection.substituteNotInRemaining',
+    'setup.invalidDateFormat': 'setup.invalidDateFormat',
+    'setup.savedDetailed': 'setup.savedDetailed',
+    'setup.savedNoChanges': 'setup.savedNoChanges',
+    'config.valid': 'config.valid',
+    'config.invalid': 'config.invalid'
       };
       return translations[key] || key;
     }),
@@ -759,5 +763,131 @@ describe('handleSetup refactored functions', () => {
     expect(changes).toContain('language');
     expect(changes).toContain('holidayCountries');
     expect(changes).not.toContain('musicChannelId');
+  });
+
+  describe('handleSubstitute', () => {
+    beforeEach(() => {
+      jest.resetModules();
+      jest.doMock('@/date', () => ({
+        todayISO: jest.fn(() => '2024-01-15')
+      }));
+      mockSaveUsers.mockClear();
+    });
+
+    test('substitutes current selected person with another person', async () => {
+      const today = '2024-01-15';
+      const data: UserData = {
+        all: [
+          { name: 'Original', id: '1' },
+          { name: 'Substitute', id: '2' }
+        ],
+        remaining: [
+          { name: 'Substitute', id: '2' }
+        ],
+        lastSelected: { name: 'Original', id: '1' },
+        lastSelectionDate: today
+      };
+
+      const interaction = createInteraction({ substitute: 'Substitute' });
+      const { handleSubstitute } = await import('@/handlers');
+      
+      await handleSubstitute(interaction, data);
+
+      expect(data.lastSelected).toEqual({ name: 'Substitute', id: '2' });
+      expect(data.remaining).toHaveLength(1);
+      expect(data.remaining[0]).toEqual({ name: 'Original', id: '1' });
+      expect(mockSaveUsers).toHaveBeenCalledWith(data);
+      expect(interaction.reply).toHaveBeenCalledWith('selection.substituted');
+    });
+
+    test('fails when no one is currently selected', async () => {
+      const data: UserData = {
+        all: [
+          { name: 'Original', id: '1' },
+          { name: 'Substitute', id: '2' }
+        ],
+        remaining: [
+          { name: 'Substitute', id: '2' }
+        ]
+      };
+
+      const interaction = createInteraction({ substitute: 'Substitute' });
+      const { handleSubstitute } = await import('@/handlers');
+      
+      await handleSubstitute(interaction, data);
+
+      expect(interaction.reply).toHaveBeenCalledWith('selection.noCurrentSelection');
+      expect(mockSaveUsers).not.toHaveBeenCalled();
+    });
+
+    test('fails when substitute user is not found', async () => {
+      const today = '2024-01-15';
+      const data: UserData = {
+        all: [
+          { name: 'Original', id: '1' }
+        ],
+        remaining: [],
+        lastSelected: { name: 'Original', id: '1' },
+        lastSelectionDate: today
+      };
+
+      const interaction = createInteraction({ substitute: 'NonExistent' });
+      const { handleSubstitute } = await import('@/handlers');
+      
+      await handleSubstitute(interaction, data);
+
+      expect(interaction.reply).toHaveBeenCalledWith('user.notFound');
+      expect(mockSaveUsers).not.toHaveBeenCalled();
+    });
+
+    test('fails when substitute user is not in remaining list', async () => {
+      const today = '2024-01-15';
+      const data: UserData = {
+        all: [
+          { name: 'Original', id: '1' },
+          { name: 'Substitute', id: '2' }
+        ],
+        remaining: [],
+        lastSelected: { name: 'Original', id: '1' },
+        lastSelectionDate: today
+      };
+
+      const interaction = createInteraction({ substitute: 'Substitute' });
+      const { handleSubstitute } = await import('@/handlers');
+      
+      await handleSubstitute(interaction, data);
+
+      expect(interaction.reply).toHaveBeenCalledWith('selection.substituteNotInRemaining');
+      expect(mockSaveUsers).not.toHaveBeenCalled();
+    });
+
+    test('accepts user id and mention for substitute', async () => {
+      const today = '2024-01-15';
+      const data: UserData = {
+        all: [
+          { name: 'Original', id: '1' },
+          { name: 'Substitute', id: '2' }
+        ],
+        remaining: [
+          { name: 'Substitute', id: '2' }
+        ],
+        lastSelected: { name: 'Original', id: '1' },
+        lastSelectionDate: today
+      };
+
+      const { handleSubstitute } = await import('@/handlers');
+      
+      // Test with user ID
+      await handleSubstitute(createInteraction({ substitute: '2' }), data);
+      expect(data.lastSelected?.id).toBe('2');
+      
+      // Reset for next test
+      data.lastSelected = { name: 'Original', id: '1' };
+      data.remaining = [{ name: 'Substitute', id: '2' }];
+      
+      // Test with mention
+      await handleSubstitute(createInteraction({ substitute: '<@2>' }), data);
+      expect(data.lastSelected?.id).toBe('2');
+    });
   });
 });

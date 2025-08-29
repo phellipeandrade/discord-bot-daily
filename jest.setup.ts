@@ -3,6 +3,27 @@ import path from 'path';
 // Configurar variáveis de ambiente para teste
 // Users are now stored in SQLite database, no JSON file needed
 
+// Mock para Supabase
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: jest.fn().mockImplementation(() => ({
+    from: jest.fn().mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockReturnValue({
+          in: jest.fn().mockReturnValue({
+            insert: jest.fn().mockReturnValue({
+              update: jest.fn().mockReturnValue({
+                delete: jest.fn().mockReturnValue({
+                  then: jest.fn().mockResolvedValue({ data: [], error: null })
+                })
+              })
+            })
+          })
+        })
+      })
+    })
+  }))
+}));
+
 // Mock das funções do fs para outros arquivos que ainda usam
 jest.mock('fs', () => ({
   existsSync: jest.fn(),

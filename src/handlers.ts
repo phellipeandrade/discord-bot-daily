@@ -261,6 +261,58 @@ export async function handleSkipUntil(
   );
 }
 
+export async function handleSubstitute(
+  interaction: ChatInputCommandInteraction,
+  data: UserData
+): Promise<void> {
+  // Verificar se há alguém selecionado hoje
+  if (!data.lastSelected || data.lastSelectionDate !== todayISO()) {
+    await interaction.reply(i18n.t('selection.noCurrentSelection'));
+    return;
+  }
+
+  const substituteIdentifier = interaction.options.getString(
+    i18n.getOptionName('substitute', 'substitute'),
+    true
+  );
+  const substituteUser = findUser(data, substituteIdentifier);
+
+  if (!substituteUser) {
+    await interaction.reply(i18n.t('user.notFound', { name: substituteIdentifier }));
+    return;
+  }
+
+  // Verificar se o substituto está na lista de remaining
+  if (!data.remaining.some((u) => u.id === substituteUser.id)) {
+    await interaction.reply(i18n.t('selection.substituteNotInRemaining', { name: substituteUser.name }));
+    return;
+  }
+
+  const originalUser = data.lastSelected;
+  const originalUserName = originalUser.name;
+  const substituteUserName = substituteUser.name;
+
+  // Remover o substituto da lista de remaining
+  data.remaining = data.remaining.filter(u => u.id !== substituteUser.id);
+
+  // Adicionar a pessoa original de volta à lista de remaining
+  if (!data.remaining.some((u) => u.id === originalUser.id)) {
+    data.remaining.push(originalUser);
+  }
+
+  // Atualizar o último selecionado para o substituto
+  data.lastSelected = substituteUser;
+
+  await saveUsers(data);
+
+  await interaction.reply(
+    i18n.t('selection.substituted', {
+      originalName: originalUserName,
+      substituteName: substituteUserName
+    })
+  );
+}
+
 function getDefaultServerConfig(guildId: string): ServerConfig {
   return {
     guildId,
