@@ -13,6 +13,7 @@
     "build": "npm run copy-assets && npm run compile && npm run bundle",
     "start": "node build/index.js",
     "dev": "ts-node src/index.ts",
+    "local:test": "ts-node -r tsconfig-paths/register src/localTest.ts",
     "generate-zip": "rm -f bot.zip && cd build && zip -r ../bot.zip index.js serverConfig.json i18n/ && zip -j ../bot.zip ../package.json ../.env",
     "build-zip": "npm run clean && npm run build && npm run generate-zip",
     "lint": "eslint \"src/**/*.ts\" && tsc --noEmit",
@@ -52,6 +53,7 @@
     "prettier": "^3.1.1",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"
   }
 }

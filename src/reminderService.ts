@@ -110,6 +110,11 @@ class ReminderService {
     try {
       const pendingReminders = await database.getPendingReminders();
       
+      if (!pendingReminders || !Array.isArray(pendingReminders)) {
+        console.warn('No pending reminders or invalid response from database');
+        return;
+      }
+      
       for (const reminder of pendingReminders) {
         await this.sendReminder(reminder);
       }
@@ -185,7 +190,7 @@ class ReminderService {
       
       const dateStr = `${formattedDate} às ${formattedTime}`;
 
-      return `${status} ${dateStr}\n   📝 ${reminder.message}`;
+      return `${status} ${dateStr}\n   📝 ${reminder.message}\n   ID: ${reminder.id}`;
     }).join('\n\n');
   }
 }

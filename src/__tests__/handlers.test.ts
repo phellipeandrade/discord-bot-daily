@@ -448,7 +448,9 @@ describe('handlers', () => {
     mockFs.existsSync.mockReturnValue(false);
     const interaction = createInteraction();
     await handleExport(interaction);
-    expect(interaction.reply).toHaveBeenCalledWith(expect.any(String));
+    expect(interaction.reply).toHaveBeenCalledWith(expect.objectContaining({
+      content: expect.any(String)
+    }));
   });
 
   test('handleImport saves data and updates config', async () => {

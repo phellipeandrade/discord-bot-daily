@@ -24,10 +24,17 @@ const loadTranslations = (lang: Language): TranslationResource => {
   try {
     const json = fs.readFileSync(path.join(__dirname, `i18n/${lang}.json`), 'utf-8');
     const result = JSON.parse(json);
-    const commands = Object.values(result.commands as Record<string, Command>)
-      .map(c => c.name)
-      .join(', ');
-    console.log(`\u{1F50D} [${lang}] translations loaded: ${commands}`);
+    
+    // Verificar se result.commands existe e é um objeto válido
+    if (result.commands && typeof result.commands === 'object') {
+      const commands = Object.values(result.commands as Record<string, Command>)
+        .map(c => c.name)
+        .join(', ');
+      console.log(`\u{1F50D} [${lang}] translations loaded: ${commands}`);
+    } else {
+      console.log(`\u{1F50D} [${lang}] translations loaded (no commands found)`);
+    }
+    
     return result;
   } catch (error) {
     console.error(`Failed to load translations for ${lang}:`, error);

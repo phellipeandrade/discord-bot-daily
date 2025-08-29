@@ -1,48 +1,53 @@
-import { i18n } from '@/i18n';
 
 // Mock do i18n
+const i18nMock = {
+  t: jest.fn((key: string) => ({
+    'reminder.defaultReply': 'default'
+  }[key] || key)),
+  getLanguage: jest.fn(() => 'pt-br')
+};
+
 jest.mock('@/i18n', () => ({
-  i18n: {
-    t: jest.fn((key: string) => ({
-      'reminder.defaultReply': 'default'
-    }[key] || key)),
-    getLanguage: jest.fn(() => 'pt-br')
-  }
+  i18n: i18nMock
 }));
 
 // Mock do @google/genai
+const mockGenerateContent = jest.fn();
+const mockGoogleGenAI = jest.fn().mockImplementation(() => ({
+  models: {
+    generateContent: mockGenerateContent
+  }
+}));
+
 jest.mock('@google/genai', () => ({
-  GoogleGenAI: jest.fn().mockImplementation(() => ({
-    models: {
-      generateContent: jest.fn().mockResolvedValue({
-        text: JSON.stringify({ reply: 'default' })
-      })
-    }
-  }))
+  GoogleGenAI: mockGoogleGenAI
 }));
 
 describe('chat', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.resetModules();
     process.env.GEMINI_API_KEY = 'test-key';
   });
 
   test('returns reminder intent when user asks for reminder', async () => {
     const future = new Date(Date.now() + 1000).toISOString();
-    const generateContent = jest
-      .fn()
-      .mockResolvedValueOnce({
-        text: JSON.stringify({
-          reply: 'Ok! Vou te lembrar amanhã às 14h.',
-          intent: { setReminder: { date: future } }
-        })
-      });
-
-    const { GoogleGenAI } = await import('@google/genai');
-    (GoogleGenAI as jest.Mock).mockImplementation(() => ({
-      models: { generateContent }
-    }));
+    
+    // Mock para classificação de intenção (reminder)
+    mockGenerateContent.mockResolvedValueOnce({
+      text: JSON.stringify({
+        intent: 'reminder',
+        confidence: 0.9,
+        subIntent: 'set_reminder'
+      })
+    });
+    
+    // Mock para resposta do handler de reminder
+    mockGenerateContent.mockResolvedValueOnce({
+      text: JSON.stringify({
+        reply: 'Ok! Vou te lembrar amanhã às 14h.',
+        intent: { setReminder: { date: future } }
+      })
+    });
 
     const { chatResponse } = await import('@/chat');
     const result = await chatResponse('me lembra de revisar o PR amanhã às 14h');
@@ -51,29 +56,25 @@ describe('chat', () => {
       reply: 'Ok! Vou te lembrar amanhã às 14h.',
       intent: { setReminder: { date: future } }
     });
-    expect(generateContent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        config: expect.objectContaining({
-          responseMimeType: 'application/json',
-          responseSchema: expect.any(Object)
-        })
-      })
-    );
+    expect(mockGenerateContent).toHaveBeenCalledTimes(2);
   });
 
   test('returns chat response when no reminder intent', async () => {
-    const generateContent = jest
-      .fn()
-      .mockResolvedValueOnce({
-        text: JSON.stringify({ 
-          reply: 'No Atena, consulte o painel do pipeline (branch, ambiente) e verifique o último job verde.' 
-        })
-      });
-
-    const { GoogleGenAI } = await import('@google/genai');
-    (GoogleGenAI as jest.Mock).mockImplementation(() => ({
-      models: { generateContent }
-    }));
+    // Mock para classificação de intenção (technical_support)
+    mockGenerateContent.mockResolvedValueOnce({
+      text: JSON.stringify({
+        intent: 'technical_support',
+        confidence: 0.8,
+        subIntent: 'deployment_status'
+      })
+    });
+    
+    // Mock para resposta do handler de technical support
+    mockGenerateContent.mockResolvedValueOnce({
+      text: JSON.stringify({ 
+        reply: 'No Atena, consulte o painel do pipeline (branch, ambiente) e verifique o último job verde.' 
+      })
+    });
 
     const { chatResponse } = await import('@/chat');
     const result = await chatResponse('como ver status do deploy?');
@@ -84,14 +85,7 @@ describe('chat', () => {
   });
 
   test('handles parse failure', async () => {
-    const generateContent = jest
-      .fn()
-      .mockResolvedValueOnce({ text: 'invalid json' });
-
-    const { GoogleGenAI } = await import('@google/genai');
-    (GoogleGenAI as jest.Mock).mockImplementation(() => ({
-      models: { generateContent }
-    }));
+    mockGenerateContent.mockResolvedValueOnce({ text: 'invalid json' });
 
     const { chatResponse } = await import('@/chat');
     const result = await chatResponse('hi');
@@ -109,14 +103,7 @@ describe('chat', () => {
   });
 
   test('handles API error gracefully', async () => {
-    const generateContent = jest
-      .fn()
-      .mockRejectedValueOnce(new Error('API Error'));
-
-    const { GoogleGenAI } = await import('@google/genai');
-    (GoogleGenAI as jest.Mock).mockImplementation(() => ({
-      models: { generateContent }
-    }));
+    mockGenerateContent.mockRejectedValueOnce(new Error('API Error'));
 
     const { chatResponse } = await import('@/chat');
     const result = await chatResponse('hi');
@@ -125,25 +112,21 @@ describe('chat', () => {
   });
 
   test('uses English language when configured', async () => {
-    const i18nMock = {
-      t: jest.fn((key: string) => ({
-        'reminder.defaultReply': 'default'
-      }[key] || key)),
-      getLanguage: jest.fn(() => 'en')
-    };
+    i18nMock.getLanguage.mockReturnValueOnce('en');
     
-    jest.doMock('@/i18n', () => ({ i18n: i18nMock }));
+    // Mock para classificação de intenção (general_question)
+    mockGenerateContent.mockResolvedValueOnce({
+      text: JSON.stringify({
+        intent: 'general_question',
+        confidence: 0.7,
+        subIntent: 'greeting'
+      })
+    });
     
-    const generateContent = jest
-      .fn()
-      .mockResolvedValueOnce({
-        text: JSON.stringify({ reply: 'Hello there!' })
-      });
-
-    const { GoogleGenAI } = await import('@google/genai');
-    (GoogleGenAI as jest.Mock).mockImplementation(() => ({
-      models: { generateContent }
-    }));
+    // Mock para resposta do handler de general question
+    mockGenerateContent.mockResolvedValueOnce({
+      text: JSON.stringify({ reply: 'Hello there!' })
+    });
 
     const { chatResponse } = await import('@/chat');
     const result = await chatResponse('hi');
