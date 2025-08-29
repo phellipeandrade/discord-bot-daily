@@ -170,10 +170,26 @@ class ReminderService {
 
     const uniqueRemindersList = Array.from(uniqueReminders.values());
     
-    return uniqueRemindersList.map(reminder => {
+    // Ordenar lembretes por data (mais próximos primeiro)
+    uniqueRemindersList.sort((a, b) => {
+      const dateA = new Date(a.scheduledFor);
+      const dateB = new Date(b.scheduledFor);
+      return dateA.getTime() - dateB.getTime();
+    });
+    
+    const formattedReminders = uniqueRemindersList.map((reminder, index) => {
       const scheduledDate = new Date(reminder.scheduledFor);
       const isPast = scheduledDate < now;
-      const status = reminder.sent ? '✅' : isPast ? '⏰' : '⏳';
+      
+      let status: string;
+      if (reminder.sent) {
+        status = '✅';
+      } else if (isPast) {
+        status = '⏰';
+      } else {
+        status = '⏳';
+      }
+      
       // Formatar data no padrão brasileiro dd/mm/aaaa
       const formattedDate = scheduledDate.toLocaleDateString('pt-BR', {
         timeZone: 'America/Sao_Paulo',
@@ -189,9 +205,30 @@ class ReminderService {
       });
       
       const dateStr = `${formattedDate} às ${formattedTime}`;
+      
+      // Calcular tempo relativo
+      const timeDiff = scheduledDate.getTime() - now.getTime();
+      const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+      const hoursDiff = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutesDiff = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+      
+      let relativeTime = '';
+      if (isPast) {
+        relativeTime = ' (passado)';
+      } else if (daysDiff > 0) {
+        relativeTime = ` (em ${daysDiff} dia${daysDiff > 1 ? 's' : ''})`;
+      } else if (hoursDiff > 0) {
+        relativeTime = ` (em ${hoursDiff} hora${hoursDiff > 1 ? 's' : ''})`;
+      } else if (minutesDiff > 0) {
+        relativeTime = ` (em ${minutesDiff} minuto${minutesDiff > 1 ? 's' : ''})`;
+      } else {
+        relativeTime = ' (agora)';
+      }
 
-      return `${status} ${dateStr}\n   📝 ${reminder.message}\n   ID: ${reminder.id}`;
-    }).join('\n\n');
+      return `**${index + 1}.** ${status} **${dateStr}**${relativeTime}\n└ 📝 ${reminder.message}\n└ 🆔 ID: ${reminder.id}`;
+    });
+    
+    return formattedReminders.join('\n\n');
   }
 }
 

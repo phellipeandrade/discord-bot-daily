@@ -44,7 +44,7 @@
   "reminder.defaultReply": "Estou aqui para ajudar! Como posso te auxiliar hoje?",
   "reminder.error": "Erro ao criar o lembrete. Tente novamente.",
   "reminder.list.empty": "Você não tem lembretes agendados.",
-  "reminder.list.title": "📋 Seus Lembretes",
+  "reminder.list.title": "📋 **Seus Lembretes Agendados**",
   "reminder.delete.success": "Lembrete removido com sucesso.",
   "reminder.delete.error": "Erro ao remover o lembrete.",
   "reminder.stats": "📊 **Estatísticas dos Lembretes**\nTotal: {{total}}\nPendentes: {{pending}}\nEnviados: {{sent}}",

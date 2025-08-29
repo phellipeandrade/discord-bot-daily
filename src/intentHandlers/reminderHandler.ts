@@ -42,21 +42,20 @@ export async function handleReminderIntent(
     - Provide a simple acknowledgment like "Aqui estão seus lembretes:" or "Vou buscar seus lembretes para você."
 
     CONFIRMATION HANDLING (CRITICAL)
-    - Ask for confirmation only when details are ambiguous. For clear, explicit requests, set intent.setReminder directly.
-    - If user says "não", "no", etc., respond appropriately without setting intent.
-    - If the user is confirming a previous proposal, extract details from history and set intent.setReminder.
+    - Ask for confirmation ONLY when details are ambiguous or missing (e.g., "me lembre de algo", "lembra de fazer isso").
+    - For clear, explicit requests with time (e.g., "daqui a 1 minuto", "amanhã às 9h"), set intent.setReminder directly.
+    - If user says "não", "no", "cancelar", etc., respond appropriately without setting intent.
+    - If the user is confirming a previous proposal (e.g., "sim", "ok", "confirma"), extract details from history and set intent.setReminder.
 
     DATE/TIME HANDLING (CRITICAL)
     - CURRENT TIME: ${currentTime} (UTC) - Use this as reference for all calculations.
     - Interpret time intentions in user's timezone (America/Sao_Paulo by default).
     - Accept relative expressions: "amanhã", "próxima segunda", "daqui a 20min", "em 5 minutos".
     - For expressions like "em X minutos", calculate: CURRENT TIME + X minutes.
-    - CRITICAL: For "em X minutos", you MUST calculate: ${currentTime} + X minutes.
     - NEVER use fixed dates or past dates for relative temporal expressions.
     - If time is missing, use 09:00 local. If only weekday, use next occurrence.
     - Convert final result to ISO 8601 UTC with Z suffix.
     - If past time already occurred today, use next possible date.
-    - If expression is ambiguous, ask 1 clarification question in "reply" and do NOT set intent.
     
     REMINDER MESSAGE (CRITICAL)
     - intent.setReminder.message should be a clean and direct message.
@@ -69,7 +68,6 @@ export async function handleReminderIntent(
 
     STYLE
     - ${context.lang} only in "reply". Tone: claro, profissional e objetivo.
-    - Always ask for confirmation before creating reminders
     - Avoid emojis unless user uses them.
     - Use user's name when appropriate to personalize response.
     - Reference previous conversations when relevant.

@@ -100,7 +100,10 @@ export async function handleChatMessage(message: Message): Promise<void> {
 
   // Processar intenção de criar lembrete
   const dateStr = result.intent?.setReminder?.date;
-  if (!dateStr) {
+  const reminderMessage = result.intent?.setReminder?.message;
+  
+  // Se não há data ou mensagem, apenas responder com a reply da IA (pode ser pedido de confirmação)
+  if (!dateStr || !reminderMessage) {
     try {
       await message.reply(result.reply || i18n.t('reminder.defaultReply'));
     } catch {
@@ -138,7 +141,6 @@ export async function handleChatMessage(message: Message): Promise<void> {
   }
 
   try {
-    const reminderMessage = result.intent?.setReminder?.message || message.content;
     await reminderService.addReminder(
       userId,
       userName,
