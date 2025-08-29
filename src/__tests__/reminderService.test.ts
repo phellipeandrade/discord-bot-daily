@@ -9,6 +9,15 @@ jest.mock('@/i18n', () => ({
   }
 }));
 
+// Mock do Google Gemini
+jest.mock('@google/genai', () => ({
+  GoogleGenAI: jest.fn().mockImplementation(() => ({
+    models: {
+      generateContent: jest.fn()
+    }
+  }))
+}));
+
 // Mock do database
 jest.mock('@/supabase', () => ({
   database: {
@@ -147,5 +156,164 @@ describe('reminderService', () => {
     
     // Verificar se não há erros na execução
     expect(client.users.fetch).toBeDefined();
+  });
+
+  describe('findAndDeleteReminder with AI', () => {
+    const mockReminders = [
+      { id: 1, userId: 'user123', userName: 'TestUser', message: 'Daily standup meeting', scheduledFor: '2025-08-26T10:00:00.000Z', sent: false, createdAt: '2025-08-25T10:00:00.000Z' },
+      { id: 2, userId: 'user123', userName: 'TestUser', message: 'Review pull request #123', scheduledFor: '2025-08-26T11:00:00.000Z', sent: false, createdAt: '2025-08-25T11:00:00.000Z' },
+      { id: 3, userId: 'user123', userName: 'TestUser', message: 'Send weekly report email', scheduledFor: '2025-08-26T12:00:00.000Z', sent: false, createdAt: '2025-08-25T12:00:00.000Z' }
+    ];
+
+    let mockGenerateContent: jest.Mock;
+    let originalEnv: string | undefined;
+
+    beforeEach(() => {
+      const { database } = require('@/supabase');
+      (database.getRemindersByUser as jest.Mock).mockResolvedValue(mockReminders);
+      (database.deleteReminder as jest.Mock).mockResolvedValue(undefined);
+      
+      // Salvar valor original da variável de ambiente
+      originalEnv = process.env.GEMINI_API_KEY;
+      
+      // Mock da variável de ambiente para garantir que a IA seja chamada
+      process.env.GEMINI_API_KEY = 'test-key';
+      
+      // Reset mock da IA
+      mockGenerateContent = jest.fn();
+      const { GoogleGenAI } = require('@google/genai');
+      GoogleGenAI.mockImplementation(() => ({
+        models: {
+          generateContent: mockGenerateContent
+        }
+      }));
+    });
+
+    afterEach(() => {
+      // Restaurar valor original da variável de ambiente
+      if (originalEnv !== undefined) {
+        process.env.GEMINI_API_KEY = originalEnv;
+      } else {
+        delete process.env.GEMINI_API_KEY;
+      }
+    });
+
+    test('finds and deletes reminder by message using AI', async () => {
+      mockGenerateContent.mockResolvedValue({
+        text: '2'
+      });
+
+      const result = await reminderService.findAndDeleteReminder('user123', {
+        message: 'review code'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.deletedId).toBe(2);
+      expect(result.message).toContain('Review pull request #123');
+      expect(mockGenerateContent).toHaveBeenCalled();
+    });
+
+    test('finds and deletes reminder by description using AI', async () => {
+      mockGenerateContent.mockResolvedValue({
+        text: '3'
+      });
+
+      const result = await reminderService.findAndDeleteReminder('user123', {
+        description: 'enviar relatório'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.deletedId).toBe(3);
+      expect(result.message).toContain('Send weekly report email');
+      expect(mockGenerateContent).toHaveBeenCalled();
+    });
+
+    test('falls back to simple search when AI returns invalid response', async () => {
+      mockGenerateContent.mockResolvedValue({
+        text: 'invalid_response'
+      });
+
+      const result = await reminderService.findAndDeleteReminder('user123', {
+        message: 'standup'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.deletedId).toBe(1);
+      expect(result.message).toContain('Daily standup meeting');
+    });
+
+    test('falls back to simple search when AI returns null', async () => {
+      mockGenerateContent.mockResolvedValue({
+        text: 'null'
+      });
+
+      const result = await reminderService.findAndDeleteReminder('user123', {
+        message: 'meeting'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.deletedId).toBe(1);
+      expect(result.message).toContain('Daily standup meeting');
+    });
+
+    test('falls back to simple search when AI throws error', async () => {
+      mockGenerateContent.mockRejectedValue(new Error('AI API error'));
+
+      const result = await reminderService.findAndDeleteReminder('user123', {
+        message: 'email'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.deletedId).toBe(3);
+      expect(result.message).toContain('Send weekly report email');
+    });
+
+    test('finds reminder by date (non-AI logic)', async () => {
+      const result = await reminderService.findAndDeleteReminder('user123', {
+        date: '2025-08-26T10:30:00.000Z'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.deletedId).toBe(1);
+      expect(result.message).toContain('Daily standup meeting');
+    });
+
+    test('returns error when no reminders found', async () => {
+      const { database } = require('@/supabase');
+      (database.getRemindersByUser as jest.Mock).mockResolvedValue([]);
+
+      const result = await reminderService.findAndDeleteReminder('user123', {
+        message: 'test'
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Você não possui lembretes para deletar');
+    });
+
+    test('returns error when reminder not found with criteria', async () => {
+      mockGenerateContent.mockResolvedValue({
+        text: 'null'
+      });
+
+      const result = await reminderService.findAndDeleteReminder('user123', {
+        message: 'nonexistent reminder'
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toBe('Lembrete não encontrado com os critérios fornecidos');
+    });
+
+    test('falls back to simple search when no API key', async () => {
+      delete process.env.GEMINI_API_KEY;
+      
+      const result = await reminderService.findAndDeleteReminder('user123', {
+        message: 'standup'
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.deletedId).toBe(1);
+      expect(result.message).toContain('Daily standup meeting');
+      expect(mockGenerateContent).not.toHaveBeenCalled();
+    });
   });
 });

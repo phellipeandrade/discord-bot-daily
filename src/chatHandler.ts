@@ -51,19 +51,36 @@ export async function handleChatMessage(message: Message): Promise<void> {
     return;
   }
 
-  // Processar intenção de deletar lembrete
-  if (result.intent?.deleteReminder?.id) {
+  // Processar intenção de deletar lembretes
+  if (result.intent?.deleteReminders) {
     try {
-      const reminderId = result.intent.deleteReminder.id;
-      const success = await reminderService.deleteReminder(reminderId, userId);
+      let success = false;
+      let replyMessage = '';
       
-      if (success) {
-        await message.reply(
-          result.reply || i18n.t('reminder.delete.success')
-        );
+      // Se tem IDs específicos, deletar por IDs
+      if (result.intent.deleteReminders.ids && result.intent.deleteReminders.ids.length > 0) {
+        let deletedCount = 0;
+        for (const id of result.intent.deleteReminders.ids) {
+          const deleteSuccess = await reminderService.deleteReminder(id, userId);
+          if (deleteSuccess) deletedCount++;
+        }
+        success = deletedCount > 0;
+        replyMessage = success ? 
+          (result.reply || i18n.t('reminder.delete.success')) : 
+          i18n.t('reminder.delete.notFound');
       } else {
-        await message.reply(i18n.t('reminder.delete.notFound'));
+        // Deletar por critérios (data, mensagem, descrição)
+        const deleteResult = await reminderService.findAndDeleteReminders(userId, {
+          message: result.intent.deleteReminders.message,
+          date: result.intent.deleteReminders.date,
+          description: result.intent.deleteReminders.description,
+          count: result.intent.deleteReminders.count
+        });
+        
+        replyMessage = deleteResult.message;
       }
+      
+      await message.reply(replyMessage);
     } catch (error) {
       console.error('Error deleting reminder:', error);
       try {

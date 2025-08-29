@@ -1,6 +1,10 @@
 import { Client } from 'discord.js';
 import { i18n } from '@/i18n';
 import { database, Reminder } from '@/supabase';
+import { GoogleGenAI } from '@google/genai';
+
+const apiKey = process.env.GEMINI_API_KEY || '';
+const ai = new GoogleGenAI({ apiKey });
 
 class ReminderService {
   private client: Client | null = null;
@@ -51,6 +55,10 @@ class ReminderService {
     }
   }
 
+  /**
+   * Busca lembretes de um usuário específico
+   * 🔒 SEGURANÇA: Sempre filtra por userId, impossível acessar lembretes de outros usuários
+   */
   async getRemindersByUser(userId: string): Promise<Reminder[]> {
     try {
       return await database.getRemindersByUser(userId);
@@ -60,20 +68,22 @@ class ReminderService {
     }
   }
 
-  async deleteReminder(reminderId: number, userId?: string): Promise<boolean> {
+  /**
+   * Deleta um lembrete específico
+   * 🔒 SEGURANÇA: userId é OBRIGATÓRIO para garantir que usuários só deletem seus próprios lembretes
+   */
+  async deleteReminder(reminderId: number, userId: string): Promise<boolean> {
     try {
-      // Se userId foi fornecido, verificar se o lembrete pertence ao usuário
-      if (userId) {
-        const reminders = await database.getRemindersByUser(userId);
-        const reminder = reminders.find(r => r.id === reminderId);
-        if (!reminder) {
-          console.log(`❌ Reminder ${reminderId} not found for user ${userId}`);
-          return false;
-        }
+      // Verificar se o lembrete pertence ao usuário
+      const reminders = await database.getRemindersByUser(userId);
+      const reminder = reminders.find(r => r.id === reminderId);
+      if (!reminder) {
+        console.log(`❌ Reminder ${reminderId} not found for user ${userId}`);
+        return false;
       }
       
       await database.deleteReminder(reminderId);
-      console.log(`🗑️ Reminder ${reminderId} deleted`);
+      console.log(`🗑️ Reminder ${reminderId} deleted for user ${userId}`);
       return true;
     } catch (error) {
       console.error('Error deleting reminder:', error);
@@ -81,6 +91,250 @@ class ReminderService {
     }
   }
 
+  /**
+   * Encontra e deleta lembretes baseado em critérios usando IA
+   * Retorna sempre um array de IDs deletados (pode ser 1 ou múltiplos)
+   */
+  async findAndDeleteReminders(
+    userId: string, 
+    criteria: { message?: string; date?: string; description?: string; count?: number }
+  ): Promise<{ 
+    success: boolean; 
+    deletedIds: number[]; 
+    deletedMessages: string[];
+    count: number;
+    message: string; 
+  }> {
+    try {
+      const reminders = await database.getRemindersByUser(userId);
+      
+      if (reminders.length === 0) {
+        return { 
+          success: false, 
+          deletedIds: [],
+          deletedMessages: [],
+          count: 0,
+          message: 'Você não possui lembretes para deletar' 
+        };
+      }
+
+      let targetReminders: Reminder[] = [];
+      
+      if (criteria.message) {
+        // Buscar por conteúdo da mensagem usando IA para similaridade semântica
+        targetReminders = await this.findRemindersBySemanticSimilarity(
+          reminders, 
+          criteria.message, 
+          'message',
+          criteria.count
+        );
+      } else if (criteria.date) {
+        // Buscar por data aproximada
+        const targetDate = new Date(criteria.date);
+        targetReminders = reminders.filter(r => {
+          const reminderDate = new Date(r.scheduledFor);
+          const timeDiff = Math.abs(reminderDate.getTime() - targetDate.getTime());
+          return timeDiff < 24 * 60 * 60 * 1000; // Dentro de 24 horas
+        });
+      } else if (criteria.description) {
+        // Buscar por descrição usando IA para similaridade semântica
+        targetReminders = await this.findRemindersBySemanticSimilarity(
+          reminders, 
+          criteria.description, 
+          'description',
+          criteria.count
+        );
+      }
+      
+      if (targetReminders.length === 0) {
+        return { 
+          success: false, 
+          deletedIds: [],
+          deletedMessages: [],
+          count: 0,
+          message: 'Nenhum lembrete encontrado com os critérios fornecidos' 
+        };
+      }
+
+      // Deletar todos os lembretes encontrados
+      const deletedIds: number[] = [];
+      const deletedMessages: string[] = [];
+      let successCount = 0;
+
+      for (const reminder of targetReminders) {
+        const deleteSuccess = await this.deleteReminder(reminder.id, userId);
+        if (deleteSuccess) {
+          deletedIds.push(reminder.id);
+          deletedMessages.push(reminder.message);
+          successCount++;
+        }
+      }
+      
+      if (successCount > 0) {
+        const countText = successCount === 1 ? '1 lembrete' : `${successCount} lembretes`;
+        return { 
+          success: true, 
+          deletedIds,
+          deletedMessages,
+          count: successCount,
+          message: `${countText} deletados com sucesso` 
+        };
+      } else {
+        return { 
+          success: false, 
+          deletedIds: [],
+          deletedMessages: [],
+          count: 0,
+          message: 'Erro ao deletar os lembretes' 
+        };
+      }
+    } catch (error) {
+      console.error('Error finding and deleting reminders:', error);
+      return { 
+        success: false, 
+        deletedIds: [],
+        deletedMessages: [],
+        count: 0,
+        message: 'Erro interno ao processar a solicitação' 
+      };
+    }
+  }
+
+  /**
+   * Encontra lembretes usando IA para análise semântica
+   */
+  private async findRemindersBySemanticSimilarity(
+    reminders: Reminder[], 
+    searchQuery: string, 
+    searchType: 'message' | 'description',
+    maxCount?: number
+  ): Promise<Reminder[]> {
+    if (!apiKey) {
+      // Fallback para busca simples se não houver API key
+      return this.findRemindersBySimpleSearch(reminders, searchQuery, maxCount);
+    }
+
+    try {
+      const prompt = `
+        Você é um assistente especializado em encontrar lembretes baseado em consultas de usuário.
+        
+        TAREFA: Analise a consulta do usuário e encontre os lembretes mais relevantes da lista fornecida.
+        
+        CONSULTA DO USUÁRIO: "${searchQuery}"
+        TIPO DE BUSCA: ${searchType === 'message' ? 'conteúdo da mensagem' : 'descrição'}
+        ${maxCount ? `MÁXIMO DE RESULTADOS: ${maxCount}` : 'RETORNE TODOS OS RELEVANTES'}
+        
+        LISTA DE LEMBRETES:
+        ${reminders.map((r, i) => `${i + 1}. ID: ${r.id} | Mensagem: "${r.message}" | Data: ${r.scheduledFor}`).join('\n')}
+        
+        INSTRUÇÕES:
+        1. Analise a semântica e contexto da consulta do usuário
+        2. Considere sinônimos, termos relacionados e intenção
+        3. Avalie a relevância de cada lembrete baseado na consulta
+        4. Retorne APENAS os IDs dos lembretes mais relevantes, separados por vírgula
+        
+        EXEMPLOS DE BUSCA:
+        - "reunião" pode encontrar "daily meeting", "standup", "call with client"
+        - "código" pode encontrar "review PR", "deploy", "test feature"
+        - "email" pode encontrar "send report", "contact support", "follow up"
+        
+        Retorne APENAS uma lista de números (IDs dos lembretes mais relevantes) separados por vírgula, ou "null" se nenhum for relevante.
+        Exemplo: "1,3,5" ou "2,4" ou "null"
+      `;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.0-flash-001',
+        contents: prompt,
+        config: {
+          temperature: 0.1, // Baixa temperatura para respostas mais consistentes
+          maxOutputTokens: 20
+        }
+      });
+
+      const aiResponse = response.text?.trim();
+      
+      if (!aiResponse || aiResponse === 'null') {
+        return [];
+      }
+
+      // Tentar extrair os IDs dos lembretes da resposta da IA
+      const reminderIds = aiResponse.split(',').map(id => parseInt(id.trim()));
+      const validIds = reminderIds.filter(id => !isNaN(id));
+      
+      if (validIds.length === 0) {
+        // Se a IA não retornou IDs válidos, usar fallback
+        return this.findRemindersBySimpleSearch(reminders, searchQuery, maxCount);
+      }
+
+      // Encontrar os lembretes pelos IDs retornados pela IA
+      const foundReminders = reminders.filter(r => validIds.includes(r.id));
+      
+      // Limitar o número de resultados se especificado
+      if (maxCount && foundReminders.length > maxCount) {
+        return foundReminders.slice(0, maxCount);
+      }
+      
+      return foundReminders;
+
+    } catch (error) {
+      console.error('Error using AI for reminder search:', error);
+      // Fallback para busca simples em caso de erro na IA
+      return this.findRemindersBySimpleSearch(reminders, searchQuery, maxCount);
+    }
+  }
+
+  /**
+   * Método de fallback para busca simples de lembretes
+   */
+  private findRemindersBySimpleSearch(
+    reminders: Reminder[], 
+    searchQuery: string,
+    maxCount?: number
+  ): Reminder[] {
+    const query = searchQuery.toLowerCase();
+    
+    // Buscar por correspondência exata primeiro
+    let matches = reminders.filter(r => 
+      r.message.toLowerCase().includes(query)
+    );
+    
+    if (matches.length === 0) {
+      // Buscar por palavras-chave com pontuação
+      const STOPWORDS = new Set(['de', 'do', 'da', 'dos', 'das', 'o', 'a', 'os', 'as', 'um', 'uma', 'e']);
+      const tokens = query
+        .split(/[^\p{L}\p{N}]+/u)
+        .filter(t => t && !STOPWORDS.has(t) && t.length >= 3);
+
+      if (tokens.length > 0) {
+        const scoredReminders = reminders.map(r => {
+          const msg = r.message.toLowerCase();
+          let score = 0;
+          for (const t of tokens) {
+            if (msg.includes(t)) score += 1;
+          }
+          return { reminder: r, score };
+        });
+
+        // Filtrar apenas lembretes com score > 0 e ordenar por relevância
+        matches = scoredReminders
+          .filter(item => item.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .map(item => item.reminder);
+      }
+    }
+    
+    // Limitar o número de resultados se especificado
+    if (maxCount && matches.length > maxCount) {
+      return matches.slice(0, maxCount);
+    }
+    
+    return matches;
+  }
+
+  /**
+   * Deleta todos os lembretes de um usuário específico
+   * 🔒 SEGURANÇA: Sempre deleta apenas lembretes do userId especificado
+   */
   async deleteAllRemindersByUser(userId: string): Promise<number> {
     try {
       const deletedCount = await database.deleteAllRemindersByUser(userId);
@@ -130,12 +384,12 @@ class ReminderService {
       const user = await this.client.users.fetch(reminder.userId);
       if (user) {
         await user.send(i18n.t('reminder.notify', { text: reminder.message }));
-        await database.markReminderAsSent(reminder.id);
+        await database.markReminderAsSent(reminder.id, reminder.userId);
         console.log(`✅ Reminder ${reminder.id} sent to ${reminder.userName}`);
       } else {
         console.warn(`User ${reminder.userId} not found for reminder ${reminder.id}`);
         // Marcar como enviado mesmo que o usuário não seja encontrado para evitar loops
-        await database.markReminderAsSent(reminder.id);
+        await database.markReminderAsSent(reminder.id, reminder.userId);
       }
     } catch (error) {
       console.error(`Error sending reminder ${reminder.id}:`, error);
@@ -179,16 +433,6 @@ class ReminderService {
     
     const formattedReminders = uniqueRemindersList.map((reminder, index) => {
       const scheduledDate = new Date(reminder.scheduledFor);
-      const isPast = scheduledDate < now;
-      
-      let status: string;
-      if (reminder.sent) {
-        status = '✅';
-      } else if (isPast) {
-        status = '⏰';
-      } else {
-        status = '⏳';
-      }
       
       // Formatar data no padrão brasileiro dd/mm/aaaa
       const formattedDate = scheduledDate.toLocaleDateString('pt-BR', {
@@ -206,16 +450,14 @@ class ReminderService {
       
       const dateStr = `${formattedDate} às ${formattedTime}`;
       
-      // Calcular tempo relativo
+      // Calcular tempo relativo (sempre positivo agora, pois filtramos lembretes passados)
       const timeDiff = scheduledDate.getTime() - now.getTime();
       const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
       const hoursDiff = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutesDiff = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
       
       let relativeTime = '';
-      if (isPast) {
-        relativeTime = ' (passado)';
-      } else if (daysDiff > 0) {
+      if (daysDiff > 0) {
         relativeTime = ` (em ${daysDiff} dia${daysDiff > 1 ? 's' : ''})`;
       } else if (hoursDiff > 0) {
         relativeTime = ` (em ${hoursDiff} hora${hoursDiff > 1 ? 's' : ''})`;
@@ -225,7 +467,7 @@ class ReminderService {
         relativeTime = ' (agora)';
       }
 
-      return `**${index + 1}.** ${status} **${dateStr}**${relativeTime}\n└ 📝 ${reminder.message}\n└ 🆔 ID: ${reminder.id}`;
+      return `**${index + 1}.** ⏳ **${dateStr}**${relativeTime}\n└ 📝 ${reminder.message}\n└ 🆔 ID: ${reminder.id}`;
     });
     
     return formattedReminders.join('\n\n');

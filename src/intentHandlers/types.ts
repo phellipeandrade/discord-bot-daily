@@ -33,8 +33,12 @@ export interface IntentActions {
     message: string;
   };
   listReminders?: boolean;
-  deleteReminder?: {
-    id: number;
+  deleteReminders?: {
+    ids?: number[];
+    message?: string;
+    date?: string;
+    description?: string;
+    count?: number;
   };
   deleteAllReminders?: boolean;
   
@@ -123,6 +127,11 @@ export interface ChatResult {
     confidence: number;
     suggestedActions?: string[];
     requiresConfirmation?: boolean;
+    deletedReminders?: {
+      count: number;
+      ids: number[];
+      messages: string[];
+    };
   };
 }
 
@@ -177,10 +186,17 @@ export const genericResponseSchema = {
         // Reminder intents
         listReminders: { type: 'boolean' },
         deleteAllReminders: { type: 'boolean' },
-        deleteReminder: {
+        deleteReminders: {
           type: 'object',
           properties: {
-            id: { type: 'integer' }
+            ids: { 
+              type: 'array',
+              items: { type: 'integer' }
+            },
+            message: { type: 'string' },
+            date: { type: 'string' },
+            description: { type: 'string' },
+            count: { type: 'integer' }
           },
           additionalProperties: false
         },
@@ -205,6 +221,75 @@ export const genericResponseSchema = {
           items: { type: 'string' }
         },
         requiresConfirmation: { type: 'boolean' }
+      },
+      additionalProperties: true
+    }
+  },
+  required: ['reply'],
+  additionalProperties: false
+} as const;
+
+// Schema específico para respostas de lembretes
+export const reminderResponseSchema = {
+  type: 'object',
+  properties: {
+    reply: { type: 'string' },
+    intent: {
+      type: 'object',
+      properties: {
+        // Reminder intents
+        listReminders: { type: 'boolean' },
+        deleteAllReminders: { type: 'boolean' },
+        deleteReminders: {
+          type: 'object',
+          properties: {
+            ids: { 
+              type: 'array',
+              items: { type: 'integer' }
+            },
+            message: { type: 'string' },
+            date: { type: 'string' },
+            description: { type: 'string' },
+            count: { type: 'integer' }
+          },
+          additionalProperties: false
+        },
+        setReminder: {
+          type: 'object',
+          properties: {
+            date: { type: 'string' },
+            message: { type: 'string' }
+          },
+          additionalProperties: true
+        }
+      },
+      additionalProperties: true
+    },
+    metadata: {
+      type: 'object',
+      properties: {
+        confidence: { type: 'number' },
+        suggestedActions: { 
+          type: 'array',
+          items: { type: 'string' }
+        },
+        requiresConfirmation: { type: 'boolean' },
+        deletedReminders: {
+          type: 'object',
+          properties: {
+            count: { type: 'integer' },
+            ids: { 
+              type: 'array',
+              items: { type: 'integer' }
+            },
+            messages: { 
+              type: 'array',
+              items: { type: 'string' }
+            }
+          },
+          required: ['count', 'ids', 'messages'],
+          additionalProperties: false
+        }
       },
       additionalProperties: true
     }

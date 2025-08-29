@@ -1,6 +1,7 @@
 import { Message } from 'discord.js';
 import { ChatResult } from './types';
 import { createHandlerContext, generateAIResponse } from './baseHandler';
+import { reminderResponseSchema } from './types';
 
 /**
  * Gera resposta para intenção de lembrete
@@ -28,10 +29,24 @@ export async function handleReminderIntent(
 
     REMINDER HANDLING (CRITICAL)
     - If the user asks to set a reminder and the request is CLEAR and UNAMBIGUOUS (e.g., "daqui a 1 minuto", "em 20 minutos", "amanhã às 9"), then directly populate intent.setReminder.date and intent.setReminder.message.
+      More clear examples that MUST be treated as reminders:
+      * "Me lembre de conversar com o Serginho daqui a 1 minuto"
+      * "Lembra de me avisar em 5 minutos"
+      * "Me avise daqui a 10 minutos"
     - If the request is ambiguous or missing date/time, ask ONE confirmation/clarification question in "reply" and do NOT set intent.
     - If the user explicitly confirms a previous proposal, then populate intent.setReminder using the details from conversation history.
     - If the user asks to list their reminders, set intent.listReminders to true and provide a simple acknowledgment in "reply" (e.g., "Aqui estão seus lembretes:" or "Vou buscar seus lembretes para você.").
-    - If the user asks to delete/remove a specific reminder, populate intent.deleteReminder.id with the reminder ID.
+    - If the user asks to delete/remove a specific reminder, try to identify it by:
+      * ID if explicitly mentioned (e.g., "deletar lembrete 123")
+      * Message content (e.g., "deletar lembrete sobre falar com o João")
+      * Date/time (e.g., "deletar lembrete de amanhã às 9h")
+      * Description (e.g., "deletar o lembrete do email")
+      Populate intent.deleteReminders with the best matching information.
+    - If the user asks to delete/remove MULTIPLE reminders or ALL reminders matching criteria, use intent.deleteReminders:
+      * "deletar todos os lembretes sobre reunião" → deleteReminders.description: "reunião"
+      * "remover lembretes de email" → deleteReminders.description: "email"
+      * "deletar 3 lembretes antigos" → deleteReminders.count: 3
+      * "limpar lembretes de ontem" → deleteReminders.date: "2024-01-01"
     - If the user asks to delete/remove ALL reminders, set intent.deleteAllReminders to true.
     - If the message does NOT request any reminder action, do NOT set any intent — just answer naturally.
 
@@ -66,6 +81,15 @@ export async function handleReminderIntent(
       * "lembra de revisar o PR" → "Revisar o PR"
       * "remind me to call the client" → "Call the client"
 
+    DELETION EXAMPLES
+    - "deletar lembrete 123" → deleteReminders.ids: [123]
+    - "deletar todos os lembretes sobre reunião" → deleteReminders.description: "reunião"
+    - "remover lembretes de email" → deleteReminders.description: "email"
+    - "deletar 3 lembretes antigos" → deleteReminders.count: 3
+    - "limpar lembretes de ontem" → deleteReminders.date: "2024-01-01"
+    - "deletar lembrete do email" → deleteReminders.description: "email"
+    - "remover lembrete sobre falar com o João" → deleteReminders.description: "falar com o João"
+
     STYLE
     - ${context.lang} only in "reply". Tone: claro, profissional e objetivo.
     - Avoid emojis unless user uses them.
@@ -79,5 +103,5 @@ export async function handleReminderIntent(
     ${JSON.stringify(content)}
   `.trim();
 
-  return await generateAIResponse(reminderPrompt);
+  return await generateAIResponse(reminderPrompt, reminderResponseSchema);
 }

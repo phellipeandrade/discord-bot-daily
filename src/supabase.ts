@@ -68,7 +68,7 @@ class SupabaseDatabase {
       throw error;
     }
 
-    console.log(`📝 Reminder ${data.id} scheduled for ${scheduledFor}`);
+    // Log de criação já é feito em reminderService.addReminder
     return data.id;
   }
 
@@ -104,7 +104,9 @@ class SupabaseDatabase {
       .from('reminders')
       .select('*')
       .eq('user_id', userId)
-      .order('scheduled_for', { ascending: false });
+      .eq('sent', false)
+      .gte('scheduled_for', new Date().toISOString())
+      .order('scheduled_for', { ascending: true });
 
     if (error) {
       console.error('Error getting user reminders:', error);
@@ -123,14 +125,15 @@ class SupabaseDatabase {
     }));
   }
 
-  async markReminderAsSent(id: number): Promise<void> {
+  async markReminderAsSent(id: number, userId: string): Promise<void> {
     const { error } = await this.client
       .from('reminders')
       .update({
         sent: true,
         sent_at: new Date().toISOString()
       })
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', userId);
 
     if (error) {
       console.error('Error marking reminder as sent:', error);
