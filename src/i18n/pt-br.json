@@ -274,5 +274,13 @@
     "role.updated": "✅ {{name}} agora é {{role}}.",
     "bot.disabled": "⏸️ Anúncios diários desativados.",
     "bot.disabledUntil": "⏸️ Anúncios diários desativados até {{date}}.",
-    "bot.enabled": "✅ Anúncios diários ativados."
+    "bot.enabled": "✅ Anúncios diários ativados.",
+    "skip.today": "✅ {{name}} não será sorteado(a) hoje.",
+    "skip.until": "✅ {{name}} não será sorteado(a) até {{date}}.",
+    "user.readded": "✅ {{name}} foi readicionado(a) à lista de seleção.",
+    "config.notFound": "❌ Arquivo de configuração não encontrado.",
+    "config.invalidField": "❌ Campo de configuração inválido: {{field}}.",
+    "config.updated": "✅ Configuração atualizada: {{field}} = {{value}}.",
+    "errors.unknownCommand": "❌ Comando não reconhecido.",
+    "errors.executionError": "❌ Erro ao executar o comando."
   }

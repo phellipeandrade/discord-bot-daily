@@ -2,11 +2,37 @@ import { Client, Message } from 'discord.js';
 import { i18n } from '@/i18n';
 import { chatResponse } from '@/chat';
 import { reminderService } from '@/reminderService';
+import { interpretNaturalCommand, executeNaturalCommand } from '@/naturalLanguage';
 
 export async function handleChatMessage(message: Message): Promise<void> {
   // Extrair informações do usuário
   const userId = message.author.id;
   const userName = message.author.displayName || message.author.username;
+  
+  // Primeiro, tentar interpretar como comando em linguagem natural
+  const naturalCommand = await interpretNaturalCommand(message.content, userId, userName);
+  
+  if (naturalCommand && naturalCommand.confidence > 0.7) {
+    console.log(`🤖 Natural command detected:`, {
+      command: naturalCommand.command,
+      confidence: naturalCommand.confidence,
+      explanation: naturalCommand.explanation,
+      parameters: naturalCommand.parameters
+    });
+    
+    try {
+      const response = await executeNaturalCommand(naturalCommand, message);
+      await message.reply(response);
+    } catch (error) {
+      console.error('Error executing natural command:', error);
+      try {
+        await message.reply(i18n.t('errors.executionError'));
+      } catch {
+        /* ignore */
+      }
+    }
+    return;
+  }
   
   // Buscar histórico de mensagens do canal DM
   let messageHistory: Message[] = [];

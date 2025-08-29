@@ -274,5 +274,13 @@
     "role.updated": "✅ {{name}} is now {{role}}.",
     "bot.disabled": "⏸️ Daily announcements disabled.",
     "bot.disabledUntil": "⏸️ Daily announcements disabled until {{date}}.",
-    "bot.enabled": "✅ Daily announcements enabled."
+    "bot.enabled": "✅ Daily announcements enabled.",
+    "skip.today": "✅ {{name}} will not be selected today.",
+    "skip.until": "✅ {{name}} will not be selected until {{date}}.",
+    "user.readded": "✅ {{name}} has been readded to the selection list.",
+    "config.notFound": "❌ Configuration file not found.",
+    "config.invalidField": "❌ Invalid configuration field: {{field}}.",
+    "config.updated": "✅ Configuration updated: {{field}} = {{value}}.",
+    "errors.unknownCommand": "❌ Command not recognized.",
+    "errors.executionError": "❌ Error executing command."
   }
