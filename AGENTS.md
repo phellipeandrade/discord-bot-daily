@@ -24,6 +24,23 @@ NODE_ENV=test node build/index.js
 
 Esses comandos verificam formatação, regras de lint, executam a suíte de testes do Jest e geram o pacote de produção. Depois confira o conteúdo do `bot.zip` e execute o projeto em ambiente de teste para garantir que não há erros de runtime. Só faça commit quando todas as verificações passarem e o build e a execução concluírem com sucesso. O projeto não deve apresentar erros ou warnings no processo de linter.
 
+## Testes
+
+O projeto possui dois tipos de testes:
+
+### Testes Unitários (`npm test`)
+- Executados via Jest
+- Localizados em `src/__tests__/`
+- Testam funcionalidades isoladas com mocks
+- Rápidos e não dependem de serviços externos
+
+### Testes Integrados (`npm run local:test`)
+- Executados via `ts-node`
+- Localizados em `src/testUtils/`
+- Testam integração com IA e banco de dados
+- Requerem configuração de ambiente (.env)
+- Mais lentos e testam fluxos completos
+
 ## Mensagens de commit
 
 As mensagens devem seguir o padrão Conventional Commits. Exemplos:

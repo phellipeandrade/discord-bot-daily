@@ -3,6 +3,13 @@ import { i18n } from '@/i18n';
 import { database, Reminder } from '@/supabase';
 import { GoogleGenAI } from '@google/genai';
 
+interface SupabaseError {
+  message?: string;
+  details?: string;
+  hint?: string;
+  code?: string;
+}
+
 const apiKey = process.env.GEMINI_API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
 
@@ -408,7 +415,7 @@ class ReminderService {
     }
 
     try {
-      const pendingReminders = await database.getPendingReminders();
+      const pendingReminders = await this.getPendingRemindersWithRetry();
       
       if (!pendingReminders || !Array.isArray(pendingReminders)) {
         console.warn('No pending reminders or invalid response from database');
@@ -419,8 +426,50 @@ class ReminderService {
         await this.sendReminder(reminder);
       }
     } catch (error) {
-      console.error('Error checking pending reminders:', error);
+      const supabaseError = error as SupabaseError;
+      console.error('Error checking pending reminders:', {
+        message: error instanceof Error ? error.message : String(error),
+        details: supabaseError.details,
+        hint: supabaseError.hint,
+        code: supabaseError.code
+      });
     }
+  }
+
+  private async getPendingRemindersWithRetry(maxRetries: number = 3): Promise<Reminder[]> {
+    let lastError: Error | unknown;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Attempting to fetch pending reminders (attempt ${attempt}/${maxRetries})`);
+        const reminders = await database.getPendingReminders();
+        console.log(`✅ Successfully fetched ${reminders.length} pending reminders`);
+        return reminders;
+      } catch (error) {
+        lastError = error;
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const supabaseError = error as SupabaseError;
+        console.warn(`⚠️ Attempt ${attempt} failed:`, {
+          message: errorMessage,
+          details: supabaseError.details,
+          hint: supabaseError.hint,
+          code: supabaseError.code
+        });
+        
+        // If it's a network error (fetch failed), wait before retrying
+        if (errorMessage?.includes('fetch failed') && attempt < maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Exponential backoff, max 10s
+          console.log(`⏳ Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else if (attempt < maxRetries) {
+          // For other errors, shorter delay
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
+    
+    console.error(`❌ All ${maxRetries} attempts failed to fetch pending reminders`);
+    throw lastError;
   }
 
   private async sendReminder(reminder: Reminder): Promise<void> {

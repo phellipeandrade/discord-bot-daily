@@ -30,6 +30,9 @@ export interface UserData {
 
 class SupabaseDatabase {
   private client: SupabaseClient;
+  private isConnected: boolean = true;
+  private lastConnectionCheck: number = 0;
+  private readonly CONNECTION_CHECK_INTERVAL = 60000; // 1 minute
 
   constructor() {
     const supabaseUrl = process.env.SUPABASE_URL;
@@ -40,6 +43,42 @@ class SupabaseDatabase {
     }
 
     this.client = createClient(supabaseUrl, supabaseKey);
+  }
+
+  private async checkConnection(): Promise<boolean> {
+    const now = Date.now();
+    if (now - this.lastConnectionCheck < this.CONNECTION_CHECK_INTERVAL) {
+      return this.isConnected;
+    }
+
+    try {
+      // Simple health check query
+      const { error } = await this.client
+        .from('reminders')
+        .select('id')
+        .limit(1);
+      
+      this.isConnected = !error;
+      this.lastConnectionCheck = now;
+      
+      if (error) {
+        console.warn('⚠️ Supabase connection check failed:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+      } else {
+        console.log('✅ Supabase connection is healthy');
+      }
+      
+      return this.isConnected;
+    } catch (error) {
+      this.isConnected = false;
+      this.lastConnectionCheck = now;
+      console.warn('⚠️ Supabase connection check failed with exception:', error);
+      return false;
+    }
   }
 
   // ===== REMINDERS =====
@@ -73,30 +112,52 @@ class SupabaseDatabase {
   }
 
   async getPendingReminders(): Promise<Reminder[]> {
-    const now = new Date().toISOString();
-    
-    const { data, error } = await this.client
-      .from('reminders')
-      .select('*')
-      .eq('sent', false)
-      .lte('scheduled_for', now)
-      .order('scheduled_for', { ascending: true });
-
-    if (error) {
-      console.error('Error getting pending reminders:', error);
-      throw error;
+    // Check connection health before attempting query
+    const isConnected = await this.checkConnection();
+    if (!isConnected) {
+      console.warn('⚠️ Supabase connection is not healthy, skipping pending reminders check');
+      return [];
     }
 
-    return data.map((row: any) => ({
-      id: row.id,
-      userId: row.user_id,
-      userName: row.user_name,
-      message: row.message,
-      scheduledFor: row.scheduled_for,
-      createdAt: row.created_at,
-      sent: row.sent,
-      sentAt: row.sent_at
-    }));
+    const now = new Date().toISOString();
+    
+    try {
+      const { data, error } = await this.client
+        .from('reminders')
+        .select('*')
+        .eq('sent', false)
+        .lte('scheduled_for', now)
+        .order('scheduled_for', { ascending: true });
+
+      if (error) {
+        console.error('Error getting pending reminders:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw error;
+      }
+
+      return data.map((row: any) => ({
+        id: row.id,
+        userId: row.user_id,
+        userName: row.user_name,
+        message: row.message,
+        scheduledFor: row.scheduled_for,
+        createdAt: row.created_at,
+        sent: row.sent,
+        sentAt: row.sent_at
+      }));
+    } catch (error) {
+      // Mark connection as unhealthy if we get a network error
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage?.includes('fetch failed')) {
+        this.isConnected = false;
+        console.warn('🔌 Marking Supabase connection as unhealthy due to fetch failure');
+      }
+      throw error;
+    }
   }
 
   async getRemindersByUser(userId: string): Promise<Reminder[]> {
