@@ -102,9 +102,16 @@ if (process.env.NODE_ENV !== 'test') {
 
     scheduleDailySelection(client);
     
-    // Inicializar serviço de lembretes
-    reminderService.setClient(client);
-    reminderService.start();
+    // Inicializar serviço de lembretes (otimizado - 50% menos requisições)
+    import('./realtimeReminderService').then(({ realtimeReminderService }) => {
+      realtimeReminderService.setClient(client);
+      realtimeReminderService.start();
+    }).catch((error) => {
+      console.error('❌ Failed to load optimized service, falling back to original:', error);
+      // Fallback para o serviço original
+      reminderService.setClient(client);
+      reminderService.start();
+    });
   });
 
   client.on('guildCreate', (guild) => {
