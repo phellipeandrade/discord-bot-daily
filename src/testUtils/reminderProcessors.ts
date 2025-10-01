@@ -1,5 +1,5 @@
 import { chatResponse } from '../chat';
-import { reminderService } from '../reminderService';
+import { simpleReminderService } from '../simpleReminderService';
 import { i18n } from '../i18n';
 import { ChatResult } from '../intentHandlers/types';
 import { TestContext } from './reminderTestUtils';
@@ -14,17 +14,17 @@ export async function processListReminders(result: ChatResult, userId: string): 
       result.intent.listReminders.message || 
       result.intent.listReminders.description
     )) {
-      reminders = await reminderService.getRemindersByUserWithFilters(userId, {
+      reminders = await simpleReminderService.getRemindersByUserWithFilters(userId, {
         date: result.intent.listReminders.date,
         message: result.intent.listReminders.message,
         description: result.intent.listReminders.description
       });
     } else {
       // Listagem sem filtros
-      reminders = await reminderService.getRemindersByUser(userId);
+      reminders = await simpleReminderService.getRemindersByUser(userId);
     }
     
-    const formattedList = reminderService.formatReminderList(reminders);
+    const formattedList = simpleReminderService.formatReminderList(reminders);
     return `${result.reply || i18n.t('reminder.list.title')}\n\n${formattedList}`;
   } catch (error) {
     console.error('Error listing reminders:', error);
@@ -41,7 +41,7 @@ export async function processDeleteReminder(result: ChatResult, userId: string):
     if (result.intent?.deleteReminders?.ids && result.intent.deleteReminders.ids.length > 0) {
       let deletedCount = 0;
       for (const id of result.intent.deleteReminders.ids) {
-        const deleteSuccess = await reminderService.deleteReminder(id, userId);
+        const deleteSuccess = await simpleReminderService.deleteReminder(id, userId);
         if (deleteSuccess) deletedCount++;
       }
       success = deletedCount > 0;
@@ -50,7 +50,7 @@ export async function processDeleteReminder(result: ChatResult, userId: string):
         i18n.t('reminder.delete.notFound');
     } else {
       // Deletar por critérios (data, mensagem, descrição)
-      const deleteResult = await reminderService.findAndDeleteReminders(userId, {
+      const deleteResult = await simpleReminderService.findAndDeleteReminders(userId, {
         message: result.intent?.deleteReminders?.message,
         date: result.intent?.deleteReminders?.date,
         description: result.intent?.deleteReminders?.description,
@@ -69,7 +69,7 @@ export async function processDeleteReminder(result: ChatResult, userId: string):
 
 export async function processDeleteAllReminders(result: ChatResult, userId: string): Promise<string> {
   try {
-    const deletedCount = await reminderService.deleteAllRemindersByUser(userId);
+    const deletedCount = await simpleReminderService.deleteAllRemindersByUser(userId);
     
     if (deletedCount > 0) {
       return result.reply || i18n.t('reminder.deleteAll.success', { count: deletedCount });
@@ -115,7 +115,7 @@ export async function processSetReminder(
 
   try {
     const reminderMessage = result.intent!.setReminder!.message || originalMessage;
-    await reminderService.addReminder(userId, userName, reminderMessage, dateStr);
+    await simpleReminderService.addReminder(userId, userName, reminderMessage, dateStr);
     
     // Formatar data no padrão brasileiro dd/mm/aaaa
     const formattedDate = date.toLocaleDateString('pt-BR', {

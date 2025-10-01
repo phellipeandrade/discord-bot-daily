@@ -1,7 +1,7 @@
 import { Client, Message } from 'discord.js';
 import { i18n } from '@/i18n';
 import { chatResponse } from '@/chat';
-import { reminderService } from '@/reminderService';
+import { simpleReminderService } from '@/simpleReminderService';
 
 export async function handleChatMessage(message: Message): Promise<void> {
   // Extrair informações do usuário
@@ -40,17 +40,17 @@ export async function handleChatMessage(message: Message): Promise<void> {
       if (result.intent.listReminders.date || 
           result.intent.listReminders.message || 
           result.intent.listReminders.description) {
-        reminders = await reminderService.getRemindersByUserWithFilters(userId, {
+        reminders = await simpleReminderService.getRemindersByUserWithFilters(userId, {
           date: result.intent.listReminders.date,
           message: result.intent.listReminders.message,
           description: result.intent.listReminders.description
         });
       } else {
         // Listagem sem filtros
-        reminders = await reminderService.getRemindersByUser(userId);
+        reminders = await simpleReminderService.getRemindersByUser(userId);
       }
       
-      const formattedList = reminderService.formatReminderList(reminders);
+      const formattedList = simpleReminderService.formatReminderList(reminders);
       
       await message.reply(
         `${result.reply || i18n.t('reminder.list.title')}\n\n${formattedList}`
@@ -76,7 +76,7 @@ export async function handleChatMessage(message: Message): Promise<void> {
       if (result.intent.deleteReminders.ids && result.intent.deleteReminders.ids.length > 0) {
         let deletedCount = 0;
         for (const id of result.intent.deleteReminders.ids) {
-          const deleteSuccess = await reminderService.deleteReminder(id, userId);
+          const deleteSuccess = await simpleReminderService.deleteReminder(id, userId);
           if (deleteSuccess) deletedCount++;
         }
         success = deletedCount > 0;
@@ -85,7 +85,7 @@ export async function handleChatMessage(message: Message): Promise<void> {
           i18n.t('reminder.delete.notFound');
       } else {
         // Deletar por critérios (data, mensagem, descrição)
-        const deleteResult = await reminderService.findAndDeleteReminders(userId, {
+        const deleteResult = await simpleReminderService.findAndDeleteReminders(userId, {
           message: result.intent.deleteReminders.message,
           date: result.intent.deleteReminders.date,
           description: result.intent.deleteReminders.description,
@@ -110,7 +110,7 @@ export async function handleChatMessage(message: Message): Promise<void> {
   // Processar intenção de deletar todos os lembretes
   if (result.intent?.deleteAllReminders) {
     try {
-      const deletedCount = await reminderService.deleteAllRemindersByUser(userId);
+      const deletedCount = await simpleReminderService.deleteAllRemindersByUser(userId);
       
       if (deletedCount > 0) {
         await message.reply(
@@ -173,7 +173,7 @@ export async function handleChatMessage(message: Message): Promise<void> {
   }
 
   try {
-    await reminderService.addReminder(
+    await simpleReminderService.addReminder(
       userId,
       userName,
       reminderMessage,

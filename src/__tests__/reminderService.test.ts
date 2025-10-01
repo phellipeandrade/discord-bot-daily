@@ -17,7 +17,7 @@ jest.mock('@google/genai', () => ({
   }))
 }));
 
-import { reminderService } from '@/reminderService';
+import { simpleReminderService } from '@/simpleReminderService';
 
 // Mock do database
 jest.mock('@/supabase', () => ({
@@ -28,12 +28,11 @@ jest.mock('@/supabase', () => ({
     deleteAllRemindersByUser: jest.fn(),
     getReminderStats: jest.fn(),
     getPendingReminders: jest.fn(),
-    markReminderAsSent: jest.fn(),
     deleteOldReminders: jest.fn()
   }
 }));
 
-describe('reminderService', () => {
+describe('simpleReminderService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -41,8 +40,20 @@ describe('reminderService', () => {
   test('adds reminder successfully', async () => {
     const { database } = await import('@/supabase');
     (database.addReminder as jest.Mock).mockResolvedValue(1);
+    
+    // Mock getRemindersByUser to return the created reminder
+    const mockReminder = {
+      id: 1,
+      userId: 'user123',
+      userName: 'TestUser',
+      message: 'Test reminder',
+      scheduledFor: '2025-08-26T10:00:00.000Z',
+      sent: false,
+      createdAt: '2025-08-25T10:00:00.000Z'
+    };
+    (database.getRemindersByUser as jest.Mock).mockResolvedValue([mockReminder]);
 
-    const result = await reminderService.addReminder(
+    const result = await simpleReminderService.addReminder(
       'user123',
       'TestUser',
       'Test reminder',
@@ -66,7 +77,7 @@ describe('reminderService', () => {
     ];
     (database.getRemindersByUser as jest.Mock).mockResolvedValue(mockReminders);
 
-    const result = await reminderService.getRemindersByUser('user123');
+    const result = await simpleReminderService.getRemindersByUser('user123');
 
     expect(result).toEqual(mockReminders);
     expect(database.getRemindersByUser).toHaveBeenCalledWith('user123');
@@ -79,7 +90,7 @@ describe('reminderService', () => {
     ]);
     (database.deleteReminder as jest.Mock).mockResolvedValue(undefined);
 
-    const result = await reminderService.deleteReminder(1, 'user123');
+    const result = await simpleReminderService.deleteReminder(1, 'user123');
 
     expect(result).toBe(true);
     expect(database.deleteReminder).toHaveBeenCalledWith(1);
@@ -89,7 +100,7 @@ describe('reminderService', () => {
     const { database } = await import('@/supabase');
     (database.getRemindersByUser as jest.Mock).mockResolvedValue([]);
 
-    const result = await reminderService.deleteReminder(999, 'user123');
+    const result = await simpleReminderService.deleteReminder(999, 'user123');
 
     expect(result).toBe(false);
     expect(database.deleteReminder).not.toHaveBeenCalled();
@@ -99,7 +110,7 @@ describe('reminderService', () => {
     const { database } = await import('@/supabase');
     (database.deleteAllRemindersByUser as jest.Mock).mockResolvedValue(3);
 
-    const result = await reminderService.deleteAllRemindersByUser('user123');
+    const result = await simpleReminderService.deleteAllRemindersByUser('user123');
 
     expect(result).toBe(3);
     expect(database.deleteAllRemindersByUser).toHaveBeenCalledWith('user123');
@@ -110,7 +121,7 @@ describe('reminderService', () => {
     const mockStats = { total: 10, pending: 5, sent: 5 };
     (database.getReminderStats as jest.Mock).mockResolvedValue(mockStats);
 
-    const result = await reminderService.getStats();
+    const result = await simpleReminderService.getStats();
 
     expect(result).toEqual(mockStats);
     expect(database.getReminderStats).toHaveBeenCalled();
@@ -122,7 +133,7 @@ describe('reminderService', () => {
       { id: 2, userId: 'user123', userName: 'TestUser', message: 'Test 2', scheduledFor: '2025-08-26T11:00:00.000Z', sent: true, createdAt: '2025-08-25T11:00:00.000Z' }
     ];
 
-    const result = reminderService.formatReminderList(mockReminders);
+    const result = simpleReminderService.formatReminderList(mockReminders);
 
     expect(result).toContain('ID: 1');
     expect(result).toContain('ID: 2');
@@ -131,7 +142,7 @@ describe('reminderService', () => {
   });
 
   test('formats empty reminder list', () => {
-    const result = reminderService.formatReminderList([]);
+    const result = simpleReminderService.formatReminderList([]);
 
     expect(result).toBe('No reminders found');
   });
@@ -140,7 +151,7 @@ describe('reminderService', () => {
     const { database } = await import('@/supabase');
     (database.addReminder as jest.Mock).mockRejectedValue(new Error('Database error'));
 
-    await expect(reminderService.addReminder(
+    await expect(simpleReminderService.addReminder(
       'user123',
       'TestUser',
       'Test reminder',
@@ -150,10 +161,10 @@ describe('reminderService', () => {
 
   test('starts and stops service correctly', () => {
     const client = { users: { fetch: jest.fn() } } as any;
-    reminderService.setClient(client);
+    simpleReminderService.setClient(client);
     
-    reminderService.start();
-    reminderService.stop();
+    simpleReminderService.start();
+    simpleReminderService.stop();
     
     // Verificar se não há erros na execução
     expect(client.users.fetch).toBeDefined();
@@ -193,13 +204,9 @@ describe('reminderService', () => {
       }
     });
 
-    test('finds and deletes reminder by message using AI', async () => {
-      mockGenerateContent.mockResolvedValue({
-        text: '2'
-      });
-
-      const result = await reminderService.findAndDeleteReminders('user123', {
-        message: 'review code'
+    test('finds and deletes reminder by message using simple search', async () => {
+      const result = await simpleReminderService.findAndDeleteReminders('user123', {
+        message: 'pull request'
       });
 
       expect(result.success).toBe(true);
@@ -207,12 +214,8 @@ describe('reminderService', () => {
       expect(result.message).toContain('1 lembrete deletados com sucesso');
     });
 
-    test('finds and deletes reminder by description using AI', async () => {
-      mockGenerateContent.mockResolvedValue({
-        text: '3'
-      });
-
-      const result = await reminderService.findAndDeleteReminders('user123', {
+    test('finds and deletes reminder by description using simple search', async () => {
+      const result = await simpleReminderService.findAndDeleteReminders('user123', {
         description: 'enviar relatório'
       });
 
@@ -220,12 +223,8 @@ describe('reminderService', () => {
       expect(result.message).toBe('Nenhum lembrete encontrado com os critérios fornecidos');
     });
 
-    test('falls back to simple search when AI returns invalid response', async () => {
-      mockGenerateContent.mockResolvedValue({
-        text: 'invalid_response'
-      });
-
-      const result = await reminderService.findAndDeleteReminders('user123', {
+    test('finds and deletes reminder by message using simple search', async () => {
+      const result = await simpleReminderService.findAndDeleteReminders('user123', {
         message: 'standup'
       });
 
@@ -234,12 +233,8 @@ describe('reminderService', () => {
       expect(result.message).toContain('1 lembrete deletados com sucesso');
     });
 
-    test('falls back to simple search when AI returns null', async () => {
-      mockGenerateContent.mockResolvedValue({
-        text: 'null'
-      });
-
-      const result = await reminderService.findAndDeleteReminders('user123', {
+    test('finds and deletes reminder by message using simple search', async () => {
+      const result = await simpleReminderService.findAndDeleteReminders('user123', {
         message: 'meeting'
       });
 
@@ -248,10 +243,8 @@ describe('reminderService', () => {
       expect(result.message).toContain('1 lembrete deletados com sucesso');
     });
 
-    test('falls back to simple search when AI throws error', async () => {
-      mockGenerateContent.mockRejectedValue(new Error('AI API error'));
-
-      const result = await reminderService.findAndDeleteReminders('user123', {
+    test('finds and deletes reminder by message using simple search', async () => {
+      const result = await simpleReminderService.findAndDeleteReminders('user123', {
         message: 'email'
       });
 
@@ -261,7 +254,7 @@ describe('reminderService', () => {
     });
 
     test('finds reminder by date (non-AI logic)', async () => {
-      const result = await reminderService.findAndDeleteReminders('user123', {
+      const result = await simpleReminderService.findAndDeleteReminders('user123', {
         date: '2025-08-26T10:30:00.000Z'
       });
 
@@ -274,7 +267,7 @@ describe('reminderService', () => {
       const { database } = require('@/supabase');
       (database.getRemindersByUser as jest.Mock).mockResolvedValue([]);
 
-      const result = await reminderService.findAndDeleteReminders('user123', {
+      const result = await simpleReminderService.findAndDeleteReminders('user123', {
         message: 'test'
       });
 
@@ -287,7 +280,7 @@ describe('reminderService', () => {
         text: 'null'
       });
 
-      const result = await reminderService.findAndDeleteReminders('user123', {
+      const result = await simpleReminderService.findAndDeleteReminders('user123', {
         message: 'nonexistent reminder'
       });
 
@@ -298,7 +291,7 @@ describe('reminderService', () => {
     test('falls back to simple search when no API key', async () => {
       delete process.env.GEMINI_API_KEY;
       
-      const result = await reminderService.findAndDeleteReminders('user123', {
+      const result = await simpleReminderService.findAndDeleteReminders('user123', {
         message: 'standup'
       });
 

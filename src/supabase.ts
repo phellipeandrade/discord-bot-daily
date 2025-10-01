@@ -107,7 +107,7 @@ class SupabaseDatabase {
       throw error;
     }
 
-    // Log de criação já é feito em reminderService.addReminder
+    // Log de criação já é feito em simpleReminderService.addReminder
     return data.id;
   }
 

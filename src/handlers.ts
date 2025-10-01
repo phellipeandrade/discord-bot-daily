@@ -11,7 +11,7 @@ import {
   formatUsers,
   findUser
 } from '@/users';
-import { reminderService } from '@/reminderService';
+import { simpleReminderService } from '@/simpleReminderService';
 import {
   parseDateString,
   todayISO,
@@ -615,8 +615,8 @@ export async function handleReminders(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
   try {
-    const reminders = await reminderService.getRemindersByUser(interaction.user.id);
-    const formattedList = reminderService.formatReminderList(reminders);
+    const reminders = await simpleReminderService.getRemindersByUser(interaction.user.id);
+    const formattedList = simpleReminderService.formatReminderList(reminders);
     
     await interaction.reply({
       content: `${i18n.t('reminder.list.title')}\n\n${formattedList}`,
@@ -640,7 +640,7 @@ export async function handleDeleteReminder(
       true
     );
 
-    const success = await reminderService.deleteReminder(reminderId, interaction.user.id);
+    const success = await simpleReminderService.deleteReminder(reminderId, interaction.user.id);
     
     if (success) {
       await interaction.reply({

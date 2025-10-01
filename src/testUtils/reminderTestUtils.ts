@@ -1,4 +1,4 @@
-import { reminderService } from '../reminderService';
+import { simpleReminderService } from '../simpleReminderService';
 import { ChatResult } from '../intentHandlers/types';
 
 export interface TestContext {
@@ -8,12 +8,12 @@ export interface TestContext {
 
 export async function clearExistingReminders(userId: string): Promise<void> {
   try {
-    const existingReminders = await reminderService.getRemindersByUser(userId);
+    const existingReminders = await simpleReminderService.getRemindersByUser(userId);
     console.log('Lembretes existentes:', existingReminders?.length || 0);
     
     if (existingReminders && existingReminders.length > 0) {
       for (const reminder of existingReminders) {
-        await reminderService.deleteReminder(reminder.id, userId);
+        await simpleReminderService.deleteReminder(reminder.id, userId);
         console.log(`Removido lembrete: ${reminder.id}`);
       }
     }
@@ -28,7 +28,7 @@ export async function createTestReminders(
 ): Promise<void> {
   console.log('📝 Criando lembretes de teste...');
   for (const reminder of reminders) {
-    await reminderService.addReminder(
+    await simpleReminderService.addReminder(
       context.userId, 
       context.userName, 
       reminder.message, 
@@ -42,7 +42,7 @@ export async function createTestReminders(
 }
 
 export async function getRemindersCount(userId: string): Promise<number> {
-  const reminders = await reminderService.getRemindersByUser(userId);
+  const reminders = await simpleReminderService.getRemindersByUser(userId);
   return reminders?.length || 0;
 }
 
@@ -50,7 +50,7 @@ export async function findReminderByMessage(
   userId: string, 
   message: string
 ): Promise<{ id: number; userId: string; userName: string; message: string; scheduledFor: string; createdAt: string; sent: boolean } | undefined> {
-  const reminders = await reminderService.getRemindersByUser(userId);
+  const reminders = await simpleReminderService.getRemindersByUser(userId);
   return reminders?.find(r => r.message === message);
 }
 

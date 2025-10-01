@@ -65,28 +65,52 @@ export async function findNextSong(
 
 export async function handleNextSong(interaction: ChatInputCommandInteraction): Promise<void> {
   const { text, components } = await findNextSong(interaction.client);
-  await interaction.reply({ content: text, components });
+  try {
+    await interaction.reply({ content: text, components });
+  } catch (error) {
+    console.error('Error replying to next song interaction:', error);
+  }
 }
 
 export async function handleClearReactions(interaction: ChatInputCommandInteraction): Promise<void> {
   const channel = await interaction.client.channels.fetch(MUSIC_CHANNEL_ID);
   if (!channel?.isTextBased()) {
-    await interaction.reply({ content: i18n.t('music.channelError') });
+    try {
+      await interaction.reply({ content: i18n.t('music.channelError') });
+    } catch (error) {
+      console.error('Error replying to clear reactions interaction (channel error):', error);
+    }
     return;
   }
-  await interaction.deferReply();
+  
+  try {
+    await interaction.deferReply();
+  } catch (error) {
+    console.error('Error deferring reply:', error);
+    return;
+  }
+  
   const messages = await (channel as TextChannel).messages.fetch();
   let count = 0;
   for (const msg of messages.values()) {
     const bunnyReaction = msg.reactions.cache.find((r) => r.emoji.name === '🐰');
     if (bunnyReaction) {
-      await bunnyReaction.remove();
-      count++;
+      try {
+        await bunnyReaction.remove();
+        count++;
+      } catch (error) {
+        console.error('Error removing reaction:', error);
+      }
     }
   }
-  await interaction.editReply({
-    content: i18n.t('music.reactionsCleared', { count })
-  });
+  
+  try {
+    await interaction.editReply({
+      content: i18n.t('music.reactionsCleared', { count })
+    });
+  } catch (error) {
+    console.error('Error editing reply:', error);
+  }
 }
 
 
@@ -97,7 +121,11 @@ export async function handlePlayButton(interaction: ButtonInteraction): Promise<
   const originalMessageId = interaction.customId.replace('play_', '');
   const channel = await interaction.client.channels.fetch(MUSIC_CHANNEL_ID);
   if (!channel?.isTextBased()) {
-    await interaction.reply({ content: i18n.t('music.channelError'), flags: 1 << 6 });
+    try {
+      await interaction.reply({ content: i18n.t('music.channelError'), flags: 1 << 6 });
+    } catch (error) {
+      console.error('Error replying to interaction (channel error):', error);
+    }
     return;
   }
 
@@ -105,7 +133,11 @@ export async function handlePlayButton(interaction: ButtonInteraction): Promise<
   try {
     originalMsg = await (channel as TextChannel).messages.fetch(originalMessageId);
   } catch (err) {
-    await interaction.reply({ content: i18n.t('music.processError'), flags: 1 << 6 });
+    try {
+      await interaction.reply({ content: i18n.t('music.processError'), flags: 1 << 6 });
+    } catch (error) {
+      console.error('Error replying to interaction (process error):', error);
+    }
     return;
   }
   const linkRegex = /https?:\/\/\S+/i;
@@ -117,11 +149,19 @@ export async function handlePlayButton(interaction: ButtonInteraction): Promise<
     || '';
 
   if (!linkToPlay) {
-    await interaction.reply({ content: i18n.t('music.extractError'), flags: 1 << 6 });
+    try {
+      await interaction.reply({ content: i18n.t('music.extractError'), flags: 1 << 6 });
+    } catch (error) {
+      console.error('Error replying to interaction (extract error):', error);
+    }
     return;
   }
 
-  await originalMsg.react('🐰');
+  try {
+    await originalMsg.react('🐰');
+  } catch (error) {
+    console.error('Error adding reaction to message:', error);
+  }
   
   // Define o comando padrão se não estiver configurado
   const commandToUse = PLAYER_FORWARD_COMMAND || '/play';
@@ -133,12 +173,30 @@ export async function handlePlayButton(interaction: ButtonInteraction): Promise<
       .setURL(linkToPlay)
   );
   
-  await interaction.reply({
-    content: i18n.t('music.marked', {
-      command: commandToUse,
-      link: linkToPlay
-    }),
-    components: [row],
-    flags: 1 << 6
-  });
+  try {
+    await interaction.reply({
+      content: i18n.t('music.marked', {
+        command: commandToUse,
+        link: linkToPlay
+      }),
+      components: [row],
+      flags: 1 << 6
+    });
+  } catch (error: unknown) {
+    console.error('Error replying to interaction (final reply):', error);
+    // Se a interação expirou, tenta enviar uma mensagem no canal
+    if (error && typeof error === 'object' && 'code' in error && error.code === 10062) {
+      try {
+        await (channel as TextChannel).send({
+          content: i18n.t('music.marked', {
+            command: commandToUse,
+            link: linkToPlay
+          }),
+          components: [row]
+        });
+      } catch (fallbackError) {
+        console.error('Error sending fallback message:', fallbackError);
+      }
+    }
+  }
 }
