@@ -407,7 +407,8 @@ class SupabaseDatabase {
       }
 
       // Salvar configurações
-      const configsToSave = [];
+      const configsToSave = [] as { key: string; value: string }[];
+      const managedConfigKeys = ['lastSelected', 'lastSelectionDate', 'retryUsers'];
       
       if (data.lastSelected) {
         configsToSave.push({
@@ -438,6 +439,22 @@ class SupabaseDatabase {
         if (configError) {
           console.error('Error saving configs:', configError);
           throw configError;
+        }
+      }
+
+      const keysToDelete = managedConfigKeys.filter(
+        key => !configsToSave.some(config => config.key === key)
+      );
+
+      if (keysToDelete.length > 0) {
+        const { error: deleteConfigError } = await this.client
+          .from('config')
+          .delete()
+          .in('key', keysToDelete);
+
+        if (deleteConfigError) {
+          console.error('Error deleting obsolete configs:', deleteConfigError);
+          throw deleteConfigError;
         }
       }
     } catch (error) {

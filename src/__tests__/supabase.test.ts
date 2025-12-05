@@ -12,6 +12,12 @@ describe('Supabase saveUsers', () => {
     return fromMock.mock.results[deleteCallIndex].value;
   };
 
+  const getConfigQueries = (fromMock: jest.Mock) => {
+    return fromMock.mock.results
+      .map((result, index) => ({ value: result.value, index }))
+      .filter((_, index) => fromMock.mock.calls[index][0] === 'config');
+  };
+
   it('removes all skips when no skip entries remain', async () => {
     const mockClient = (createClient as jest.Mock).mock.results[0].value;
     const fromMock = mockClient.from as jest.Mock;
@@ -56,5 +62,27 @@ describe('Supabase saveUsers', () => {
     const skipQuery = getSkipQuery(fromMock);
     const deleteResult = skipQuery.delete.mock.results[0].value;
     expect(deleteResult.not).toHaveBeenCalledWith('user_id', 'in', ['1', '2']);
+  });
+
+  it('deletes obsolete config entries when they are not provided', async () => {
+    const mockClient = (createClient as jest.Mock).mock.results[0].value;
+    const fromMock = mockClient.from as jest.Mock;
+    fromMock.mockClear();
+
+    const data: UserData = {
+      all: [{ id: '1', name: 'Alice' }],
+      remaining: [{ id: '1', name: 'Alice' }],
+      lastSelected: { id: '1', name: 'Alice' },
+      lastSelectionDate: '2024-01-01'
+    };
+
+    await database.saveUsers(data);
+
+    const configQueries = getConfigQueries(fromMock);
+    const deleteQuery = configQueries[configQueries.length - 1].value;
+
+    expect(deleteQuery.delete).toHaveBeenCalled();
+    const deleteResult = deleteQuery.delete.mock.results[0].value;
+    expect(deleteResult.in).toHaveBeenCalledWith('key', ['retryUsers']);
   });
 });
