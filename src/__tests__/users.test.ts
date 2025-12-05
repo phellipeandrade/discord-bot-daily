@@ -144,4 +144,26 @@ describe('selectUser retry functionality', () => {
 
     await expect(selectUser(data)).rejects.toBeInstanceOf(AlreadySelectedTodayError);
   });
+
+  it('does not immediately reselect the last picked user after a full rotation', async () => {
+    const originalRandom = Math.random;
+    Math.random = jest.fn(() => 0);
+
+    const data: UserData = {
+      all: [
+        { name: 'Alice', id: '1' },
+        { name: 'Bob', id: '2' }
+      ],
+      remaining: [
+        { name: 'Bob', id: '2' }
+      ]
+    };
+
+    const selected = await selectUser(data);
+
+    expect(selected.id).toBe('2');
+    expect(data.remaining).toEqual([{ name: 'Alice', id: '1' }]);
+
+    Math.random = originalRandom;
+  });
 });

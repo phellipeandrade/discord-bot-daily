@@ -99,7 +99,8 @@ export async function selectUser(data: UserData): Promise<UserEntry> {
   }
   
   if (isLastEligible) {
-    data.remaining = [...data.all];
+    // Avoid picking the same person immediately after a full rotation
+    data.remaining = data.all.filter(u => u.id !== selected.id);
   }
   data.lastSelected = selected;
   data.lastSelectionDate = today;
