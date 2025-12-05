@@ -375,22 +375,35 @@ class SupabaseDatabase {
       }
 
       // Salvar skips
-      if (data.skips) {
-        const skipEntries = Object.entries(data.skips).map(([userId, skipUntil]) => ({
-          user_id: userId,
-          skip_until: skipUntil
-        }));
+      const skipEntries = data.skips
+        ? Object.entries(data.skips).map(([userId, skipUntil]) => ({
+            user_id: userId,
+            skip_until: skipUntil
+          }))
+        : [];
 
-        if (skipEntries.length > 0) {
-          const { error: skipsError } = await this.client
-            .from('skips')
-            .upsert(skipEntries);
+      if (skipEntries.length > 0) {
+        const { error: skipsError } = await this.client
+          .from('skips')
+          .upsert(skipEntries);
 
-          if (skipsError) {
-            console.error('Error saving skips:', skipsError);
-            throw skipsError;
-          }
+        if (skipsError) {
+          console.error('Error saving skips:', skipsError);
+          throw skipsError;
         }
+      }
+
+      // Remover skips que não estão mais presentes
+      const skipIds = skipEntries.map((entry) => entry.user_id);
+      const skipDeletionQuery = this.client.from('skips').delete();
+      const { error: deleteSkipsError } =
+        skipIds.length > 0
+          ? await skipDeletionQuery.not('user_id', 'in', skipIds)
+          : await skipDeletionQuery;
+
+      if (deleteSkipsError) {
+        console.error('Error deleting obsolete skips:', deleteSkipsError);
+        throw deleteSkipsError;
       }
 
       // Salvar configurações
