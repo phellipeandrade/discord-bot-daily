@@ -49,7 +49,7 @@ import { scheduleDailySelection } from '@/scheduler';
 import { setupChatListener } from '@/chatHandler';
 import { simpleReminderService } from '@/simpleReminderService';
 import { database } from '@/supabase';
-const { version } = require('../package.json');
+import { version } from '../package.json'
 
 i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
 logConfig();
