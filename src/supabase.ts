@@ -292,7 +292,7 @@ class SupabaseDatabase {
       const { data: configs } = await this.client
         .from('config')
         .select('*')
-        .in('key', ['lastSelected', 'lastSelectionDate', 'retryUsers']);
+        .in('key', ['lastSelectionDate', 'retryUsers']);
 
       const userEntries: UserEntry[] = users.map((user: any) => ({
         id: user.id,
@@ -317,21 +317,20 @@ class SupabaseDatabase {
         skips: skipMap
       };
 
+      const lastSelectedUser = users.find((user: any) => user.last_selected);
+      if (lastSelectedUser) {
+        result.lastSelected = {
+          id: lastSelectedUser.id,
+          name: lastSelectedUser.name
+        };
+      }
+
       // Processar configurações
       if (configs) {
         const configMap: Record<string, string> = {};
         configs.forEach((cfg: any) => {
           configMap[cfg.key] = cfg.value;
         });
-
-        // Adicionar último selecionado se existir
-        if (configMap.lastSelected) {
-          const lastSelected = userEntries.find(u => u.id === configMap.lastSelected);
-          if (lastSelected) {
-            result.lastSelected = lastSelected;
-          }
-        }
-
         // Adicionar data da última seleção se existir
         if (configMap.lastSelectionDate) {
           result.lastSelectionDate = configMap.lastSelectionDate;
@@ -408,14 +407,7 @@ class SupabaseDatabase {
 
       // Salvar configurações
       const configsToSave = [] as { key: string; value: string }[];
-      const managedConfigKeys = ['lastSelected', 'lastSelectionDate', 'retryUsers'];
-      
-      if (data.lastSelected) {
-        configsToSave.push({
-          key: 'lastSelected',
-          value: data.lastSelected.id
-        });
-      }
+      const managedConfigKeys = ['lastSelectionDate', 'retryUsers', 'lastSelected'];
       
       if (data.lastSelectionDate) {
         configsToSave.push({

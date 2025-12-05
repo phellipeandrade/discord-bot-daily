@@ -72,17 +72,19 @@ describe('Supabase saveUsers', () => {
     const data: UserData = {
       all: [{ id: '1', name: 'Alice' }],
       remaining: [{ id: '1', name: 'Alice' }],
-      lastSelected: { id: '1', name: 'Alice' },
       lastSelectionDate: '2024-01-01'
     };
 
     await database.saveUsers(data);
 
     const configQueries = getConfigQueries(fromMock);
-    const deleteQuery = configQueries[configQueries.length - 1].value;
+    const [upsertQuery, deleteQuery] = configQueries.map((query) => query.value);
 
+    expect(upsertQuery.upsert).toHaveBeenCalledWith([
+      { key: 'lastSelectionDate', value: '2024-01-01' }
+    ]);
     expect(deleteQuery.delete).toHaveBeenCalled();
     const deleteResult = deleteQuery.delete.mock.results[0].value;
-    expect(deleteResult.in).toHaveBeenCalledWith('key', ['retryUsers']);
+    expect(deleteResult.in).toHaveBeenCalledWith('key', ['retryUsers', 'lastSelected']);
   });
 });
