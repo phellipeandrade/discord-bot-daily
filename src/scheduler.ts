@@ -10,7 +10,7 @@ import {
   HOLIDAY_COUNTRIES,
   DISABLED_UNTIL
 } from '@/config';
-import { loadUsers, selectUser } from '@/users';
+import { loadUsers, selectUser, AlreadySelectedTodayError } from '@/users';
 import { findNextSong } from '@/music';
 import { todayISO } from '@/date';
 
@@ -37,7 +37,17 @@ export function scheduleDailySelection(client: Client): void {
       }
 
       const data = await loadUsers();
-      const selected = await selectUser(data);
+      let selected;
+
+      try {
+        selected = await selectUser(data);
+      } catch (error) {
+        if (error instanceof AlreadySelectedTodayError) {
+          console.log(error.message);
+          return;
+        }
+        throw error;
+      }
 
       const { text, components } = await findNextSong(client);
 

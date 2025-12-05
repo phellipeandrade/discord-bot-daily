@@ -4,6 +4,18 @@ import { todayISO } from '@/date';
 
 export { UserData, UserEntry } from '@/supabase';
 
+export class AlreadySelectedTodayError extends Error {
+  constructor(lastSelected: UserEntry) {
+    super(
+      i18n.t('selection.alreadySelectedToday', {
+        id: lastSelected.id,
+        name: lastSelected.name
+      })
+    );
+    this.name = 'AlreadySelectedTodayError';
+  }
+}
+
 export async function loadUsers(): Promise<UserData> {
   try {
     return await database.loadUsers();
@@ -20,6 +32,12 @@ export async function saveUsers(data: UserData): Promise<void> {
 }
 
 export async function selectUser(data: UserData): Promise<UserEntry> {
+  const today = todayISO();
+
+  if (data.lastSelected && data.lastSelectionDate === today) {
+    throw new AlreadySelectedTodayError(data.lastSelected);
+  }
+
   if (data.remaining.length === 0) {
     data.remaining = [...data.all];
   }
@@ -84,7 +102,7 @@ export async function selectUser(data: UserData): Promise<UserEntry> {
     data.remaining = [...data.all];
   }
   data.lastSelected = selected;
-  data.lastSelectionDate = todayISO();
+  data.lastSelectionDate = today;
   await saveUsers(data);
   return selected;
 }
