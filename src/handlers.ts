@@ -147,16 +147,17 @@ export async function handleSelect(
   data: UserData
 ): Promise<void> {
   const today = todayISO();
-  let message = '';
   if (data.lastSelected && data.lastSelectionDate === today) {
-    if (!data.remaining.some((u) => u.id === data.lastSelected!.id)) {
-      data.remaining.push(data.lastSelected);
-    }
-    message += i18n.t('selection.readded', { name: data.lastSelected.name }) +
-      '\n';
+    await interaction.reply(
+      i18n.t('selection.alreadySelectedToday', {
+        id: data.lastSelected.id,
+        name: data.lastSelected.name
+      })
+    );
+    return;
   }
   const selected = await selectUser(data);
-  message += i18n.t('daily.announcement', {
+  const message = i18n.t('daily.announcement', {
     id: selected.id,
     name: selected.name
   });

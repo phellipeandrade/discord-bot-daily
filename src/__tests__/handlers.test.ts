@@ -22,7 +22,8 @@ jest.mock('@/i18n', () => ({
   i18n: {
     t: jest.fn((key: string, params: Record<string, string> = {}) => {
       const translations: Record<string, string> = {
-            'selection.readded': 'selection.readded',
+    'selection.readded': 'selection.readded',
+    'selection.alreadySelectedToday': 'selection.alreadySelectedToday',
     'selection.substituted': 'selection.substituted',
     'selection.noCurrentSelection': 'selection.noCurrentSelection',
     'selection.substituteNotInRemaining': 'selection.substituteNotInRemaining',
@@ -264,23 +265,18 @@ describe('handlers', () => {
     expect(interaction.reply).toHaveBeenCalled();
   });
 
-  test('handleSelect readds previous user on same day', async () => {
+  test('handleSelect returns existing selection when it already happened today', async () => {
     const userA = { name: 'A', id: '1' };
-    const userB = { name: 'B', id: '2' };
-    data.all.push(userA, userB);
-    data.remaining.push(userA, userB);
-    const today = new Date().toISOString().split('T')[0];
-    mockSelectUser.mockResolvedValueOnce(userA);
-    const interaction = createInteraction();
-    await handleSelect(interaction, data);
     data.lastSelected = userA;
-    data.lastSelectionDate = today;
-    data.remaining = [userB];
-    mockSelectUser.mockResolvedValueOnce(userB);
+    data.lastSelectionDate = new Date().toISOString().split('T')[0];
+    const interaction = createInteraction();
+
     await handleSelect(interaction, data);
-    expect(data.remaining.some((u) => u.id === '1')).toBe(true);
-    const msg = (interaction.reply as jest.Mock).mock.calls[1][0];
-    expect(String(msg)).toContain('selection.readded');
+
+    expect(mockSelectUser).not.toHaveBeenCalled();
+    expect(interaction.reply).toHaveBeenCalledWith(
+      'selection.alreadySelectedToday'
+    );
   });
 
   test('handleReset loads original file', async () => {
