@@ -194,6 +194,15 @@ export async function handleReadd(
 
   if (!data.remaining.some((u) => u.id === user.id)) {
     data.remaining.push(user);
+    
+    // Adicionar usuário à lista de retry para priorização
+    if (!data.retryUsers) {
+      data.retryUsers = [];
+    }
+    if (!data.retryUsers.includes(user.id)) {
+      data.retryUsers.push(user.id);
+    }
+    
     await saveUsers(data);
     await interaction.reply(i18n.t('selection.readded', { name: userName }));
   } else {

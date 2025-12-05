@@ -8,6 +8,6 @@ export default {
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }]
   },
-  testMatch: ['**/__tests__/**/*.test.[jt]s?(x)'],
+  testMatch: ['<rootDir>/src/__tests__/**/*.test.[jt]s?(x)'],
   coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary']
 };

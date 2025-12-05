@@ -54,7 +54,9 @@ jest.mock('@/users', () => {
   const actual = jest.requireActual('@/users');
   return {
     ...actual,
-    saveUsers: (data: UserData) => mockSaveUsers(data),
+    saveUsers: jest.fn().mockImplementation(async (data: UserData) => {
+      mockSaveUsers(data);
+    }),
     selectUser: (data: UserData) => mockSelectUser(data),
     formatUsers: (users: Array<{ name: string; id: string }>) =>
       mockFormatUsers(users)
@@ -307,6 +309,23 @@ describe('handlers', () => {
     data.remaining = [];
     await handleReadd(createInteraction({ name: '<@2>' }), data);
     expect(data.remaining.length).toBe(1);
+  });
+
+  test('handleReadd adds user to retry list', async () => {
+    data.all.push({ name: 'A', id: '1' });
+    const interaction = createInteraction({ name: 'A' });
+    await handleReadd(interaction, data);
+    expect(data.remaining.length).toBe(1);
+    expect(data.retryUsers).toEqual(['1']);
+    expect(mockSaveUsers).toHaveBeenCalled();
+  });
+
+  test('handleReadd does not duplicate retry users', async () => {
+    data.all.push({ name: 'A', id: '1' });
+    data.retryUsers = ['1'];
+    const interaction = createInteraction({ name: 'A' });
+    await handleReadd(interaction, data);
+    expect(data.retryUsers).toEqual(['1']); // Should not duplicate
   });
 
   test('handleSkipToday sets skip for today', async () => {

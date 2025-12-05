@@ -43,6 +43,14 @@ export async function selectUser(data: UserData): Promise<UserEntry> {
 
   let eligible = data.remaining.filter(u => !isSkipped(u));
   
+  // Priorizar usuários de retry se existirem
+  if (data.retryUsers && data.retryUsers.length > 0) {
+    const retryEligible = eligible.filter(u => data.retryUsers!.includes(u.id));
+    if (retryEligible.length > 0) {
+      eligible = retryEligible;
+    }
+  }
+  
   // Salva os dados se houver skips expirados removidos
   if (hasExpiredSkips) {
     await saveUsers(data);
@@ -62,6 +70,16 @@ export async function selectUser(data: UserData): Promise<UserEntry> {
   const index = Math.floor(Math.random() * eligible.length);
   const selected = eligible[index];
   data.remaining = data.remaining.filter(u => u.id !== selected.id);
+  
+  // Remover usuário selecionado da lista de retry se estiver nela
+  if (data.retryUsers && data.retryUsers.includes(selected.id)) {
+    data.retryUsers = data.retryUsers.filter(id => id !== selected.id);
+    // Se não há mais usuários de retry, limpar a lista
+    if (data.retryUsers.length === 0) {
+      data.retryUsers = undefined;
+    }
+  }
+  
   if (isLastEligible) {
     data.remaining = [...data.all];
   }

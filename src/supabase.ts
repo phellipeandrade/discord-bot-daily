@@ -26,6 +26,8 @@ export interface UserData {
   /** ISO date string of the last selection */
   lastSelectionDate?: string;
   skips?: Record<string, string>;
+  /** Users that were readded and should be prioritized in next selection */
+  retryUsers?: string[];
 }
 
 class SupabaseDatabase {
@@ -290,7 +292,7 @@ class SupabaseDatabase {
       const { data: configs } = await this.client
         .from('config')
         .select('*')
-        .in('key', ['lastSelected', 'lastSelectionDate']);
+        .in('key', ['lastSelected', 'lastSelectionDate', 'retryUsers']);
 
       const userEntries: UserEntry[] = users.map((user: any) => ({
         id: user.id,
@@ -333,6 +335,16 @@ class SupabaseDatabase {
         // Adicionar data da última seleção se existir
         if (configMap.lastSelectionDate) {
           result.lastSelectionDate = configMap.lastSelectionDate;
+        }
+
+        // Adicionar usuários de retry se existirem
+        if (configMap.retryUsers) {
+          try {
+            result.retryUsers = JSON.parse(configMap.retryUsers);
+          } catch (error) {
+            console.error('Error parsing retryUsers:', error);
+            result.retryUsers = [];
+          }
         }
       }
 
@@ -395,6 +407,13 @@ class SupabaseDatabase {
         configsToSave.push({
           key: 'lastSelectionDate',
           value: data.lastSelectionDate
+        });
+      }
+
+      if (data.retryUsers && data.retryUsers.length > 0) {
+        configsToSave.push({
+          key: 'retryUsers',
+          value: JSON.stringify(data.retryUsers)
         });
       }
       
