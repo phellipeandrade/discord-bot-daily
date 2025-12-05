@@ -260,7 +260,8 @@ describe('Funções Utilitárias', () => {
       const resultado = await selectUser(dados);
 
       expect(resultado.id).toBe('1');
-      expect(dados.remaining.length).toBe(mockData.all.length);
+      expect(dados.remaining.length).toBe(mockData.all.length - 1);
+      expect(dados.remaining.some((u: UserEntry) => u.id === '1')).toBe(false);
     });
 
     it('deve reinserir usuários elegíveis quando todos restantes estão pulados', async () => {
