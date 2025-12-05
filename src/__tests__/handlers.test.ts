@@ -269,13 +269,13 @@ describe('handlers', () => {
 
   test('handleSelect returns existing selection when it already happened today', async () => {
     const userA = { name: 'A', id: '1' };
-    data.lastSelected = userA;
-    data.lastSelectionDate = new Date().toISOString().split('T')[0];
+    const { AlreadySelectedTodayError } = await import('@/users');
+    mockSelectUser.mockRejectedValue(new AlreadySelectedTodayError(userA));
     const interaction = createInteraction();
 
     await handleSelect(interaction, data);
 
-    expect(mockSelectUser).not.toHaveBeenCalled();
+    expect(mockSelectUser).toHaveBeenCalled();
     expect(interaction.reply).toHaveBeenCalledWith(
       'selection.alreadySelectedToday'
     );

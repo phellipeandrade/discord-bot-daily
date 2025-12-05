@@ -41,7 +41,7 @@ jest.mock('@supabase/supabase-js', () => ({
 
       // Mock para upsert que retorna dados simulados
       query.upsert.mockResolvedValue({ data: [{ id: 1 }], error: null });
-      
+
       // Mock para insert que retorna dados simulados
       query.insert.mockReturnValue({
         select: jest.fn().mockReturnValue({
@@ -51,12 +51,17 @@ jest.mock('@supabase/supabase-js', () => ({
 
       // Mock para update que retorna sucesso
       query.update.mockReturnValue({
+        data: [],
+        error: null,
         eq: jest.fn().mockResolvedValue({ data: [], error: null })
       });
 
       // Mock para delete que retorna sucesso
       query.delete.mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ data: [], error: null })
+        data: [],
+        error: null,
+        eq: jest.fn().mockResolvedValue({ data: [], error: null }),
+        not: jest.fn().mockResolvedValue({ data: [], error: null })
       });
 
       return query;

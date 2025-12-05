@@ -9,7 +9,8 @@ import {
   saveUsers,
   selectUser,
   formatUsers,
-  findUser
+  findUser,
+  AlreadySelectedTodayError
 } from '@/users';
 import { simpleReminderService } from '@/simpleReminderService';
 import {
@@ -146,22 +147,20 @@ export async function handleSelect(
   interaction: ChatInputCommandInteraction,
   data: UserData
 ): Promise<void> {
-  const today = todayISO();
-  if (data.lastSelected && data.lastSelectionDate === today) {
-    await interaction.reply(
-      i18n.t('selection.alreadySelectedToday', {
-        id: data.lastSelected.id,
-        name: data.lastSelected.name
-      })
-    );
-    return;
+  try {
+    const selected = await selectUser(data);
+    const message = i18n.t('daily.announcement', {
+      id: selected.id,
+      name: selected.name
+    });
+    await interaction.reply(message);
+  } catch (error) {
+    if (error instanceof AlreadySelectedTodayError) {
+      await interaction.reply(error.message);
+      return;
+    }
+    throw error;
   }
-  const selected = await selectUser(data);
-  const message = i18n.t('daily.announcement', {
-    id: selected.id,
-    name: selected.name
-  });
-  await interaction.reply(message);
 }
 
 export async function handleReset(
