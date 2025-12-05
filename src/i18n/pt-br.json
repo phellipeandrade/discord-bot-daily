@@ -15,6 +15,7 @@
   "music.next": "🎵 Próxima música: {{link}}\n\n📎 Link da mensagem: {{messageUrl}}",
   "music.allPlayed": "✅ Todas as músicas recentes já foram tocadas.",
   "selection.readded": "✅ {{name}} foi readicionado(a) à lista de seleção.",
+  "selection.alreadySelectedToday": "🎙️ O host da daily já foi selecionado hoje: <@{{id}}> ({{name}}).",
   "selection.notSelected": "❌ {{name}} já está na lista de seleção.",
   "daily.announcement": "🎙️ Bom dia! Hoje a daily será conduzida por: <@{{id}}> ({{name}})",
   "daily.holiday": "🌴 Feriado detectado, bom feriado a todos!",
