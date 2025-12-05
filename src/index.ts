@@ -49,6 +49,7 @@ import { scheduleDailySelection } from '@/scheduler';
 import { setupChatListener } from '@/chatHandler';
 import { simpleReminderService } from '@/simpleReminderService';
 import { database } from '@/supabase';
+const { version } = require('../package.json');
 
 i18n.setLanguage(LANGUAGE as 'en' | 'pt-br');
 logConfig();
@@ -88,11 +89,11 @@ if (process.env.NODE_ENV !== 'test') {
     if (!client.user) throw new Error('Client not properly initialized');
 
     console.log(`🤖 Logged in as ${client.user.tag}`);
+    console.log(`📦 Version: ${version}`);
 
     const users = await loadUsers();
     console.log(
-      `👥 Users loaded (${users.all.length}): ${
-        users.all.map((u) => u.name).join(', ') || '(none)'
+      `👥 Users loaded (${users.all.length}): ${users.all.map((u) => u.name).join(', ') || '(none)'
       }`
     );
 
@@ -101,7 +102,7 @@ if (process.env.NODE_ENV !== 'test') {
     console.log('✅ Commands registered');
 
     scheduleDailySelection(client);
-    
+
     // Inicializar serviço de lembretes simplificado
     simpleReminderService.setClient(client);
     await simpleReminderService.start();
