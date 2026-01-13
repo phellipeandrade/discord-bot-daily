@@ -62,7 +62,8 @@ jest.mock('@supabase/supabase-js', () => ({
         error: null,
         eq: jest.fn().mockResolvedValue({ data: [], error: null }),
         not: jest.fn().mockResolvedValue({ data: [], error: null }),
-        in: jest.fn().mockResolvedValue({ data: [], error: null })
+        in: jest.fn().mockResolvedValue({ data: [], error: null }),
+        neq: jest.fn().mockResolvedValue({ data: [], error: null })
       });
 
       return query;

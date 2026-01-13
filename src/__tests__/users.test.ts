@@ -130,21 +130,6 @@ describe('selectUser retry functionality', () => {
     Math.random = originalRandom;
   });
 
-  it('throws when trying to select again on the same day', async () => {
-    const data: UserData = {
-      all: [
-        { name: 'Alice', id: '1' }
-      ],
-      remaining: [
-        { name: 'Alice', id: '1' }
-      ],
-      lastSelected: { name: 'Alice', id: '1' },
-      lastSelectionDate: new Date().toISOString().split('T')[0]
-    };
-
-    await expect(selectUser(data)).rejects.toBeInstanceOf(AlreadySelectedTodayError);
-  });
-
   it('does not immediately reselect the last picked user after a full rotation', async () => {
     const originalRandom = Math.random;
     Math.random = jest.fn(() => 0);

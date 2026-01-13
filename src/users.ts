@@ -34,10 +34,6 @@ export async function saveUsers(data: UserData): Promise<void> {
 export async function selectUser(data: UserData): Promise<UserEntry> {
   const today = todayISO();
 
-  if (data.lastSelected && data.lastSelectionDate === today) {
-    throw new AlreadySelectedTodayError(data.lastSelected);
-  }
-
   if (data.remaining.length === 0) {
     data.remaining = [...data.all];
   }

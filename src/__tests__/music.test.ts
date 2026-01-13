@@ -27,6 +27,18 @@ jest.mock('@/i18n', () => ({
 }));
 
 // Mock do discord.js
+const mockButtonBuilder = {
+  setCustomId: jest.fn().mockReturnThis(),
+  setLabel: jest.fn().mockReturnThis(),
+  setStyle: jest.fn().mockReturnThis(),
+  data: { custom_id: 'play_msg2' }
+};
+
+const mockActionRowBuilder = {
+  addComponents: jest.fn().mockReturnThis(),
+  components: [mockButtonBuilder]
+};
+
 jest.mock('discord.js', () => ({
   Client: jest.fn(),
   GatewayIntentBits: { Guilds: 1, GuildMessages: 2, GuildVoiceStates: 4, MessageContent: 8 },
@@ -37,7 +49,10 @@ jest.mock('discord.js', () => ({
   Attachment: jest.fn(),
   ButtonInteraction: jest.fn(),
   ApplicationCommandType: { ChatInput: 1 },
-  ComponentType: { Button: 2 }
+  ComponentType: { Button: 2 },
+  ButtonBuilder: jest.fn(() => mockButtonBuilder),
+  ActionRowBuilder: jest.fn(() => mockActionRowBuilder),
+  ButtonStyle: { Primary: 1, Secondary: 2, Success: 3, Danger: 4, Link: 5 }
 }));
 
 // Mock do config
@@ -85,17 +100,26 @@ describe('music handlers', () => {
 
   describe('findNextSong', () => {
     it('should return channel error when MUSIC_CHANNEL_ID is not set', async () => {
-      // Temporarily mock empty MUSIC_CHANNEL_ID
+      // Mock empty MUSIC_CHANNEL_ID by mocking the config module
+      const originalConfig = require('@/config');
       jest.doMock('@/config', () => ({
+        ...originalConfig,
         MUSIC_CHANNEL_ID: '',
         PLAYER_FORWARD_COMMAND: '/play'
       }));
       
-      const { findNextSong } = await import('@/music');
+      // Clear module cache and re-import
+      jest.resetModules();
+      const { findNextSong } = require('@/music');
+      
       const result = await findNextSong(mockClient);
       
       expect(result.text).toBe(mockTranslations['music.channelError']);
       expect(result.components).toBeUndefined();
+      
+      // Restore original config
+      jest.doMock('@/config', () => originalConfig);
+      jest.resetModules();
     });
 
     it('should return all played message when no unplayed songs exist', async () => {
@@ -117,7 +141,11 @@ describe('music handlers', () => {
         id: 'msg1',
         content: 'https://youtube.com/song1',
         url: 'https://discord.com/msg1',
-        reactions: { cache: new Map() },
+        reactions: { 
+          cache: {
+            find: jest.fn().mockReturnValue(undefined)
+          }
+        },
         embeds: [],
         attachments: new Map()
       };
@@ -126,7 +154,11 @@ describe('music handlers', () => {
         id: 'msg2', 
         content: 'https://youtube.com/song2',
         url: 'https://discord.com/msg2',
-        reactions: { cache: new Map() },
+        reactions: { 
+          cache: {
+            find: jest.fn().mockReturnValue(undefined)
+          }
+        },
         embeds: [],
         attachments: new Map()
       };
@@ -135,7 +167,11 @@ describe('music handlers', () => {
         id: 'msg3',
         content: 'https://youtube.com/song3', 
         url: 'https://discord.com/msg3',
-        reactions: { cache: new Map() },
+        reactions: { 
+          cache: {
+            find: jest.fn().mockReturnValue(undefined)
+          }
+        },
         embeds: [],
         attachments: new Map()
       };
@@ -152,7 +188,7 @@ describe('music handlers', () => {
 
       expect(result.text).toContain('https://youtube.com/song2');
       expect(result.components).toBeDefined();
-      expect(result.components![0].components[0].data.custom_id).toBe('play_msg2');
+      expect((result.components![0].components[0].data as any).custom_id).toBe('play_msg2');
 
       // Restore original Math.random
       Math.random = originalRandom;
@@ -169,7 +205,9 @@ describe('music handlers', () => {
         content: 'https://youtube.com/song1',
         url: 'https://discord.com/msg1',
         reactions: { 
-          cache: new Map([['🐰', mockBunnyReaction]])
+          cache: {
+            find: jest.fn().mockReturnValue(mockBunnyReaction)
+          }
         },
         embeds: [],
         attachments: new Map()
@@ -179,7 +217,11 @@ describe('music handlers', () => {
         id: 'msg2',
         content: 'https://youtube.com/song2',
         url: 'https://discord.com/msg2', 
-        reactions: { cache: new Map() },
+        reactions: { 
+          cache: {
+            find: jest.fn().mockReturnValue(undefined)
+          }
+        },
         embeds: [],
         attachments: new Map()
       };
@@ -195,7 +237,7 @@ describe('music handlers', () => {
 
       // Should select msg2 since msg1 has bunny reaction
       expect(result.text).toContain('https://youtube.com/song2');
-      expect(result.components![0].components[0].data.custom_id).toBe('play_msg2');
+      expect((result.components![0].components[0].data as any).custom_id).toBe('play_msg2');
     });
   });
 

@@ -394,15 +394,28 @@ class SupabaseDatabase {
 
       // Remover skips que não estão mais presentes
       const skipIds = skipEntries.map((entry) => entry.user_id);
-      const skipDeletionQuery = this.client.from('skips').delete();
-      const { error: deleteSkipsError } =
-        skipIds.length > 0
-          ? await skipDeletionQuery.not('user_id', 'in', skipIds)
-          : await skipDeletionQuery;
-
-      if (deleteSkipsError) {
-        console.error('Error deleting obsolete skips:', deleteSkipsError);
-        throw deleteSkipsError;
+      
+      if (skipIds.length > 0) {
+        const { error: deleteSkipsError } = await this.client
+          .from('skips')
+          .delete()
+          .not('user_id', 'in', skipIds);
+          
+        if (deleteSkipsError) {
+          console.error('Error deleting obsolete skips:', deleteSkipsError);
+          throw deleteSkipsError;
+        }
+      } else {
+        // Se não há skipIds, deletar todos os skips usando uma condição que sempre é verdadeira
+        const { error: deleteSkipsError } = await this.client
+          .from('skips')
+          .delete()
+          .neq('user_id', ''); // Delete all records where user_id is not empty (which is all records)
+          
+        if (deleteSkipsError) {
+          console.error('Error deleting obsolete skips:', deleteSkipsError);
+          throw deleteSkipsError;
+        }
       }
 
       // Salvar configurações
