@@ -33,7 +33,10 @@ export async function findNextSong(
   const bunny = '🐰';
   const linkRegex = /https?:\/\/\S+/i;
 
-  for (const msg of Array.from(messages.values()).reverse()) {
+  // Collect all unplayed songs first
+  const unplayedSongs = [];
+  
+  for (const msg of messages.values()) {
     const bunnyReaction = msg.reactions.cache.find((r) => r.emoji.name === bunny);
     if (bunnyReaction && bunnyReaction.count > 0) continue;
 
@@ -51,16 +54,36 @@ export async function findNextSong(
         linkRegex.exec(msg.content)?.[0] ||
         msg.embeds[0]?.url ||
         '';
-      const playButton = new ButtonBuilder()
-        .setCustomId(`play_${msg.id}`)
-        .setLabel('▶️ Play')
-        .setStyle(ButtonStyle.Primary);
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(playButton);
-      return { text: i18n.t('music.next', { link: extractedLink, messageUrl: msg.url }), components: [row] };
+      
+      unplayedSongs.push({
+        message: msg,
+        link: extractedLink
+      });
     }
   }
 
-  return { text: i18n.t('music.allPlayed') };
+  // If no unplayed songs found, return the "all played" message
+  if (unplayedSongs.length === 0) {
+    return { text: i18n.t('music.allPlayed') };
+  }
+
+  // Randomly select one song from the unplayed songs
+  const randomIndex = Math.floor(Math.random() * unplayedSongs.length);
+  const selectedSong = unplayedSongs[randomIndex];
+
+  const playButton = new ButtonBuilder()
+    .setCustomId(`play_${selectedSong.message.id}`)
+    .setLabel('▶️ Play')
+    .setStyle(ButtonStyle.Primary);
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(playButton);
+  
+  return { 
+    text: i18n.t('music.next', { 
+      link: selectedSong.link, 
+      messageUrl: selectedSong.message.url 
+    }), 
+    components: [row] 
+  };
 }
 
 export async function handleNextSong(interaction: ChatInputCommandInteraction): Promise<void> {

@@ -1,4 +1,4 @@
-import { handleNextSong, handlePlayButton, handleClearReactions } from '@/music';
+import { handleNextSong, handlePlayButton, handleClearReactions, findNextSong } from '@/music';
 
 // Mock do i18n
 const mockTranslations: Record<string, string> = {
@@ -81,6 +81,122 @@ describe('music handlers', () => {
       reply: jest.fn(),
       client: mockClient
     };
+  });
+
+  describe('findNextSong', () => {
+    it('should return channel error when MUSIC_CHANNEL_ID is not set', async () => {
+      // Temporarily mock empty MUSIC_CHANNEL_ID
+      jest.doMock('@/config', () => ({
+        MUSIC_CHANNEL_ID: '',
+        PLAYER_FORWARD_COMMAND: '/play'
+      }));
+      
+      const { findNextSong } = await import('@/music');
+      const result = await findNextSong(mockClient);
+      
+      expect(result.text).toBe(mockTranslations['music.channelError']);
+      expect(result.components).toBeUndefined();
+    });
+
+    it('should return all played message when no unplayed songs exist', async () => {
+      const messagesMap = new Map();
+      mockChannel.messages.fetch.mockResolvedValue(messagesMap);
+
+      const result = await findNextSong(mockClient);
+
+      expect(result.text).toBe(mockTranslations['music.allPlayed']);
+      expect(result.components).toBeUndefined();
+    });
+
+    it('should randomly select from multiple unplayed songs', async () => {
+      // Mock Math.random to control randomization in test
+      const originalRandom = Math.random;
+      Math.random = jest.fn().mockReturnValue(0.5); // Will select middle song
+
+      const mockMessage1 = {
+        id: 'msg1',
+        content: 'https://youtube.com/song1',
+        url: 'https://discord.com/msg1',
+        reactions: { cache: new Map() },
+        embeds: [],
+        attachments: new Map()
+      };
+
+      const mockMessage2 = {
+        id: 'msg2', 
+        content: 'https://youtube.com/song2',
+        url: 'https://discord.com/msg2',
+        reactions: { cache: new Map() },
+        embeds: [],
+        attachments: new Map()
+      };
+
+      const mockMessage3 = {
+        id: 'msg3',
+        content: 'https://youtube.com/song3', 
+        url: 'https://discord.com/msg3',
+        reactions: { cache: new Map() },
+        embeds: [],
+        attachments: new Map()
+      };
+
+      const messagesMap = new Map([
+        ['msg1', mockMessage1],
+        ['msg2', mockMessage2], 
+        ['msg3', mockMessage3]
+      ]);
+
+      mockChannel.messages.fetch.mockResolvedValue(messagesMap);
+
+      const result = await findNextSong(mockClient);
+
+      expect(result.text).toContain('https://youtube.com/song2');
+      expect(result.components).toBeDefined();
+      expect(result.components![0].components[0].data.custom_id).toBe('play_msg2');
+
+      // Restore original Math.random
+      Math.random = originalRandom;
+    });
+
+    it('should skip songs that already have bunny reactions', async () => {
+      const mockBunnyReaction = {
+        emoji: { name: '🐰' },
+        count: 1
+      };
+
+      const mockMessage1 = {
+        id: 'msg1',
+        content: 'https://youtube.com/song1',
+        url: 'https://discord.com/msg1',
+        reactions: { 
+          cache: new Map([['🐰', mockBunnyReaction]])
+        },
+        embeds: [],
+        attachments: new Map()
+      };
+
+      const mockMessage2 = {
+        id: 'msg2',
+        content: 'https://youtube.com/song2',
+        url: 'https://discord.com/msg2', 
+        reactions: { cache: new Map() },
+        embeds: [],
+        attachments: new Map()
+      };
+
+      const messagesMap = new Map([
+        ['msg1', mockMessage1],
+        ['msg2', mockMessage2]
+      ]);
+
+      mockChannel.messages.fetch.mockResolvedValue(messagesMap);
+
+      const result = await findNextSong(mockClient);
+
+      // Should select msg2 since msg1 has bunny reaction
+      expect(result.text).toContain('https://youtube.com/song2');
+      expect(result.components![0].components[0].data.custom_id).toBe('play_msg2');
+    });
   });
 
   describe('handleNextSong', () => {
